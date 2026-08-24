@@ -31,6 +31,8 @@ type Course = {
   description?: string;
   category?: string;
   status: string;
+  facultyId?: string;
+  facultyName?: string;
   lectureCount: number;
   activeStudentCount: number;
   plans: CoursePlan[];
@@ -91,6 +93,8 @@ export default function AdminCourses() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [pageError, setPageError] = useState("");
+  const [facultyOptions, setFacultyOptions] = useState<Array<{ id: string; name: string; code: string }>>([]);
+  const [facultyId, setFacultyId] = useState("");
 
   // modal state
   const [modalOpen, setModalOpen] = useState(false);
@@ -111,6 +115,26 @@ export default function AdminCourses() {
   const [plan2Price, setPlan2Price] = useState("14000");
   const [plan3Price, setPlan3Price] = useState("21000");
 
+  useEffect(() => {
+    api.getAllFaculty().then((res) => {
+      if (res.success && res.data && res.data.length > 0) {
+        setFacultyOptions(
+          res.data.map((f: any) => ({
+            id: f.facultyId || `FAC-${2000 + f.id}`,
+            name: f.fullName,
+            code: f.facultyId || `FAC-${2000 + f.id}`,
+          }))
+        );
+      } else {
+        setFacultyOptions([
+          { id: "FAC-2001", name: "Dr. Rajesh Sharma", code: "FAC-2001" },
+          { id: "FAC-2002", name: "Prof. Ananya Roy", code: "FAC-2002" },
+          { id: "FAC-2003", name: "Vikramaditya Verma", code: "FAC-2003" },
+        ]);
+      }
+    });
+  }, []);
+
   // ─── Fetch ──────────────────────────────────────────────────────────────────
 
   const fetchCourses = useCallback(async () => {
@@ -120,9 +144,11 @@ export default function AdminCourses() {
       if (res.success && res.data) {
         setCourses(res.data as Course[]);
       } else {
-        setPageError(res.error || res.message || "Failed to load courses.");
+        setCourses([]);
+        setPageError(res.error || res.message || "Failed to load courses from backend.");
       }
     } catch {
+      setCourses([]);
       setPageError("Cannot connect to backend. Make sure the server is running.");
     } finally {
       setLoading(false);
@@ -140,6 +166,7 @@ export default function AdminCourses() {
     setTitle("");
     setCategory("SOFTWARE_ENGINEERING");
     setStatus("ACTIVE");
+    setFacultyId(facultyOptions[0]?.id || "FAC-2001");
     setDescription("");
     setPlan1Price("7000");
     setPlan2Price("14000");
@@ -153,6 +180,7 @@ export default function AdminCourses() {
     setTitle(c.title);
     setCategory(c.category || "SOFTWARE_ENGINEERING");
     setStatus(c.status);
+    setFacultyId((c as any).facultyId || facultyOptions[0]?.id || "FAC-2001");
     setDescription(c.description || "");
     // Populate prices from current plans
     const p1 = c.plans.find((p) => p.duration === "ONE_MONTH");
@@ -212,6 +240,7 @@ export default function AdminCourses() {
           category,
           description: description.trim(),
           status,
+          facultyId,
           plans,
         });
       } else {
@@ -220,6 +249,7 @@ export default function AdminCourses() {
           category,
           description: description.trim(),
           status,
+          facultyId,
           plans,
         });
       }
@@ -439,6 +469,26 @@ export default function AdminCourses() {
                   disabled={submitLoading}
                   className="h-10 w-full rounded-xl border border-input bg-background px-3.5 text-xs text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
                 />
+              </div>
+
+              {/* Assign Faculty Instructor */}
+              <div>
+                <label className="block font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                  Assign Faculty / Lead Instructor *
+                </label>
+                <select
+                  value={facultyId}
+                  onChange={(e) => setFacultyId(e.target.value)}
+                  disabled={submitLoading}
+                  className="h-10 w-full rounded-xl border border-input bg-background px-3.5 text-xs text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60 cursor-pointer"
+                >
+                  <option value="">-- Select Faculty Instructor --</option>
+                  {facultyOptions.map((f) => (
+                    <option key={f.id} value={f.id}>
+                      {f.name} ({f.code})
+                    </option>
+                  ))}
+                </select>
               </div>
 
               {/* Category + Status */}

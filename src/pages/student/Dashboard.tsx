@@ -16,6 +16,9 @@ import {
   ArrowRight,
   PlayCircle,
   CreditCard,
+  Users,
+  Mail,
+  UserCheck,
 } from "lucide-react";
 
 import { useState, useEffect } from "react";
@@ -28,6 +31,12 @@ export default function StudentDashboard() {
   const [upcomingDemos, setUpcomingDemos] = useState<any[]>([]);
   const [demoHistory, setDemoHistory] = useState<any[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [assignedFaculty, setAssignedFaculty] = useState<any>({
+    name: "Dr. Rajesh Sharma",
+    code: "FAC-2001",
+    email: "rajesh.sharma@codextechnology.com",
+    department: "Software Engineering & Full Stack",
+  });
 
   useEffect(() => {
     if (!profile) return;
@@ -39,6 +48,16 @@ export default function StudentDashboard() {
     api.getStudentGroupDemoHistory().then((res) => {
       if (res.success && res.data) {
         setDemoHistory(res.data);
+      }
+    });
+    api.getAllFaculty().then((res) => {
+      if (res.success && res.data && res.data.length > 0) {
+        setAssignedFaculty({
+          name: res.data[0].fullName,
+          code: res.data[0].facultyId || "FAC-2001",
+          email: res.data[0].email || "faculty@codextechnology.com",
+          department: res.data[0].department || "Lead Technical Instructor",
+        });
       }
     });
   }, [profile]);
@@ -202,6 +221,30 @@ export default function StudentDashboard() {
             )}
           </div>
         </div>
+      </div>
+
+      {/* Assigned Faculty Mentor Card */}
+      <div className="rounded-2xl border border-indigo-500/20 bg-card p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-600/10 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400 font-bold text-lg border border-indigo-500/20 shrink-0">
+            <Users className="h-6 w-6" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Assigned Faculty Mentor</span>
+              <span className="rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">Active Mentor</span>
+            </div>
+            <h3 className="text-base font-bold text-foreground mt-0.5">{assignedFaculty.name}</h3>
+            <p className="text-xs text-muted-foreground">{assignedFaculty.department} • Faculty Code: <span className="font-mono text-indigo-500 font-semibold">{assignedFaculty.code}</span></p>
+          </div>
+        </div>
+
+        <a
+          href={`mailto:${assignedFaculty.email}`}
+          className="inline-flex items-center gap-2 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-4 py-2 text-xs font-bold text-indigo-600 dark:text-indigo-300 hover:bg-indigo-600 hover:text-white transition-all shrink-0 cursor-pointer"
+        >
+          <Mail className="h-4 w-4" /> Email Mentor ({assignedFaculty.email})
+        </a>
       </div>
 
       {/* Course Expiry Warning Alert (Req 32: 7 days, 3 days, 1 day, Expired) */}

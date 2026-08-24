@@ -108,6 +108,14 @@ export default function MyCourses() {
                     </span>
                   </div>
 
+                  <div className="flex items-center justify-between text-xs text-muted-foreground bg-muted/30 p-2.5 rounded-xl border border-border/50">
+                    <div className="flex items-center gap-1.5">
+                      <User className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
+                      <span className="truncate">Faculty: <strong className="text-foreground">{(course as any).facultyName || "Dr. Rajesh Sharma"}</strong></span>
+                    </div>
+                    <span className="font-mono text-[10px] text-indigo-600 dark:text-indigo-400 font-bold shrink-0">{(course as any).facultyId || "FAC-2001"}</span>
+                  </div>
+
                   {/* Enrollment Status or Pricing */}
                   {isEnrolled ? (
                     <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3 text-xs space-y-1.5">

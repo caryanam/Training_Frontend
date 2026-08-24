@@ -20,6 +20,7 @@ import {
   Filter,
   CheckCircle2,
   Clock,
+  UserPlus,
 } from "lucide-react";
 
 export default function ExecutorStudentLeads() {
@@ -222,18 +223,26 @@ export default function ExecutorStudentLeads() {
                   </div>
                 </div>
 
-                <div className="pt-3 border-t border-border/60 flex items-center justify-between">
+                <div className="pt-3 border-t border-border/60 flex items-center justify-between gap-2">
                   <div className="text-[11px] text-muted-foreground flex items-center gap-1">
                     <Clock className="h-3 w-3" /> Assigned {formatDate(lead.created_at)}
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => handleOpenScheduleModal(lead)}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary hover:text-primary-foreground transition-all"
-                  >
-                    <Video className="h-3.5 w-3.5" />
-                    {existingDemo ? "View / Reschedule Demo" : "Schedule Demo"}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <Link
+                      to={`/executor/onboarding?leadId=${lead.id}`}
+                      className="inline-flex items-center gap-1 rounded-lg bg-emerald-500/10 px-2.5 py-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-600 hover:text-white transition-all"
+                    >
+                      <UserPlus className="h-3.5 w-3.5" /> Onboard
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => handleOpenScheduleModal(lead)}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary hover:text-primary-foreground transition-all"
+                    >
+                      <Video className="h-3.5 w-3.5" />
+                      {existingDemo ? "View / Reschedule Demo" : "Schedule Demo"}
+                    </button>
+                  </div>
                 </div>
               </div>
             );

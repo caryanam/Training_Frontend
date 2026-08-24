@@ -115,6 +115,26 @@ export default function CourseDetail() {
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         {/* Left 2 Cols: Curriculum Breakdown */}
         <div className="lg:col-span-2 space-y-6">
+          {/* Faculty Mentor Profile Card */}
+          <div className="rounded-2xl border border-indigo-500/20 bg-card p-5 shadow-xs flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-600/10 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400 font-bold text-base border border-indigo-500/20 shrink-0">
+                <User className="h-6 w-6" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Course Lead Faculty & Mentor</div>
+                <div className="text-base font-bold text-foreground">{(course as any).facultyName || "Dr. Rajesh Sharma"}</div>
+                <div className="text-xs text-muted-foreground">Faculty Code: <span className="font-mono text-indigo-500 font-bold">{(course as any).facultyId || "FAC-2001"}</span></div>
+              </div>
+            </div>
+            <a
+              href={`mailto:${(course as any).facultyEmail || "faculty@codextechnology.com"}`}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-3.5 py-2 text-xs font-bold text-indigo-600 dark:text-indigo-300 hover:bg-indigo-600 hover:text-white transition-all shrink-0 cursor-pointer"
+            >
+              Contact Faculty
+            </a>
+          </div>
+
           <div className="rounded-2xl border border-border bg-card p-6 shadow-xs">
             <h2 className="text-lg font-bold text-foreground mb-4">
               Curriculum & Lecture Outline

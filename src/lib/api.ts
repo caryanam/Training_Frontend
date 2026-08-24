@@ -487,6 +487,10 @@ export const api = {
         status: string;
         lectureCount: number;
         activeStudentCount: number;
+        facultyId?: string;
+        facultyName?: string;
+        facultyEmail?: string;
+        facultyPhone?: string;
         plans: Array<{
           id: number;
           duration: string;
@@ -507,6 +511,10 @@ export const api = {
       status: string;
       lectureCount: number;
       activeStudentCount: number;
+      facultyId?: string;
+      facultyName?: string;
+      facultyEmail?: string;
+      facultyPhone?: string;
       plans: Array<{
         id: number;
         duration: string;
@@ -521,6 +529,7 @@ export const api = {
     category: string;
     description: string;
     status: string;
+    facultyId?: string;
     plans: Array<{ duration: string; price: number }>;
   }) =>
     apiRequest<{
@@ -540,6 +549,7 @@ export const api = {
       category?: string;
       description?: string;
       status?: string;
+      facultyId?: string;
       plans?: Array<{ duration: string; price: number }>;
     }
   ) =>
