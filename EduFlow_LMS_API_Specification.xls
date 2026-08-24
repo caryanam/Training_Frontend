@@ -1,0 +1,222 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{font-family:Calibri,sans-serif}table{border-collapse:collapse;width:100%}th{background:#1e293b;color:#fff;padding:12px;border:1px solid #475569;text-align:left;font-size:13px}td{padding:10px;border:1px solid #cbd5e1;font-size:12px;vertical-align:top}tr:nth-child(even){background:#f8fafc}.method{font-weight:bold;padding:4px 8px;border-radius:4px;color:#fff;display:inline-block;font-size:11px}.POST{background:#10b981}.GET{background:#3b82f6}.PUT{background:#f59e0b}.DELETE{background:#ef4444}pre{margin:0;font-family:Consolas,monospace;font-size:11px;white-space:pre-wrap;background:#0f172a;color:#38bdf8;padding:8px;border-radius:4px}</style></head><body><h2>EduFlow LMS - Full Spring Boot REST API Specification</h2><table><thead><tr><th>Module</th><th>HTTP Method</th><th>Endpoint URL</th><th>Allowed Roles</th><th>Description</th><th>Request Payload (JSON / DTO)</th><th>Response Payload (JSON)</th><th>HTTP Status</th></tr></thead><tbody><tr><td><b>1. Authentication</b></td><td><span class="method POST">POST</span></td><td><code>POST /api/v1/auth/register</code></td><td>Public</td><td>Registers a new student and automatically creates a StudentLead with status NEW</td><td><pre>{
+  &quot;fullName&quot;: &quot;Rahul Sharma&quot;,
+  &quot;email&quot;: &quot;rahul.sharma@example.com&quot;,
+  &quot;phone&quot;: &quot;+91 98765 43210&quot;,
+  &quot;password&quot;: &quot;Password@123&quot;,
+  &quot;interestedCourse&quot;: &quot;Java Full Stack Development&quot;,
+  &quot;education&quot;: &quot;B.Tech Computer Science&quot;,
+  &quot;city&quot;: &quot;Bangalore&quot;
+}</pre></td><td><pre>{
+  &quot;success&quot;: true,
+  &quot;message&quot;: &quot;Registration successful. Admissions executor will contact you for a free demo.&quot;,
+  &quot;data&quot;: {
+    &quot;profileId&quot;: &quot;8f3b2c1a-5555-4444-8888-111122223333&quot;,
+    &quot;studentId&quot;: &quot;STU-1005&quot;,
+    &quot;leadId&quot;: &quot;lead-9901&quot;,
+    &quot;fullName&quot;: &quot;Rahul Sharma&quot;,
+    &quot;email&quot;: &quot;rahul.sharma@example.com&quot;,
+    &quot;phone&quot;: &quot;+91 98765 43210&quot;,
+    &quot;role&quot;: &quot;STUDENT&quot;,
+    &quot;leadStatus&quot;: &quot;NEW&quot;
+  }
+}</pre></td><td><b>201 Created</b></td></tr><tr><td><b>1. Authentication</b></td><td><span class="method POST">POST</span></td><td><code>POST /api/v1/auth/login</code></td><td>Public (All Roles)</td><td>Authenticates user and returns JWT bearer token with embedded role claims</td><td><pre>{
+  &quot;email&quot;: &quot;admin@eduflow.com&quot;,
+  &quot;password&quot;: &quot;AdminPassword123&quot;
+}</pre></td><td><pre>{
+  &quot;success&quot;: true,
+  &quot;token&quot;: &quot;eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbi0xIiwicm9sZSI6IkFETUlOIn0...&quot;,
+  &quot;tokenType&quot;: &quot;Bearer&quot;,
+  &quot;user&quot;: {
+    &quot;profileId&quot;: &quot;admin-1&quot;,
+    &quot;fullName&quot;: &quot;Siddharth Oberoi&quot;,
+    &quot;email&quot;: &quot;admin@eduflow.com&quot;,
+    &quot;role&quot;: &quot;ADMIN&quot;
+  }
+}</pre></td><td><b>200 OK</b></td></tr><tr><td><b>2. Lead Management</b></td><td><span class="method GET">GET</span></td><td><code>GET /api/v1/leads</code></td><td>ADMIN, EXECUTOR</td><td>Retrieves student leads filterable by status, search term, and executor ID</td><td><pre>Query Params:
+?status=NEW&amp;search=Rahul&amp;executorId=exe-rec-1</pre></td><td><pre>{
+  &quot;success&quot;: true,
+  &quot;count&quot;: 1,
+  &quot;data&quot;: [
+    {
+      &quot;leadId&quot;: &quot;lead-9901&quot;,
+      &quot;studentId&quot;: &quot;STU-1005&quot;,
+      &quot;profileId&quot;: &quot;8f3b2c1a-5555-4444-8888-111122223333&quot;,
+      &quot;fullName&quot;: &quot;Rahul Sharma&quot;,
+      &quot;email&quot;: &quot;rahul.sharma@example.com&quot;,
+      &quot;phone&quot;: &quot;+91 98765 43210&quot;,
+      &quot;interestedCourse&quot;: &quot;Java Full Stack Development&quot;,
+      &quot;education&quot;: &quot;B.Tech Computer Science&quot;,
+      &quot;city&quot;: &quot;Bangalore&quot;,
+      &quot;status&quot;: &quot;NEW&quot;,
+      &quot;assignedExecutor&quot;: null,
+      &quot;createdAt&quot;: &quot;2026-08-21T10:00:00Z&quot;
+    }
+  ]
+}</pre></td><td><b>200 OK</b></td></tr><tr><td><b>2. Lead Management</b></td><td><span class="method PUT">PUT</span></td><td><code>PUT /api/v1/leads/{leadId}/assign</code></td><td>ADMIN</td><td>Assigns or reassigns an Executor to a student lead</td><td><pre>{
+  &quot;executorId&quot;: &quot;exe-rec-1&quot;
+}</pre></td><td><pre>{
+  &quot;success&quot;: true,
+  &quot;message&quot;: &quot;Executor Vikram Mehta assigned successfully.&quot;,
+  &quot;data&quot;: {
+    &quot;leadId&quot;: &quot;lead-9901&quot;,
+    &quot;status&quot;: &quot;ASSIGNED&quot;,
+    &quot;executorId&quot;: &quot;exe-rec-1&quot;,
+    &quot;executorName&quot;: &quot;Vikram Mehta&quot;
+  }
+}</pre></td><td><b>200 OK</b></td></tr><tr><td><b>2. Lead Management</b></td><td><span class="method PUT">PUT</span></td><td><code>PUT /api/v1/leads/{leadId}/status</code></td><td>ADMIN, EXECUTOR</td><td>Updates lead pipeline status (NEW, ASSIGNED, CONTACTED, DEMO_SCHEDULED, INTERESTED, PAYMENT_PENDING, ENROLLED, etc.)</td><td><pre>{
+  &quot;status&quot;: &quot;CONTACTED&quot;,
+  &quot;notes&quot;: &quot;Spoke to student. Interested in Java Full Stack demo.&quot;
+}</pre></td><td><pre>{
+  &quot;success&quot;: true,
+  &quot;data&quot;: {
+    &quot;leadId&quot;: &quot;lead-9901&quot;,
+    &quot;status&quot;: &quot;CONTACTED&quot;,
+    &quot;updatedAt&quot;: &quot;2026-08-21T10:30:00Z&quot;
+  }
+}</pre></td><td><b>200 OK</b></td></tr><tr><td><b>3. Free Demos</b></td><td><span class="method POST">POST</span></td><td><code>POST /api/v1/demos</code></td><td>EXECUTOR</td><td>Schedules a live Google Meet course introduction demo for an assigned lead</td><td><pre>{
+  &quot;leadId&quot;: &quot;lead-9901&quot;,
+  &quot;courseId&quot;: &quot;course-1&quot;,
+  &quot;demoDate&quot;: &quot;2026-08-25&quot;,
+  &quot;demoTime&quot;: &quot;15:00:00&quot;,
+  &quot;meetingLink&quot;: &quot;https://meet.google.com/abc-demo-xyz&quot;,
+  &quot;notes&quot;: &quot;Full Stack Java roadmap &amp; Spring Boot overview.&quot;
+}</pre></td><td><pre>{
+  &quot;success&quot;: true,
+  &quot;data&quot;: {
+    &quot;demoId&quot;: &quot;demo-7701&quot;,
+    &quot;leadId&quot;: &quot;lead-9901&quot;,
+    &quot;studentName&quot;: &quot;Rahul Sharma&quot;,
+    &quot;courseName&quot;: &quot;Java Full Stack Development&quot;,
+    &quot;demoDate&quot;: &quot;2026-08-25&quot;,
+    &quot;demoTime&quot;: &quot;15:00:00&quot;,
+    &quot;meetingLink&quot;: &quot;https://meet.google.com/abc-demo-xyz&quot;,
+    &quot;status&quot;: &quot;SCHEDULED&quot;
+  }
+}</pre></td><td><b>201 Created</b></td></tr><tr><td><b>3. Free Demos</b></td><td><span class="method PUT">PUT</span></td><td><code>PUT /api/v1/demos/{demoId}/complete</code></td><td>EXECUTOR</td><td>Marks demo completed and optionally transitions lead to INTERESTED and PAYMENT_PENDING</td><td><pre>{
+  &quot;feedback&quot;: &quot;Student impressed with Spring Boot microservices demo.&quot;,
+  &quot;markInterested&quot;: true
+}</pre></td><td><pre>{
+  &quot;success&quot;: true,
+  &quot;message&quot;: &quot;Demo completed. Student lead updated to INTERESTED / PAYMENT_PENDING.&quot;,
+  &quot;data&quot;: {
+    &quot;demoId&quot;: &quot;demo-7701&quot;,
+    &quot;demoStatus&quot;: &quot;COMPLETED&quot;,
+    &quot;leadStatus&quot;: &quot;PAYMENT_PENDING&quot;
+  }
+}</pre></td><td><b>200 OK</b></td></tr><tr><td><b>4. Admin User Creation</b></td><td><span class="method POST">POST</span></td><td><code>POST /api/v1/admin/faculty</code></td><td>ADMIN</td><td>Creates a Faculty account and sends invitation credentials</td><td><pre>{
+  &quot;fullName&quot;: &quot;Dr. Rajesh Kumar&quot;,
+  &quot;email&quot;: &quot;rajesh.kumar@eduflow.com&quot;,
+  &quot;phone&quot;: &quot;+91 98111 22334&quot;
+}</pre></td><td><pre>{
+  &quot;success&quot;: true,
+  &quot;message&quot;: &quot;Faculty account created.&quot;,
+  &quot;data&quot;: {
+    &quot;profileId&quot;: &quot;fac-prof-8899&quot;,
+    &quot;facultyId&quot;: &quot;FAC-2055&quot;,
+    &quot;fullName&quot;: &quot;Dr. Rajesh Kumar&quot;,
+    &quot;email&quot;: &quot;rajesh.kumar@eduflow.com&quot;,
+    &quot;status&quot;: &quot;ACTIVE&quot;
+  }
+}</pre></td><td><b>201 Created</b></td></tr><tr><td><b>4. Admin User Creation</b></td><td><span class="method POST">POST</span></td><td><code>POST /api/v1/admin/executors</code></td><td>ADMIN</td><td>Creates an Executor account and sends invitation credentials</td><td><pre>{
+  &quot;fullName&quot;: &quot;Priya Sen&quot;,
+  &quot;email&quot;: &quot;priya.executor@eduflow.com&quot;,
+  &quot;phone&quot;: &quot;+91 98222 33445&quot;
+}</pre></td><td><pre>{
+  &quot;success&quot;: true,
+  &quot;message&quot;: &quot;Executor account created.&quot;,
+  &quot;data&quot;: {
+    &quot;profileId&quot;: &quot;exe-prof-7766&quot;,
+    &quot;executorId&quot;: &quot;EXE-3044&quot;,
+    &quot;fullName&quot;: &quot;Priya Sen&quot;,
+    &quot;email&quot;: &quot;priya.executor@eduflow.com&quot;,
+    &quot;status&quot;: &quot;ACTIVE&quot;
+  }
+}</pre></td><td><b>201 Created</b></td></tr><tr><td><b>5. Courses & Plans</b></td><td><span class="method POST">POST</span></td><td><code>POST /api/v1/courses</code></td><td>ADMIN</td><td>Creates a new course track in the platform</td><td><pre>{
+  &quot;name&quot;: &quot;Cloud Native DevOps &amp; Kubernetes Masterclass&quot;,
+  &quot;description&quot;: &quot;Production CI/CD pipelines, Terraform IaC, and AWS Kubernetes clusters.&quot;,
+  &quot;category&quot;: &quot;DevOps &amp; Cloud&quot;,
+  &quot;facultyId&quot;: &quot;fac-rec-1&quot;,
+  &quot;curriculum&quot;: [
+    {
+      &quot;module&quot;: &quot;Module 1&quot;,
+      &quot;title&quot;: &quot;Linux &amp; Bash Automation&quot;,
+      &quot;lectures&quot;: 8
+    },
+    {
+      &quot;module&quot;: &quot;Module 2&quot;,
+      &quot;title&quot;: &quot;Kubernetes Clusters&quot;,
+      &quot;lectures&quot;: 16
+    }
+  ]
+}</pre></td><td><pre>{
+  &quot;success&quot;: true,
+  &quot;data&quot;: {
+    &quot;courseId&quot;: &quot;course-990&quot;,
+    &quot;name&quot;: &quot;Cloud Native DevOps &amp; Kubernetes Masterclass&quot;,
+    &quot;status&quot;: &quot;ACTIVE&quot;
+  }
+}</pre></td><td><b>201 Created</b></td></tr><tr><td><b>5. Courses & Plans</b></td><td><span class="method POST">POST</span></td><td><code>POST /api/v1/courses/{courseId}/plans</code></td><td>ADMIN</td><td>Creates a course pricing plan with calendar duration in months</td><td><pre>{
+  &quot;name&quot;: &quot;3 Months Standard Plan&quot;,
+  &quot;durationMonths&quot;: 3,
+  &quot;price&quot;: 14999.0,
+  &quot;discount&quot;: 2000.0,
+  &quot;currency&quot;: &quot;INR&quot;
+}</pre></td><td><pre>{
+  &quot;success&quot;: true,
+  &quot;data&quot;: {
+    &quot;planId&quot;: &quot;plan-8811&quot;,
+    &quot;courseId&quot;: &quot;course-990&quot;,
+    &quot;name&quot;: &quot;3 Months Standard Plan&quot;,
+    &quot;durationMonths&quot;: 3,
+    &quot;price&quot;: 14999.0,
+    &quot;discount&quot;: 2000.0,
+    &quot;currency&quot;: &quot;INR&quot;
+  }
+}</pre></td><td><b>201 Created</b></td></tr><tr><td><b>6. Payments & Enrollments</b></td><td><span class="method POST">POST</span></td><td><code>POST /api/v1/payments/verify</code></td><td>STUDENT, SYSTEM</td><td>Verifies payment signature, activates course enrollment, and calculates calendar start and expiry dates</td><td><pre>{
+  &quot;studentProfileId&quot;: &quot;student-1&quot;,
+  &quot;courseId&quot;: &quot;course-1&quot;,
+  &quot;planId&quot;: &quot;plan-2&quot;,
+  &quot;amount&quot;: 12999.0,
+  &quot;paymentMethod&quot;: &quot;UPI (Razorpay)&quot;,
+  &quot;providerOrderId&quot;: &quot;ORD_99881&quot;,
+  &quot;providerPaymentId&quot;: &quot;PAY_77221&quot;,
+  &quot;providerSignature&quot;: &quot;valid_signature_hash&quot;
+}</pre></td><td><pre>{
+  &quot;success&quot;: true,
+  &quot;message&quot;: &quot;Payment verified. Course enrollment activated.&quot;,
+  &quot;data&quot;: {
+    &quot;transactionId&quot;: &quot;TXN-20260821-99112&quot;,
+    &quot;amount&quot;: 12999.0,
+    &quot;paymentStatus&quot;: &quot;SUCCESS&quot;,
+    &quot;enrollment&quot;: {
+      &quot;enrollmentId&quot;: &quot;enr-5544&quot;,
+      &quot;startDate&quot;: &quot;2026-08-21&quot;,
+      &quot;expiryDate&quot;: &quot;2026-11-21&quot;,
+      &quot;status&quot;: &quot;ACTIVE&quot;
+    }
+  }
+}</pre></td><td><b>200 OK</b></td></tr><tr><td><b>7. Lectures & Google Meet</b></td><td><span class="method POST">POST</span></td><td><code>POST /api/v1/lectures</code></td><td>FACULTY, ADMIN</td><td>Schedules a live lecture or uploads recorded session</td><td><pre>{
+  &quot;courseId&quot;: &quot;course-1&quot;,
+  &quot;facultyId&quot;: &quot;fac-rec-1&quot;,
+  &quot;title&quot;: &quot;Spring Boot 3 &amp; Dependency Injection Deep Dive&quot;,
+  &quot;description&quot;: &quot;Inversion of Control, Beans lifecycle, and annotations.&quot;,
+  &quot;lectureDate&quot;: &quot;2026-08-26&quot;,
+  &quot;startTime&quot;: &quot;18:00:00&quot;,
+  &quot;endTime&quot;: &quot;19:30:00&quot;,
+  &quot;lectureUrl&quot;: &quot;https://meet.google.com/abc-spring-boot&quot;,
+  &quot;recordingUrl&quot;: &quot;https://cdn.eduflow.internal/recordings/spring-boot.mp4&quot;,
+  &quot;isDownloadable&quot;: true
+}</pre></td><td><pre>{
+  &quot;success&quot;: true,
+  &quot;data&quot;: {
+    &quot;lectureId&quot;: &quot;lec-4411&quot;,
+    &quot;title&quot;: &quot;Spring Boot 3 &amp; Dependency Injection Deep Dive&quot;,
+    &quot;status&quot;: &quot;SCHEDULED&quot;
+  }
+}</pre></td><td><b>201 Created</b></td></tr><tr><td><b>7. Lectures & Google Meet</b></td><td><span class="method GET">GET</span></td><td><code>GET /api/v1/lectures/{lectureId}/access</code></td><td>STUDENT, FACULTY, ADMIN</td><td>Executes 8-step server-side access validation and returns live Google Meet & recording URLs if valid</td><td><pre>Header:
+Authorization: Bearer &lt;JWT_TOKEN&gt;</pre></td><td><pre>{
+  &quot;hasAccess&quot;: true,
+  &quot;reason&quot;: &quot;Access granted&quot;,
+  &quot;lectureUrl&quot;: &quot;https://meet.google.com/abc-spring-boot&quot;,
+  &quot;recordingUrl&quot;: &quot;https://cdn.eduflow.internal/recordings/spring-boot.mp4&quot;
+}</pre></td><td><b>200 OK</b></td></tr></tbody></table></body></html>

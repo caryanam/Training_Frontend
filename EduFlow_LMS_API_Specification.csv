@@ -1,0 +1,234 @@
+﻿Module,Endpoint,Method,Roles,Description,Request_Payload,Response_Payload,HTTP_Status
+1. Authentication,POST /api/v1/auth/register,POST,Public,Registers a new student and automatically creates a StudentLead with status NEW,"{
+  ""fullName"": ""Rahul Sharma"",
+  ""email"": ""rahul.sharma@example.com"",
+  ""phone"": ""+91 98765 43210"",
+  ""password"": ""Password@123"",
+  ""interestedCourse"": ""Java Full Stack Development"",
+  ""education"": ""B.Tech Computer Science"",
+  ""city"": ""Bangalore""
+}","{
+  ""success"": true,
+  ""message"": ""Registration successful. Admissions executor will contact you for a free demo."",
+  ""data"": {
+    ""profileId"": ""8f3b2c1a-5555-4444-8888-111122223333"",
+    ""studentId"": ""STU-1005"",
+    ""leadId"": ""lead-9901"",
+    ""fullName"": ""Rahul Sharma"",
+    ""email"": ""rahul.sharma@example.com"",
+    ""phone"": ""+91 98765 43210"",
+    ""role"": ""STUDENT"",
+    ""leadStatus"": ""NEW""
+  }
+}",201 Created
+1. Authentication,POST /api/v1/auth/login,POST,Public (All Roles),Authenticates user and returns JWT bearer token with embedded role claims,"{
+  ""email"": ""admin@eduflow.com"",
+  ""password"": ""AdminPassword123""
+}","{
+  ""success"": true,
+  ""token"": ""eyJhbGciOiJIUzI1NiJ9..."",
+  ""tokenType"": ""Bearer"",
+  ""user"": {
+    ""profileId"": ""admin-1"",
+    ""fullName"": ""Siddharth Oberoi"",
+    ""email"": ""admin@eduflow.com"",
+    ""role"": ""ADMIN""
+  }
+}",200 OK
+2. Lead Management,GET /api/v1/leads,GET,"ADMIN, EXECUTOR","Retrieves student leads filterable by status, search term, and executor ID",Query Params: ?status=NEW&search=Rahul&executorId=exe-rec-1,"{
+  ""success"": true,
+  ""count"": 1,
+  ""data"": [
+    {
+      ""leadId"": ""lead-9901"",
+      ""studentId"": ""STU-1005"",
+      ""profileId"": ""8f3b2c1a-5555-4444-8888-111122223333"",
+      ""fullName"": ""Rahul Sharma"",
+      ""email"": ""rahul.sharma@example.com"",
+      ""phone"": ""+91 98765 43210"",
+      ""interestedCourse"": ""Java Full Stack Development"",
+      ""education"": ""B.Tech Computer Science"",
+      ""city"": ""Bangalore"",
+      ""status"": ""NEW"",
+      ""assignedExecutor"": null,
+      ""createdAt"": ""2026-08-21T10:00:00Z""
+    }
+  ]
+}",200 OK
+2. Lead Management,PUT /api/v1/leads/{leadId}/assign,PUT,ADMIN,Assigns or reassigns an Executor to a student lead,"{
+  ""executorId"": ""exe-rec-1""
+}","{
+  ""success"": true,
+  ""message"": ""Executor Vikram Mehta assigned successfully."",
+  ""data"": {
+    ""leadId"": ""lead-9901"",
+    ""status"": ""ASSIGNED"",
+    ""executorId"": ""exe-rec-1"",
+    ""executorName"": ""Vikram Mehta""
+  }
+}",200 OK
+2. Lead Management,PUT /api/v1/leads/{leadId}/status,PUT,"ADMIN, EXECUTOR","Updates lead pipeline status (NEW, ASSIGNED, CONTACTED, DEMO_SCHEDULED, INTERESTED, PAYMENT_PENDING, ENROLLED, etc.)","{
+  ""status"": ""CONTACTED"",
+  ""notes"": ""Spoke to student. Interested in Java Full Stack demo.""
+}","{
+  ""success"": true,
+  ""data"": {
+    ""leadId"": ""lead-9901"",
+    ""status"": ""CONTACTED"",
+    ""updatedAt"": ""2026-08-21T10:30:00Z""
+  }
+}",200 OK
+3. Free Demos,POST /api/v1/demos,POST,EXECUTOR,Schedules a live Google Meet course introduction demo for an assigned lead,"{
+  ""leadId"": ""lead-9901"",
+  ""courseId"": ""course-1"",
+  ""demoDate"": ""2026-08-25"",
+  ""demoTime"": ""15:00:00"",
+  ""meetingLink"": ""https://meet.google.com/abc-demo-xyz"",
+  ""notes"": ""Full Stack Java roadmap & Spring Boot overview.""
+}","{
+  ""success"": true,
+  ""data"": {
+    ""demoId"": ""demo-7701"",
+    ""leadId"": ""lead-9901"",
+    ""studentName"": ""Rahul Sharma"",
+    ""courseName"": ""Java Full Stack Development"",
+    ""demoDate"": ""2026-08-25"",
+    ""demoTime"": ""15:00:00"",
+    ""meetingLink"": ""https://meet.google.com/abc-demo-xyz"",
+    ""status"": ""SCHEDULED""
+  }
+}",201 Created
+3. Free Demos,PUT /api/v1/demos/{demoId}/complete,PUT,EXECUTOR,Marks demo completed and optionally transitions lead to INTERESTED and PAYMENT_PENDING,"{
+  ""feedback"": ""Student impressed with Spring Boot microservices demo."",
+  ""markInterested"": true
+}","{
+  ""success"": true,
+  ""message"": ""Demo completed. Student lead updated to INTERESTED / PAYMENT_PENDING."",
+  ""data"": {
+    ""demoId"": ""demo-7701"",
+    ""demoStatus"": ""COMPLETED"",
+    ""leadStatus"": ""PAYMENT_PENDING""
+  }
+}",200 OK
+4. Admin User Creation,POST /api/v1/admin/faculty,POST,ADMIN,Creates a Faculty account and sends invitation credentials,"{
+  ""fullName"": ""Dr. Rajesh Kumar"",
+  ""email"": ""rajesh.kumar@eduflow.com"",
+  ""phone"": ""+91 98111 22334""
+}","{
+  ""success"": true,
+  ""message"": ""Faculty account created."",
+  ""data"": {
+    ""profileId"": ""fac-prof-8899"",
+    ""facultyId"": ""FAC-2055"",
+    ""fullName"": ""Dr. Rajesh Kumar"",
+    ""email"": ""rajesh.kumar@eduflow.com"",
+    ""status"": ""ACTIVE""
+  }
+}",201 Created
+4. Admin User Creation,POST /api/v1/admin/executors,POST,ADMIN,Creates an Executor account and sends invitation credentials,"{
+  ""fullName"": ""Priya Sen"",
+  ""email"": ""priya.executor@eduflow.com"",
+  ""phone"": ""+91 98222 33445""
+}","{
+  ""success"": true,
+  ""message"": ""Executor account created."",
+  ""data"": {
+    ""profileId"": ""exe-prof-7766"",
+    ""executorId"": ""EXE-3044"",
+    ""fullName"": ""Priya Sen"",
+    ""email"": ""priya.executor@eduflow.com"",
+    ""status"": ""ACTIVE""
+  }
+}",201 Created
+5. Courses & Plans,POST /api/v1/courses,POST,ADMIN,Creates a new course track in the platform,"{
+  ""name"": ""Cloud Native DevOps & Kubernetes Masterclass"",
+  ""description"": ""Production CI/CD pipelines, Terraform IaC, and AWS Kubernetes clusters."",
+  ""category"": ""DevOps & Cloud"",
+  ""facultyId"": ""fac-rec-1"",
+  ""curriculum"": [
+    {
+      ""module"": ""Module 1"",
+      ""title"": ""Linux & Bash Automation"",
+      ""lectures"": 8
+    },
+    {
+      ""module"": ""Module 2"",
+      ""title"": ""Kubernetes Clusters"",
+      ""lectures"": 16
+    }
+  ]
+}","{
+  ""success"": true,
+  ""data"": {
+    ""courseId"": ""course-990"",
+    ""name"": ""Cloud Native DevOps & Kubernetes Masterclass"",
+    ""status"": ""ACTIVE""
+  }
+}",201 Created
+5. Courses & Plans,POST /api/v1/courses/{courseId}/plans,POST,ADMIN,Creates a course pricing plan with calendar duration in months,"{
+  ""name"": ""3 Months Standard Plan"",
+  ""durationMonths"": 3,
+  ""price"": 14999.0,
+  ""discount"": 2000.0,
+  ""currency"": ""INR""
+}","{
+  ""success"": true,
+  ""data"": {
+    ""planId"": ""plan-8811"",
+    ""courseId"": ""course-990"",
+    ""name"": ""3 Months Standard Plan"",
+    ""durationMonths"": 3,
+    ""price"": 14999.0,
+    ""discount"": 2000.0,
+    ""currency"": ""INR""
+  }
+}",201 Created
+6. Payments & Enrollments,POST /api/v1/payments/verify,POST,"STUDENT, SYSTEM","Verifies payment signature, activates course enrollment, and calculates calendar start and expiry dates","{
+  ""studentProfileId"": ""student-1"",
+  ""courseId"": ""course-1"",
+  ""planId"": ""plan-2"",
+  ""amount"": 12999.0,
+  ""paymentMethod"": ""UPI (Razorpay)"",
+  ""providerOrderId"": ""ORD_99881"",
+  ""providerPaymentId"": ""PAY_77221"",
+  ""providerSignature"": ""valid_signature_hash""
+}","{
+  ""success"": true,
+  ""message"": ""Payment verified. Course enrollment activated."",
+  ""data"": {
+    ""transactionId"": ""TXN-20260821-99112"",
+    ""amount"": 12999.0,
+    ""paymentStatus"": ""SUCCESS"",
+    ""enrollment"": {
+      ""enrollmentId"": ""enr-5544"",
+      ""startDate"": ""2026-08-21"",
+      ""expiryDate"": ""2026-11-21"",
+      ""status"": ""ACTIVE""
+    }
+  }
+}",200 OK
+7. Lectures & Google Meet,POST /api/v1/lectures,POST,"FACULTY, ADMIN",Schedules a live lecture or uploads recorded session,"{
+  ""courseId"": ""course-1"",
+  ""facultyId"": ""fac-rec-1"",
+  ""title"": ""Spring Boot 3 & Dependency Injection Deep Dive"",
+  ""description"": ""Inversion of Control, Beans lifecycle, and annotations."",
+  ""lectureDate"": ""2026-08-26"",
+  ""startTime"": ""18:00:00"",
+  ""endTime"": ""19:30:00"",
+  ""lectureUrl"": ""https://meet.google.com/abc-spring-boot"",
+  ""recordingUrl"": ""https://cdn.eduflow.internal/recordings/spring-boot.mp4"",
+  ""isDownloadable"": true
+}","{
+  ""success"": true,
+  ""data"": {
+    ""lectureId"": ""lec-4411"",
+    ""title"": ""Spring Boot 3 & Dependency Injection Deep Dive"",
+    ""status"": ""SCHEDULED""
+  }
+}",201 Created
+7. Lectures & Google Meet,GET /api/v1/lectures/{lectureId}/access,GET,"STUDENT, FACULTY, ADMIN",Executes 8-step server-side access validation and returns live Google Meet & recording URLs if valid,None (Header: Authorization Bearer JWT Token),"{
+  ""hasAccess"": true,
+  ""reason"": ""Access granted"",
+  ""lectureUrl"": ""https://meet.google.com/abc-spring-boot"",
+  ""recordingUrl"": ""https://cdn.eduflow.internal/recordings/spring-boot.mp4""
+}",200 OK

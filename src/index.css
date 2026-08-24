@@ -1,0 +1,337 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/geist";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+    --font-heading: var(--font-sans);
+    --font-sans: 'Geist Variable', sans-serif;
+    --color-sidebar-ring: var(--sidebar-ring);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar: var(--sidebar);
+    --color-chart-5: var(--chart-5);
+    --color-chart-4: var(--chart-4);
+    --color-chart-3: var(--chart-3);
+    --color-chart-2: var(--chart-2);
+    --color-chart-1: var(--chart-1);
+    --color-ring: var(--ring);
+    --color-input: var(--input);
+    --color-border: var(--border);
+    --color-destructive: var(--destructive);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-accent: var(--accent);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-muted: var(--muted);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-secondary: var(--secondary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-primary: var(--primary);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-popover: var(--popover);
+    --color-card-foreground: var(--card-foreground);
+    --color-card: var(--card);
+    --color-foreground: var(--foreground);
+    --color-background: var(--background);
+    --radius-sm: calc(var(--radius) * 0.6);
+    --radius-md: calc(var(--radius) * 0.8);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) * 1.4);
+    --radius-2xl: calc(var(--radius) * 1.8);
+    --radius-3xl: calc(var(--radius) * 2.2);
+    --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* ============================================================
+   LIGHT THEME — Vibrant Modern LMS
+   ============================================================ */
+:root {
+    --background: oklch(0.985 0.005 264);
+    --foreground: oklch(0.14 0.03 264);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.14 0.03 264);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.14 0.03 264);
+    --primary: oklch(0.52 0.26 270);
+    --primary-foreground: oklch(0.99 0 0);
+    --secondary: oklch(0.95 0.02 270);
+    --secondary-foreground: oklch(0.25 0.06 270);
+    --muted: oklch(0.96 0.01 264);
+    --muted-foreground: oklch(0.48 0.03 264);
+    --accent: oklch(0.93 0.04 270);
+    --accent-foreground: oklch(0.25 0.06 270);
+    --destructive: oklch(0.58 0.24 25);
+    --border: oklch(0.90 0.015 264);
+    --input: oklch(0.90 0.015 264);
+    --ring: oklch(0.52 0.26 270);
+    --chart-1: oklch(0.52 0.26 270);
+    --chart-2: oklch(0.65 0.22 160);
+    --chart-3: oklch(0.70 0.20 50);
+    --chart-4: oklch(0.60 0.25 320);
+    --chart-5: oklch(0.72 0.18 195);
+    --radius: 0.75rem;
+    --sidebar: oklch(0.98 0.008 264);
+    --sidebar-foreground: oklch(0.14 0.03 264);
+    --sidebar-primary: oklch(0.52 0.26 270);
+    --sidebar-primary-foreground: oklch(0.99 0 0);
+    --sidebar-accent: oklch(0.93 0.04 270);
+    --sidebar-accent-foreground: oklch(0.25 0.06 270);
+    --sidebar-border: oklch(0.90 0.015 264);
+    --sidebar-ring: oklch(0.52 0.26 270);
+}
+
+/* ============================================================
+   DARK THEME — Deep Cyber Obsidian with Holographic Neon Accents
+   ============================================================ */
+.dark {
+    --background: oklch(0.12 0.02 265);
+    --foreground: oklch(0.99 0.005 265);
+    --card: oklch(0.16 0.025 265);
+    --card-foreground: oklch(0.99 0.005 265);
+    --popover: oklch(0.16 0.025 265);
+    --popover-foreground: oklch(0.99 0.005 265);
+    --primary: oklch(0.62 0.26 270);
+    --primary-foreground: oklch(0.99 0 0);
+    --secondary: oklch(0.22 0.03 265);
+    --secondary-foreground: oklch(0.99 0.005 265);
+    --muted: oklch(0.20 0.025 265);
+    --muted-foreground: oklch(0.70 0.02 265);
+    --accent: oklch(0.22 0.04 270);
+    --accent-foreground: oklch(0.99 0.005 265);
+    --destructive: oklch(0.65 0.22 25);
+    --border: oklch(1 0 0 / 12%);
+    --input: oklch(1 0 0 / 15%);
+    --ring: oklch(0.62 0.26 270);
+    --chart-1: oklch(0.62 0.26 270);
+    --chart-2: oklch(0.70 0.20 160);
+    --chart-3: oklch(0.75 0.18 50);
+    --chart-4: oklch(0.68 0.22 320);
+    --chart-5: oklch(0.78 0.16 195);
+    --sidebar: oklch(0.14 0.022 265);
+    --sidebar-foreground: oklch(0.99 0.005 265);
+    --sidebar-primary: oklch(0.62 0.26 270);
+    --sidebar-primary-foreground: oklch(0.99 0 0);
+    --sidebar-accent: oklch(0.22 0.04 270);
+    --sidebar-accent-foreground: oklch(0.99 0.005 265);
+    --sidebar-border: oklch(1 0 0 / 12%);
+    --sidebar-ring: oklch(0.62 0.26 270);
+}
+
+@layer base {
+    * {
+        @apply border-border outline-ring/50;
+    }
+    body {
+        @apply bg-background text-foreground antialiased selection:bg-primary selection:text-primary-foreground;
+    }
+    html {
+        @apply font-sans scroll-smooth;
+    }
+}
+
+/* ============================================================
+   3D ANIMATION KEYFRAMES & MICRO-INTERACTIONS
+   ============================================================ */
+@keyframes float3d {
+    0%, 100% {
+        transform: translateY(0px) rotateX(0deg) rotateY(0deg);
+    }
+    50% {
+        transform: translateY(-8px) rotateX(2deg) rotateY(-2deg);
+    }
+}
+
+@keyframes floatOrb {
+    0%, 100% {
+        transform: translate(0px, 0px) scale(1);
+    }
+    33% {
+        transform: translate(25px, -35px) scale(1.08);
+    }
+    66% {
+        transform: translate(-20px, 20px) scale(0.94);
+    }
+}
+
+@keyframes pulseGlowRing {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 12px rgba(99, 102, 241, 0);
+    }
+}
+
+@keyframes holographicShimmer {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+@keyframes spin3dSlow {
+    0% {
+        transform: rotateY(0deg) rotateX(0deg);
+    }
+    50% {
+        transform: rotateY(180deg) rotateX(10deg);
+    }
+    100% {
+        transform: rotateY(360deg) rotateX(0deg);
+    }
+}
+
+/* ============================================================
+   3D & GLASS UTILITY CLASSES
+   ============================================================ */
+.animate-float-3d {
+    animation: float3d 6s ease-in-out infinite;
+}
+
+.animate-float-orb {
+    animation: floatOrb 12s ease-in-out infinite;
+}
+
+.animate-glow-ring {
+    animation: pulseGlowRing 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-shimmer {
+    background-size: 200% auto;
+    animation: holographicShimmer 4s linear infinite;
+}
+
+.perspective-1000 {
+    perspective: 1000px;
+}
+
+.perspective-2000 {
+    perspective: 2000px;
+}
+
+.preserve-3d {
+    transform-style: preserve-3d;
+}
+
+.glass-panel {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.05), 0 0 1px 1px rgba(255, 255, 255, 0.8) inset;
+}
+
+.dark .glass-panel {
+    background: rgba(26, 26, 46, 0.75);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5), 0 0 1px 1px rgba(255, 255, 255, 0.06) inset;
+}
+
+.card-3d-hover {
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform-style: preserve-3d;
+}
+
+.card-3d-hover:hover {
+    transform: translateY(-6px) scale(1.015);
+    box-shadow: 0 25px 50px -12px rgba(99, 102, 241, 0.25);
+}
+
+.gradient-border {
+    position: relative;
+    border-radius: var(--radius-2xl);
+    background: linear-gradient(var(--card), var(--card)) padding-box,
+                linear-gradient(135deg, #6366f1, #a855f7, #ec4899) border-box;
+    border: 2px solid transparent;
+}
+
+.glow-primary {
+    box-shadow: 0 0 30px -5px rgba(99, 102, 241, 0.35);
+}
+
+.glow-emerald {
+    box-shadow: 0 0 30px -5px rgba(16, 185, 129, 0.35);
+}
+
+.glow-amber {
+    box-shadow: 0 0 30px -5px rgba(245, 158, 11, 0.35);
+}
+
+.glow-rose {
+    box-shadow: 0 0 30px -5px rgba(244, 63, 94, 0.35);
+}
+
+.text-gradient-hero {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 40%, #db2777 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.dark .text-gradient-hero {
+    background: linear-gradient(135deg, #818cf8 0%, #c084fc 40%, #f472b6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* ============================================================
+   CUSTOM STYLIZED NEON SCROLLBAR
+   ============================================================ */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(99, 102, 241, 0.4), rgba(168, 85, 247, 0.5));
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, rgba(99, 102, 241, 0.8), rgba(168, 85, 247, 0.9));
+}
+
+/* ============================================================
+   SCROLL REVEAL UTILITY CLASSES
+   ============================================================ */
+.scroll-reveal {
+    opacity: 0;
+    transform: translateY(30px) scale(0.98);
+    transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: opacity, transform;
+}
+
+.scroll-reveal-visible {
+    opacity: 1;
+    transform: translateY(0px) scale(1);
+}
+
+.scroll-reveal-delay-1 {
+    transition-delay: 0.1s;
+}
+
+.scroll-reveal-delay-2 {
+    transition-delay: 0.2s;
+}
+
+.scroll-reveal-delay-3 {
+    transition-delay: 0.3s;
+}
