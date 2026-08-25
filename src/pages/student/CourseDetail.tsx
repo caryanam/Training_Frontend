@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDataStore } from "@/lib/store";
+import { api } from "@/lib/api";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import {
@@ -16,6 +17,7 @@ import {
   CreditCard,
   PlayCircle,
   Award,
+  Loader2,
 } from "lucide-react";
 
 export default function CourseDetail() {
@@ -27,17 +29,72 @@ export default function CourseDetail() {
   const [selectedPlanId, setSelectedPlanId] = useState<string>("");
   const [processing, setProcessing] = useState(false);
   const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
+  const [springCourse, setSpringCourse] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  const storeCourse = courseId ? store.getCourse(courseId) : null;
+
+  useEffect(() => {
+    if (!courseId) return;
+    setLoading(true);
+    api.getAllCourses()
+      .then((res) => {
+        if (res.success && res.data) {
+          const found = res.data.find(
+            (c: any) => String(c.id) === courseId || c.courseId === courseId || c.courseCode === courseId
+          );
+          if (found) {
+            setSpringCourse(found);
+          }
+        }
+      })
+      .finally(() => setLoading(false));
+  }, [courseId]);
 
   if (!courseId) return null;
 
-  const course = store.getCourse(courseId);
-  const plans = store.getPlansForCourse(courseId);
-  const lectures = store.getLecturesForCourse(courseId);
+  const rawCourse = storeCourse || (springCourse ? {
+    id: String(springCourse.id || springCourse.courseId || courseId),
+    name: springCourse.title || springCourse.name,
+    category: springCourse.category?.replace(/_/g, " ") || "Software Engineering",
+    description: springCourse.description || "Master industry standards through hands-on architectures and real-world assignments.",
+    status: (springCourse.status || "ACTIVE").toLowerCase(),
+    facultyName: springCourse.facultyName || "Dr. Rajesh Sharma",
+    facultyId: springCourse.facultyId || "FAC-2001",
+    facultyEmail: "faculty@codextechnology.com",
+  } : null);
+
+  const rawPlans = storeCourse
+    ? store.getPlansForCourse(courseId)
+    : (springCourse?.plans && springCourse.plans.length > 0)
+    ? springCourse.plans.map((p: any) => ({
+        id: String(p.id),
+        name: p.durationLabel || `${p.duration?.replace(/_/g, " ") || "1 Month"} Plan`,
+        duration_months: p.duration === "THREE_MONTHS" ? 3 : p.duration === "TWO_MONTHS" ? 2 : 1,
+        price: p.price || 7000,
+        discount: 0,
+      }))
+    : [
+        { id: "p1", name: "1 Month Plan", duration_months: 1, price: 7000, discount: 0 },
+        { id: "p2", name: "2 Months Plan", duration_months: 2, price: 14000, discount: 1000 },
+        { id: "p3", name: "3 Months Plan", duration_months: 3, price: 21000, discount: 2000 },
+      ];
+
+  const rawLectures = storeCourse
+    ? store.getLecturesForCourse(courseId)
+    : [
+        { id: "lec-1", title: "Module 1: Architecture Overview & Tooling", description: "Development environment setup, core design patterns, and foundational concepts.", status: "completed" },
+        { id: "lec-2", title: "Module 2: Core Components & Data Modeling", description: "Deep dive into state management, schema design, and microservice communications.", status: "live" },
+        { id: "lec-3", title: "Module 3: Production Deployment & CI/CD", description: "Automated pipelines, testing frameworks, containerization, and monitoring.", status: "scheduled" },
+      ];
+
   const enrollments = profile ? store.getEnrollmentsForProfile(profile.id) : [];
-  const enrollment = enrollments.find((e) => e.course_id === courseId);
+  const enrollment = enrollments.find(
+    (e) => e.course_id === courseId || (springCourse?.courseCode && e.course_id === springCourse.courseCode)
+  );
   const isEnrolled = Boolean(enrollment);
 
-  const selectedPlan = plans.find((p) => p.id === (selectedPlanId || plans[0]?.id)) || plans[0];
+  const selectedPlan = rawPlans.find((p: any) => p.id === (selectedPlanId || rawPlans[0]?.id)) || rawPlans[0];
 
   const handleEnrollment = () => {
     if (!profile || !selectedPlan) return;
@@ -45,26 +102,38 @@ export default function CourseDetail() {
 
     setTimeout(() => {
       // Trigger complete verified enrollment flow
-      const finalAmount = Math.max(0, selectedPlan.price - selectedPlan.discount);
+      const finalAmount = Math.max(0, selectedPlan.price - (selectedPlan.discount || 0));
       store.processSuccessfulEnrollment({
         studentProfileId: profile.id,
         courseId,
         planId: selectedPlan.id,
         amount: finalAmount,
-        paymentMethod: "UPI / NetBanking (Mock Payment)",
+        paymentMethod: "UPI / NetBanking (Instant Activation)",
       });
 
       setProcessing(false);
       setCheckoutModalOpen(false);
       navigate("/student/lectures");
-    }, 1200);
+    }, 1000);
   };
 
-  if (!course) {
+  if (loading && !rawCourse) {
     return (
-      <div className="p-12 text-center">
-        <h2 className="text-xl font-bold">Course Not Found</h2>
-        <Link to="/student/courses" className="text-primary mt-2 inline-block">Back to Courses</Link>
+      <div className="flex items-center justify-center py-24">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-3 text-sm text-muted-foreground">Loading course details...</span>
+      </div>
+    );
+  }
+
+  if (!rawCourse) {
+    return (
+      <div className="p-12 text-center space-y-3">
+        <h2 className="text-xl font-bold text-foreground">Course Not Found</h2>
+        <p className="text-xs text-muted-foreground">The requested course could not be located in the catalog.</p>
+        <Link to="/student/courses" className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground shadow-xs">
+          <ArrowLeft className="h-4 w-4" /> Back to Courses
+        </Link>
       </div>
     );
   }
@@ -83,19 +152,19 @@ export default function CourseDetail() {
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-950 via-slate-900 to-indigo-900 p-6 sm:p-10 text-white shadow-xl">
           <div className="max-w-3xl">
             <span className="inline-block rounded-full bg-indigo-500/20 px-3 py-1 text-xs font-semibold text-indigo-300 ring-1 ring-indigo-400/30 mb-3">
-              {course.category || "Professional Track"}
+              {rawCourse.category || "Professional Track"}
             </span>
             <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight mb-4">
-              {course.name}
+              {rawCourse.name}
             </h1>
             <p className="text-sm sm:text-base text-indigo-200/80 leading-relaxed max-w-2xl mb-6">
-              {course.description || "Master industry standards through hands-on architectures and real-world assignments."}
+              {rawCourse.description || "Master industry standards through hands-on architectures and real-world assignments."}
             </p>
 
             <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-xs sm:text-sm text-indigo-200">
               <span className="flex items-center gap-1.5">
                 <BookOpen className="h-4 w-4 text-indigo-400" />
-                {lectures.length} Comprehensive Modules
+                {rawLectures.length} Comprehensive Modules
               </span>
               <span className="flex items-center gap-1.5">
                 <Award className="h-4 w-4 text-indigo-400" />
@@ -123,12 +192,12 @@ export default function CourseDetail() {
               </div>
               <div>
                 <div className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Course Lead Faculty & Mentor</div>
-                <div className="text-base font-bold text-foreground">{(course as any).facultyName || "Dr. Rajesh Sharma"}</div>
-                <div className="text-xs text-muted-foreground">Faculty Code: <span className="font-mono text-indigo-500 font-bold">{(course as any).facultyId || "FAC-2001"}</span></div>
+                <div className="text-base font-bold text-foreground">{(rawCourse as any).facultyName || "Dr. Rajesh Sharma"}</div>
+                <div className="text-xs text-muted-foreground">Faculty Code: <span className="font-mono text-indigo-500 font-bold">{(rawCourse as any).facultyId || "FAC-2001"}</span></div>
               </div>
             </div>
             <a
-              href={`mailto:${(course as any).facultyEmail || "faculty@codextechnology.com"}`}
+              href={`mailto:${(rawCourse as any).facultyEmail || "faculty@codextechnology.com"}`}
               className="inline-flex items-center gap-1.5 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-3.5 py-2 text-xs font-bold text-indigo-600 dark:text-indigo-300 hover:bg-indigo-600 hover:text-white transition-all shrink-0 cursor-pointer"
             >
               Contact Faculty
@@ -141,9 +210,9 @@ export default function CourseDetail() {
             </h2>
 
             <div className="divide-y divide-border">
-              {lectures.map((lec, idx) => (
+              {rawLectures.map((lec: any, idx: number) => (
                 <div
-                  key={lec.id}
+                  key={lec.id || idx}
                   className="flex items-center justify-between py-4 hover:bg-accent/40 px-2 rounded-lg transition-colors"
                 >
                   <div className="flex items-center gap-3">
@@ -159,7 +228,7 @@ export default function CourseDetail() {
                   </div>
 
                   <div className="flex items-center gap-3 shrink-0">
-                    <StatusBadge status={lec.status} />
+                    <StatusBadge status={lec.status || "scheduled"} />
                     {isEnrolled && (
                       <Link
                         to={`/student/lecture/${lec.id}`}
@@ -187,9 +256,9 @@ export default function CourseDetail() {
             </p>
 
             <div className="space-y-3 mb-6">
-              {plans.map((plan) => {
-                const isSelected = (selectedPlanId || plans[0]?.id) === plan.id;
-                const finalPrice = Math.max(0, plan.price - plan.discount);
+              {rawPlans.map((plan: any) => {
+                const isSelected = (selectedPlanId || rawPlans[0]?.id) === plan.id;
+                const finalPrice = Math.max(0, plan.price - (plan.discount || 0));
 
                 return (
                   <div
@@ -252,7 +321,7 @@ export default function CourseDetail() {
               <button
                 type="button"
                 onClick={() => setCheckoutModalOpen(true)}
-                className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary font-semibold text-xs text-primary-foreground shadow-md hover:bg-primary/90 transition-all"
+                className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary font-semibold text-xs text-primary-foreground shadow-md hover:bg-primary/90 transition-all cursor-pointer"
               >
                 <CreditCard className="h-4 w-4" /> Enroll in Selected Plan
               </button>
@@ -291,7 +360,7 @@ export default function CourseDetail() {
             <div className="rounded-xl border border-border bg-muted/40 p-4 space-y-2 text-xs mb-6">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Course:</span>
-                <span className="font-semibold text-foreground">{course.name}</span>
+                <span className="font-semibold text-foreground">{rawCourse.name}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Selected Plan:</span>
@@ -322,9 +391,10 @@ export default function CourseDetail() {
                 type="button"
                 disabled={processing}
                 onClick={handleEnrollment}
-                className="flex-1 rounded-xl bg-primary py-2.5 text-xs font-bold text-primary-foreground shadow-md hover:bg-primary/90 disabled:opacity-50"
+                className="flex-1 rounded-xl bg-primary py-2.5 text-xs font-bold text-primary-foreground shadow-md hover:bg-primary/90 disabled:opacity-50 flex items-center justify-center gap-1.5"
               >
-                {processing ? "Verifying Payment..." : "Pay & Activate"}
+                {processing && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                {processing ? "Activating..." : "Pay & Activate"}
               </button>
             </div>
           </div>

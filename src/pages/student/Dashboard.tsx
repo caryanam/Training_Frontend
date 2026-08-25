@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDataStore } from "@/lib/store";
-import { formatCurrency, getDaysRemaining, formatDate } from "@/lib/utils";
+import { formatCurrency, getDaysRemaining, formatDate, formatExternalUrl } from "@/lib/utils";
 import { StatsCard } from "@/components/shared/StatsCard";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -103,14 +103,14 @@ export default function StudentDashboard() {
     <div className="space-y-6">
       {/* Upcoming Demo Card for Student */}
       {activeUpcomingDemo && (
-        <div className="rounded-2xl border border-indigo-500/30 bg-gradient-to-r from-indigo-950 via-slate-900 to-indigo-900 p-6 shadow-xl text-white">
+        <div className="rounded-2xl border border-indigo-400/40 bg-gradient-to-r from-indigo-950 via-slate-900 to-indigo-900 p-6 shadow-xl text-white">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/20 border border-indigo-400/30 px-3 py-1 text-xs font-bold text-indigo-300">
-                  <Video className="h-3.5 w-3.5" /> Upcoming Demo
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/30 border border-indigo-300/50 px-3 py-1 text-xs font-extrabold text-indigo-100">
+                  <Video className="h-3.5 w-3.5 text-indigo-200" /> Upcoming Demo
                 </span>
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 px-2.5 py-0.5 text-xs font-bold text-emerald-400 uppercase">
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/30 border border-emerald-300/50 px-2.5 py-0.5 text-xs font-extrabold text-emerald-200 uppercase">
                   {activeUpcomingDemo.status || "Scheduled"}
                 </span>
               </div>
@@ -119,19 +119,19 @@ export default function StudentDashboard() {
                 {activeUpcomingDemo.courseName || "Full Stack Web Development"}
               </h2>
 
-              <div className="flex flex-wrap items-center gap-4 text-xs text-indigo-200/90 pt-1">
-                <div className="flex items-center gap-1.5">
-                  <Calendar className="h-4 w-4 text-amber-400" />
-                  <span>Date: <strong className="text-white">{formatDate(activeUpcomingDemo.demoDate)}</strong></span>
+              <div className="flex flex-wrap items-center gap-4 text-xs text-white pt-1">
+                <div className="flex items-center gap-1.5 font-medium">
+                  <Calendar className="h-4 w-4 text-amber-300" />
+                  <span>Date: <strong className="text-white font-bold">{formatDate(activeUpcomingDemo.demoDate)}</strong></span>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <Clock className="h-4 w-4 text-indigo-400" />
-                  <span>Time: <strong className="text-white">{activeUpcomingDemo.startTime} - {activeUpcomingDemo.endTime || "12:00"}</strong></span>
+                <div className="flex items-center gap-1.5 font-medium">
+                  <Clock className="h-4 w-4 text-cyan-300" />
+                  <span>Time: <strong className="text-white font-bold">{activeUpcomingDemo.startTime} - {activeUpcomingDemo.endTime || "12:00"}</strong></span>
                 </div>
               </div>
 
               {activeUpcomingDemo.notes && (
-                <p className="text-xs text-indigo-200/70 italic bg-white/5 p-2.5 rounded-lg border border-white/10 mt-2 max-w-xl">
+                <p className="text-xs text-slate-100 font-medium italic bg-white/10 p-3 rounded-lg border border-white/20 mt-2 max-w-xl">
                   Notes: "{activeUpcomingDemo.notes}"
                 </p>
               )}
@@ -139,40 +139,40 @@ export default function StudentDashboard() {
 
             {activeUpcomingDemo.meetLink && (
               <a
-                href={activeUpcomingDemo.meetLink}
+                href={formatExternalUrl(activeUpcomingDemo.meetLink)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="shrink-0 inline-flex items-center justify-center gap-2.5 rounded-xl bg-emerald-500 px-6 py-3.5 text-xs font-black text-slate-950 hover:bg-emerald-400 transition-all shadow-lg hover:shadow-emerald-500/20"
+                className="shrink-0 inline-flex items-center justify-center gap-2.5 rounded-xl bg-emerald-400 px-6 py-3.5 text-xs font-black text-slate-950 hover:bg-emerald-300 transition-all shadow-lg hover:shadow-emerald-500/20"
               >
-                <Video className="h-4 w-4" /> Join Google Meet
+                <Video className="h-4 w-4 text-slate-950" /> Join Google Meet
               </a>
             )}
           </div>
         </div>
       )}
 
-      {/* Registration Received Banner for Unenrolled Students */}
+      {/* Registration Received Banner for Unenrolled Students - BUG-STU-002: High Contrast */}
       {!activeEnrollment && !activeUpcomingDemo && (
-        <div className="rounded-2xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-slate-900 to-indigo-950 p-6 shadow-xl backdrop-blur-xl">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="space-y-2">
-              <div className="inline-flex items-center gap-2 rounded-full bg-amber-500/20 px-3 py-1 text-xs font-bold text-amber-300 border border-amber-400/30">
-                <Clock className="h-3.5 w-3.5" /> Registration Received
+        <div className="rounded-2xl border border-amber-400/50 bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 p-6 sm:p-7 shadow-xl">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
+            <div className="space-y-2.5">
+              <div className="inline-flex items-center gap-2 rounded-full bg-amber-400 px-3 py-1 text-xs font-black text-slate-950 shadow-xs">
+                <Clock className="h-3.5 w-3.5 text-slate-950" /> Registration Received
               </div>
-              <h2 className="text-xl sm:text-2xl font-black text-white">
-                An executor will contact you shortly for your free demo!
+              <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                An admissions executor will contact you shortly for your free demo!
               </h2>
-              <p className="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
-                Thank you for registering with CodeX Technology. Our admissions officer will get in touch with you to explain the course curriculum and set up your free interactive live demo session.
+              <p className="text-xs sm:text-sm font-medium text-slate-100 max-w-2xl leading-relaxed">
+                Thank you for registering with CodeX Technology. Our admissions officer will get in touch with you to explain the course curriculum and schedule your free interactive live demo session.
               </p>
 
               {lead && (
-                <div className="flex flex-wrap items-center gap-4 pt-2 text-xs text-slate-300">
-                  <div>
-                    Lead Status: <span className="font-bold text-amber-300 uppercase">{lead.status.replace("_", " ")}</span>
+                <div className="flex flex-wrap items-center gap-4 pt-1 text-xs font-semibold text-white">
+                  <div className="bg-white/10 px-3 py-1 rounded-lg border border-white/20">
+                    Lead Status: <span className="font-extrabold text-amber-300 uppercase">{lead.status.replace("_", " ")}</span>
                   </div>
-                  <div>
-                    Assigned Executor: <span className="font-bold text-white">{lead.assigned_executor_id ? "Assigned" : "Pending Assignment"}</span>
+                  <div className="bg-white/10 px-3 py-1 rounded-lg border border-white/20">
+                    Assigned Executor: <span className="font-extrabold text-white">{lead.assigned_executor_id ? "Assigned" : "Pending Assignment"}</span>
                   </div>
                 </div>
               )}
@@ -180,43 +180,42 @@ export default function StudentDashboard() {
 
             <Link
               to="/student/courses"
-              className="shrink-0 inline-flex items-center gap-2 rounded-xl bg-amber-500 px-5 py-3 text-xs font-extrabold text-slate-950 hover:bg-amber-400 transition-all shadow-lg"
+              className="shrink-0 inline-flex items-center gap-2 rounded-xl bg-amber-400 px-5 py-3 text-xs font-black text-slate-950 hover:bg-amber-300 transition-all shadow-lg hover:shadow-amber-400/20"
             >
-              <BookOpen className="h-4 w-4" /> Explore Catalog
+              <BookOpen className="h-4 w-4" /> Explore Course Catalog
             </Link>
           </div>
         </div>
       )}
 
-      {/* Welcome Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 p-6 sm:p-8 text-white shadow-lg">
+      {/* Welcome Banner - BUG-STU-002: High Contrast */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-950 via-indigo-900 to-slate-900 p-6 sm:p-8 text-white shadow-xl border border-indigo-500/30">
         <div className="relative z-10 max-w-2xl">
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-indigo-200 backdrop-blur-md mb-3">
-            <Sparkles className="h-3.5 w-3.5" /> Student Learning Portal
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-white/20 border border-white/30 px-3.5 py-1 text-xs font-bold text-white backdrop-blur-md mb-3">
+            <Sparkles className="h-3.5 w-3.5 text-amber-300" /> Student Learning Portal
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
             Welcome back, {profile?.full_name || "Student"}! 👋
           </h1>
-          <p className="mt-2 text-sm sm:text-base text-indigo-100/80 leading-relaxed">
+          <p className="mt-2 text-sm sm:text-base font-medium text-slate-100 leading-relaxed">
             {activeCourse
               ? `You are currently making progress in ${activeCourse.name}. Keep going!`
               : "Explore our catalog of industry-grade courses to start learning."}
           </p>
 
-
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
               to="/student/courses"
-              className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-xs sm:text-sm font-semibold text-indigo-900 shadow-sm hover:bg-indigo-50 transition-all"
+              className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-xs sm:text-sm font-extrabold text-indigo-950 shadow-md hover:bg-slate-100 transition-all"
             >
-              <BookOpen className="h-4 w-4" /> Browse Courses
+              <BookOpen className="h-4 w-4 text-indigo-900" /> Browse Courses
             </Link>
             {upcomingLecture && (
               <Link
                 to={`/student/lecture/${upcomingLecture.id}`}
-                className="inline-flex items-center gap-2 rounded-lg bg-indigo-600/80 border border-indigo-400/30 px-4 py-2 text-xs sm:text-sm font-semibold text-white hover:bg-indigo-600 transition-all"
+                className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 border border-indigo-300/40 px-5 py-2.5 text-xs sm:text-sm font-bold text-white hover:bg-indigo-500 transition-all shadow-md"
               >
-                <PlayCircle className="h-4 w-4" /> Next Lecture
+                <PlayCircle className="h-4 w-4 text-white" /> Next Lecture
               </Link>
             )}
           </div>

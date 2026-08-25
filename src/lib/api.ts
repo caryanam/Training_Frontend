@@ -78,11 +78,11 @@ export const api = {
       body: JSON.stringify({
         fullName: payload.fullName,
         email: payload.email,
-        phone: payload.phone && payload.phone.trim() ? payload.phone : "9876543210",
+        phone: payload.phone && payload.phone.trim() ? payload.phone : "",
         password: payload.password,
-        interestedCourse: payload.interestedCourse && payload.interestedCourse.trim() ? payload.interestedCourse : "Full Stack Web Development",
-        education: payload.education && payload.education.trim() ? payload.education : "Graduate",
-        city: payload.city && payload.city.trim() ? payload.city : "Mumbai",
+        interestedCourse: payload.interestedCourse && payload.interestedCourse.trim() ? payload.interestedCourse.trim() : "",
+        education: payload.education && payload.education.trim() ? payload.education.trim() : "",
+        city: payload.city && payload.city.trim() ? payload.city.trim() : "",
       }),
     }),
 

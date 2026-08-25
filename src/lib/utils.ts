@@ -76,3 +76,19 @@ export function generateTransactionId(): string {
   const random = Math.random().toString(36).substring(2, 6).toUpperCase();
   return `TXN-${timestamp}${random}`;
 }
+
+export function formatExternalUrl(url?: string | null): string {
+  if (!url || !url.trim() || url === "#") return "#";
+  const clean = url.trim();
+  if (clean.startsWith("http://") || clean.startsWith("https://")) {
+    return clean;
+  }
+  return `https://${clean}`;
+}
+
+export function openExternalUrl(url?: string | null) {
+  const formatted = formatExternalUrl(url);
+  if (formatted !== "#") {
+    window.open(formatted, "_blank", "noopener,noreferrer");
+  }
+}

@@ -202,7 +202,9 @@ export default function AdminCourses() {
 
   function validateForm(): string | null {
     if (!title.trim()) return "Course title is required.";
+    if (title.trim().length < 3) return "Course title must be at least 3 characters.";
     if (!description.trim()) return "Description is required.";
+    if (description.trim().length < 10) return "Description must be at least 10 characters.";
     if (!category) return "Category is required.";
     const p1 = Number(plan1Price);
     const p2 = Number(plan2Price);
@@ -466,6 +468,7 @@ export default function AdminCourses() {
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g. Java Full Stack Development"
                   required
+                  minLength={3}
                   disabled={submitLoading}
                   className="h-10 w-full rounded-xl border border-input bg-background px-3.5 text-xs text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
                 />
@@ -540,6 +543,7 @@ export default function AdminCourses() {
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Overview of what students will master in this course..."
                   required
+                  minLength={10}
                   disabled={submitLoading}
                   className="w-full rounded-xl border border-input bg-background p-3 text-xs text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
                 />

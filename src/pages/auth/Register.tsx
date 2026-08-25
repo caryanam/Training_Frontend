@@ -3,7 +3,22 @@ import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDataStore } from "@/lib/store";
 import { api } from "@/lib/api";
-import { GraduationCap, Code, Eye, EyeOff, Loader2, CheckCircle2, Phone, MapPin, BookOpen, GraduationCap as Education } from "lucide-react";
+import { GraduationCap, Code, Eye, EyeOff, Loader2, CheckCircle2, Phone, MapPin, BookOpen, GraduationCap as Education, AlertCircle } from "lucide-react";
+
+// Password strength validation
+function getPasswordErrors(pw: string): string[] {
+  const errors: string[] = [];
+  if (pw.length < 8) errors.push("At least 8 characters");
+  if (!/[A-Z]/.test(pw)) errors.push("One uppercase letter (A–Z)");
+  if (!/[a-z]/.test(pw)) errors.push("One lowercase letter (a–z)");
+  if (!/[0-9]/.test(pw)) errors.push("One digit (0–9)");
+  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pw)) errors.push("One special character (!@#$%...)");
+  return errors;
+}
+
+function isStrongPassword(pw: string): boolean {
+  return getPasswordErrors(pw).length === 0;
+}
 
 export default function Register() {
   const [fullName, setFullName] = useState("");
@@ -15,7 +30,9 @@ export default function Register() {
   const [education, setEducation] = useState("");
   const [city, setCity] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [springCourses, setSpringCourses] = useState<any[]>([]);
@@ -34,19 +51,40 @@ export default function Register() {
     ? springCourses.map((c: any) => ({ id: c.courseId, name: c.name }))
     : store.getCourses().filter((c) => c.status === "active");
 
+  const validateFields = (): boolean => {
+    const errors: Record<string, string> = {};
+
+    // BUG-001: Full Name must be at least 2 characters
+    if (fullName.trim().length < 2) {
+      errors.fullName = "Full name must be at least 2 characters.";
+    }
+
+    // BUG-002: Phone must be a valid 10-digit number
+    const cleanPhone = phone.replace(/[\s\-\+]/g, "");
+    const phoneDigits = cleanPhone.replace(/^(\+91|91)/, "");
+    if (phoneDigits.length !== 10 || !/^\d{10}$/.test(phoneDigits)) {
+      errors.phone = "Enter a valid 10-digit mobile number.";
+    }
+
+    // BUG-003: Strong password policy
+    if (!isStrongPassword(password)) {
+      errors.password = "Password does not meet strength requirements.";
+    }
+
+    // Confirm password match
+    if (password !== confirmPassword) {
+      errors.confirmPassword = "Passwords do not match.";
+    }
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError("");
 
-    if (password !== confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters");
-      return;
-    }
+    if (!validateFields()) return;
 
     setLoading(true);
 
@@ -68,6 +106,8 @@ export default function Register() {
     setSuccess(true);
     setLoading(false);
   };
+
+  const passwordErrors = getPasswordErrors(password);
 
   if (success) {
     return (
@@ -167,7 +207,7 @@ export default function Register() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Required Fields */}
+            {/* Full Name — BUG-001: min 2 chars */}
             <div>
               <label htmlFor="fullName" className="block text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1.5">
                 Full name <span className="text-destructive">*</span>
@@ -176,13 +216,18 @@ export default function Register() {
                 id="fullName"
                 type="text"
                 value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
+                onChange={(e) => { setFullName(e.target.value); setFieldErrors((p) => ({ ...p, fullName: "" })); }}
                 placeholder="Enter your full name"
                 required
-                className="flex h-11 w-full rounded-lg border border-input bg-background px-4 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
+                minLength={2}
+                className={`flex h-11 w-full rounded-lg border ${fieldErrors.fullName ? "border-destructive" : "border-input"} bg-background px-4 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors`}
               />
+              {fieldErrors.fullName && (
+                <p className="mt-1 text-xs text-destructive flex items-center gap-1"><AlertCircle className="h-3 w-3" />{fieldErrors.fullName}</p>
+              )}
             </div>
 
+            {/* Email */}
             <div>
               <label htmlFor="email" className="block text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1.5">
                 Email address <span className="text-destructive">*</span>
@@ -198,6 +243,7 @@ export default function Register() {
               />
             </div>
 
+            {/* Phone — BUG-002: must be 10-digit */}
             <div>
               <label htmlFor="phone" className="block text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1.5">
                 Phone Number <span className="text-destructive">*</span>
@@ -208,14 +254,20 @@ export default function Register() {
                   id="phone"
                   type="tel"
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  onChange={(e) => { setPhone(e.target.value); setFieldErrors((p) => ({ ...p, phone: "" })); }}
                   placeholder="+91 98765 43210"
                   required
-                  className="flex h-11 w-full rounded-lg border border-input bg-background pl-10 pr-4 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
+                  pattern="[\+]?[0-9\s\-]{10,15}"
+                  title="Enter a valid 10-digit mobile number"
+                  className={`flex h-11 w-full rounded-lg border ${fieldErrors.phone ? "border-destructive" : "border-input"} bg-background pl-10 pr-4 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors`}
                 />
               </div>
+              {fieldErrors.phone && (
+                <p className="mt-1 text-xs text-destructive flex items-center gap-1"><AlertCircle className="h-3 w-3" />{fieldErrors.phone}</p>
+              )}
             </div>
 
+            {/* Password + Confirm — BUG-003 & BUG-004 */}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label htmlFor="password" className="block text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1.5">
@@ -226,11 +278,11 @@ export default function Register() {
                     id="password"
                     type={showPassword ? "text" : "password"}
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Min 6 characters"
+                    onChange={(e) => { setPassword(e.target.value); setFieldErrors((p) => ({ ...p, password: "" })); }}
+                    placeholder="Min 8 characters"
                     required
-                    minLength={6}
-                    className="flex h-11 w-full rounded-lg border border-input bg-background px-4 pr-11 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
+                    minLength={8}
+                    className={`flex h-11 w-full rounded-lg border ${fieldErrors.password ? "border-destructive" : "border-input"} bg-background px-4 pr-11 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors`}
                   />
                   <button
                     type="button"
@@ -241,21 +293,52 @@ export default function Register() {
                   </button>
                 </div>
               </div>
+              {/* BUG-004: Eye icon on Confirm Password */}
               <div>
                 <label htmlFor="confirmPassword" className="block text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1.5">
                   Confirm <span className="text-destructive">*</span>
                 </label>
-                <input
-                  id="confirmPassword"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Re-enter password"
-                  required
-                  className="flex h-11 w-full rounded-lg border border-input bg-background px-4 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
-                />
+                <div className="relative">
+                  <input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(e) => { setConfirmPassword(e.target.value); setFieldErrors((p) => ({ ...p, confirmPassword: "" })); }}
+                    placeholder="Re-enter password"
+                    required
+                    className={`flex h-11 w-full rounded-lg border ${fieldErrors.confirmPassword ? "border-destructive" : "border-input"} bg-background px-4 pr-11 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
             </div>
+
+            {/* BUG-003: Password strength indicator */}
+            {password.length > 0 && (
+              <div className={`rounded-lg border p-3 text-xs space-y-1.5 ${passwordErrors.length === 0 ? "border-emerald-500/30 bg-emerald-500/5" : "border-amber-500/30 bg-amber-500/5"}`}>
+                <div className={`font-semibold flex items-center gap-1.5 ${passwordErrors.length === 0 ? "text-emerald-700 dark:text-emerald-300" : "text-amber-700 dark:text-amber-300"}`}>
+                  {passwordErrors.length === 0 ? <CheckCircle2 className="h-3.5 w-3.5" /> : <AlertCircle className="h-3.5 w-3.5" />}
+                  {passwordErrors.length === 0 ? "Strong password ✓" : "Password requirements:"}
+                </div>
+                {passwordErrors.length > 0 && (
+                  <ul className="space-y-0.5 text-muted-foreground ml-5">
+                    {passwordErrors.map((err) => (
+                      <li key={err} className="list-disc">{err}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+
+            {fieldErrors.confirmPassword && (
+              <p className="text-xs text-destructive flex items-center gap-1"><AlertCircle className="h-3 w-3" />{fieldErrors.confirmPassword}</p>
+            )}
 
             {/* Optional Fields */}
             <div className="pt-2 border-t border-border/60">
@@ -268,20 +351,28 @@ export default function Register() {
                   </label>
                   <div className="relative">
                     <BookOpen className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <select
+                    <input
                       id="interestedCourse"
+                      list="interested-courses-list"
+                      type="text"
                       value={interestedCourse}
                       onChange={(e) => setInterestedCourse(e.target.value)}
-                      className="flex h-11 w-full rounded-lg border border-input bg-background pl-10 pr-4 text-sm ring-offset-background text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors appearance-none"
-                    >
-                      <option value="">Select a course (optional)</option>
+                      placeholder="Select or type your interested course (e.g. Full Stack Web Development)"
+                      className="flex h-11 w-full rounded-lg border border-input bg-background pl-10 pr-4 text-sm ring-offset-background placeholder:text-muted-foreground text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
+                    />
+                    <datalist id="interested-courses-list">
                       {courses.map((c) => (
-                        <option key={c.id} value={c.name}>
-                          {c.name}
-                        </option>
+                        <option key={c.id} value={c.name} />
                       ))}
-                    </select>
+                      <option value="Full Stack Web Development" />
+                      <option value="Java Full Stack Development" />
+                      <option value="Python & AI / Data Science" />
+                      <option value="DevOps & Cloud Engineering" />
+                      <option value="Cyber Security & Ethical Hacking" />
+                      <option value="React & Node.js Masterclass" />
+                    </datalist>
                   </div>
+                  <p className="mt-1 text-[11px] text-muted-foreground">Select from the dropdown suggestions or type any custom course</p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">

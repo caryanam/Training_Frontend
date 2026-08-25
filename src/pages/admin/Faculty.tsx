@@ -9,6 +9,8 @@ import {
   X,
   Loader2,
   CheckCircle2,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 
 interface FacultyItem {
@@ -28,6 +30,7 @@ export default function AdminFaculty() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [department, setDepartment] = useState("");
   const [faculty, setFaculty] = useState<FacultyItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -88,6 +91,31 @@ export default function AdminFaculty() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    // BUG-005: Full Name min 2 chars
+    if (fullName.trim().length < 2) {
+      setError("Full Name must be at least 2 characters.");
+      return;
+    }
+
+    // BUG-006: Department min 2 chars
+    if (department.trim().length < 2) {
+      setError("Department must be at least 2 characters.");
+      return;
+    }
+
+    // BUG-007: Strong password policy
+    const pwErrors: string[] = [];
+    if (password.length < 8) pwErrors.push("at least 8 characters");
+    if (!/[A-Z]/.test(password)) pwErrors.push("one uppercase letter");
+    if (!/[a-z]/.test(password)) pwErrors.push("one lowercase letter");
+    if (!/[0-9]/.test(password)) pwErrors.push("one digit");
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) pwErrors.push("one special character");
+    if (pwErrors.length > 0) {
+      setError(`Password must contain: ${pwErrors.join(", ")}.`);
+      return;
+    }
+
     setSubmitLoading(true);
 
     try {
@@ -99,6 +127,7 @@ export default function AdminFaculty() {
         setPhone("");
         setPassword("");
         setDepartment("");
+        showSuccess("Faculty member created successfully!");
         fetchFaculty();
       } else {
         setError(res.error || "Failed to create faculty account.");
@@ -119,24 +148,20 @@ export default function AdminFaculty() {
       if (!res.success) {
         dataStore.updateFacultyStatus(fac.facultyId, newStatus);
       }
+      showSuccess(`Faculty status updated to ${newStatus}`);
+      fetchFaculty();
     } catch {
       dataStore.updateFacultyStatus(fac.facultyId, newStatus);
+      fetchFaculty();
+    } finally {
+      setStatusLoadingId(null);
     }
-
-    // Update local state directly so the UI reflects the change immediately
-    setFaculty((prev) =>
-      prev.map((f) =>
-        f.facultyId === fac.facultyId ? { ...f, status: newStatus } : f
-      )
-    );
-    setStatusLoadingId(null);
-    showSuccess(`${fac.fullName} status changed to ${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)}.`);
   };
 
   if (loading) {
     return (
-      <div className="flex h-[50vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         <span className="ml-2 text-sm text-muted-foreground">Loading training faculty...</span>
       </div>
     );
@@ -241,26 +266,29 @@ export default function AdminFaculty() {
             </div>
 
             {error && (
-              <div className="mb-4 rounded-xl border border-destructive/20 bg-destructive/5 p-3 text-destructive">
+              <div className="mb-4 rounded-xl border border-destructive/20 bg-destructive/5 p-3 text-destructive text-xs">
                 {error}
               </div>
             )}
 
             <form onSubmit={handleCreate} className="space-y-4 text-xs">
+              {/* BUG-005: Full Name min 2 chars */}
               <div>
-                <label className="block font-semibold uppercase tracking-wider text-muted-foreground mb-1">Full Name & Title</label>
+                <label className="block font-semibold uppercase tracking-wider text-muted-foreground mb-1">Full Name & Title *</label>
                 <input
                   type="text"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="e.g. Prof. Rajesh Khanna"
                   required
+                  minLength={2}
                   className="h-10 w-full rounded-xl border border-input bg-background px-3.5 text-xs text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 />
+                <p className="mt-0.5 text-[10px] text-muted-foreground">Minimum 2 characters required</p>
               </div>
 
               <div>
-                <label className="block font-semibold uppercase tracking-wider text-muted-foreground mb-1">Academic Email</label>
+                <label className="block font-semibold uppercase tracking-wider text-muted-foreground mb-1">Academic Email *</label>
                 <input
                   type="email"
                   value={email}
@@ -272,7 +300,7 @@ export default function AdminFaculty() {
               </div>
 
               <div>
-                <label className="block font-semibold uppercase tracking-wider text-muted-foreground mb-1">Phone</label>
+                <label className="block font-semibold uppercase tracking-wider text-muted-foreground mb-1">Phone *</label>
                 <input
                   type="tel"
                   value={phone}
@@ -283,28 +311,44 @@ export default function AdminFaculty() {
                 />
               </div>
 
+              {/* BUG-006: Department min 2 chars */}
               <div>
-                <label className="block font-semibold uppercase tracking-wider text-muted-foreground mb-1">Department</label>
+                <label className="block font-semibold uppercase tracking-wider text-muted-foreground mb-1">Department *</label>
                 <input
                   type="text"
                   value={department}
                   onChange={(e) => setDepartment(e.target.value)}
                   placeholder="e.g. Information Technology"
                   required
+                  minLength={2}
                   className="h-10 w-full rounded-xl border border-input bg-background px-3.5 text-xs text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 />
+                <p className="mt-0.5 text-[10px] text-muted-foreground">Minimum 2 characters required</p>
               </div>
 
+              {/* BUG-007 & BUG-ADM-006: Password with strong policy and eye toggle */}
               <div>
-                <label className="block font-semibold uppercase tracking-wider text-muted-foreground mb-1">Password</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter initial password"
-                  required
-                  className="h-10 w-full rounded-xl border border-input bg-background px-3.5 text-xs text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                />
+                <label className="block font-semibold uppercase tracking-wider text-muted-foreground mb-1">Password *</label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Min 8 chars, upper+lower+digit+special"
+                    required
+                    minLength={8}
+                    className="h-10 w-full rounded-xl border border-input bg-background px-3.5 pr-10 text-xs text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                <p className="mt-0.5 text-[10px] text-muted-foreground">Must include: 8+ chars, uppercase, lowercase, digit, special char</p>
               </div>
 
               <div className="flex gap-3 pt-2">

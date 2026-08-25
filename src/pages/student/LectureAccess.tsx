@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDataStore } from "@/lib/store";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatExternalUrl } from "@/lib/utils";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import {
   Lock,
@@ -180,7 +180,7 @@ export default function LectureAccess() {
           </div>
 
           <a
-            href={lecture?.meeting_link || lecture?.lecture_url || "#"}
+            href={formatExternalUrl(lecture?.meeting_link || lecture?.lecture_url)}
             target="_blank"
             rel="noopener noreferrer"
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 px-6 py-2.5 text-xs font-bold text-white shadow-md hover:bg-red-700 transition-all shrink-0"
@@ -211,7 +211,7 @@ export default function LectureAccess() {
 
             {lecture?.lecture_url && (
               <a
-                href={lecture.lecture_url}
+                href={formatExternalUrl(lecture.lecture_url)}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-2.5 text-xs font-semibold text-white hover:bg-indigo-500 shadow-md transition-all"

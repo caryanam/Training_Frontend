@@ -275,7 +275,7 @@ export default function AdminStudentLeads() {
                     </td>
                     <td className="px-4 py-3 hidden md:table-cell">
                       <span className="text-xs font-medium text-foreground">
-                        {lead.interested_course || "Not specified"}
+                        {lead.interested_course || "Not Selected"}
                       </span>
                     </td>
                     <td className="px-4 py-3">

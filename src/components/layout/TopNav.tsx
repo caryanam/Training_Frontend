@@ -85,8 +85,8 @@ export function TopNav({ onMobileMenuToggle }: TopNavProps) {
 
       {/* Right Controls */}
       <div className="flex items-center gap-2 sm:gap-3">
-        {/* 1-Click Role Switcher */}
-        {isMockMode && (
+        {/* 1-Click Role Switcher - BUG-SEC-010: Only available to Admin for security */}
+        {isMockMode && role === "admin" && (
           <div className="relative">
             <button
               type="button"
@@ -98,40 +98,40 @@ export function TopNav({ onMobileMenuToggle }: TopNavProps) {
               className="flex items-center gap-1.5 rounded-xl border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/20 transition-all shadow-xs"
             >
               <Sparkles className="h-3.5 w-3.5 text-primary animate-spin" style={{ animationDuration: "8s" }} />
-              <span className="hidden md:inline">Switch Role:</span>
-              <span className="capitalize">{role || "student"}</span>
+              <span className="hidden md:inline">Admin Switcher:</span>
+              <span className="capitalize">{role || "admin"}</span>
               <ChevronDown className="h-3.5 w-3.5 opacity-70" />
             </button>
 
             {showRoleMenu && (
               <div className="absolute right-0 mt-2 w-60 rounded-2xl border border-border bg-card/95 p-2 shadow-2xl backdrop-blur-xl z-50 animate-in fade-in zoom-in-95">
                 <div className="px-2.5 py-2 text-[11px] font-bold text-muted-foreground uppercase tracking-wider border-b border-border mb-1 flex items-center justify-between">
-                  <span>1-Click Switcher</span>
+                  <span>Admin Dev Switcher</span>
                   <Zap className="h-3.5 w-3.5 text-amber-500" />
                 </div>
                 <button
                   type="button"
                   onClick={() => handleRoleSwitch("student")}
                   className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs transition-colors ${
-                    role === "student" ? "bg-primary/10 text-primary font-bold" : "text-foreground hover:bg-accent"
+                    (role as string) === "student" ? "bg-primary/10 text-primary font-bold" : "text-foreground hover:bg-accent"
                   }`}
                 >
                   <span className="flex items-center gap-2">
                     <BookOpen className="h-4 w-4 text-blue-500" /> Student (Rahul)
                   </span>
-                  {role === "student" && <Check className="h-3.5 w-3.5" />}
+                  {(role as string) === "student" && <Check className="h-3.5 w-3.5" />}
                 </button>
                 <button
                   type="button"
                   onClick={() => handleRoleSwitch("faculty")}
                   className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs transition-colors ${
-                    role === "faculty" ? "bg-primary/10 text-primary font-bold" : "text-foreground hover:bg-accent"
+                    (role as string) === "faculty" ? "bg-primary/10 text-primary font-bold" : "text-foreground hover:bg-accent"
                   }`}
                 >
                   <span className="flex items-center gap-2">
                     <GraduationCap className="h-4 w-4 text-purple-500" /> Faculty (Dr. Ananya)
                   </span>
-                  {role === "faculty" && <Check className="h-3.5 w-3.5" />}
+                  {(role as string) === "faculty" && <Check className="h-3.5 w-3.5" />}
                 </button>
                 <div className="border-t border-border/40 my-1 pt-1">
                   <div className="px-2 py-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
@@ -149,33 +149,13 @@ export function TopNav({ onMobileMenuToggle }: TopNavProps) {
                       navigate(ROLE_DASHBOARD_PATHS["executor"], { replace: true });
                     }}
                     className={`flex w-full items-center justify-between rounded-xl px-3 py-1.5 text-xs transition-colors ${
-                      role === "executor" && profile?.email === "dsapkal141@gmail.com" ? "bg-primary/10 text-primary font-bold" : "text-foreground hover:bg-accent"
+                      (role as string) === "executor" && profile?.email === "dsapkal141@gmail.com" ? "bg-primary/10 text-primary font-bold" : "text-foreground hover:bg-accent"
                     }`}
                   >
                     <span className="flex items-center gap-2">
                       <UserCheck className="h-3.5 w-3.5 text-amber-500" /> Dinesh Sapkla
                     </span>
-                    {role === "executor" && profile?.email === "dsapkal141@gmail.com" && <Check className="h-3.5 w-3.5" />}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowRoleMenu(false);
-                      loginAsRole("executor", {
-                        id: "exe-prof-2",
-                        full_name: "Ramesh Saxena",
-                        email: "ramesh.test@codextechnology.com",
-                      });
-                      navigate(ROLE_DASHBOARD_PATHS["executor"], { replace: true });
-                    }}
-                    className={`flex w-full items-center justify-between rounded-xl px-3 py-1.5 text-xs transition-colors ${
-                      role === "executor" && profile?.email === "ramesh.test@codextechnology.com" ? "bg-primary/10 text-primary font-bold" : "text-foreground hover:bg-accent"
-                    }`}
-                  >
-                    <span className="flex items-center gap-2">
-                      <UserCheck className="h-3.5 w-3.5 text-amber-500" /> Ramesh Saxena
-                    </span>
-                    {role === "executor" && profile?.email === "ramesh.test@codextechnology.com" && <Check className="h-3.5 w-3.5" />}
+                    {(role as string) === "executor" && profile?.email === "dsapkal141@gmail.com" && <Check className="h-3.5 w-3.5" />}
                   </button>
                 </div>
                 <div className="border-t border-border/40 my-1 pt-1">
@@ -183,13 +163,13 @@ export function TopNav({ onMobileMenuToggle }: TopNavProps) {
                     type="button"
                     onClick={() => handleRoleSwitch("admin")}
                     className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs transition-colors ${
-                      role === "admin" ? "bg-primary/10 text-primary font-bold" : "text-foreground hover:bg-accent"
+                      (role as string) === "admin" ? "bg-primary/10 text-primary font-bold" : "text-foreground hover:bg-accent"
                     }`}
                   >
                     <span className="flex items-center gap-2">
                       <Briefcase className="h-4 w-4 text-rose-500" /> Admin (Siddharth)
                     </span>
-                    {role === "admin" && <Check className="h-3.5 w-3.5" />}
+                    {(role as string) === "admin" && <Check className="h-3.5 w-3.5" />}
                   </button>
                 </div>
               </div>

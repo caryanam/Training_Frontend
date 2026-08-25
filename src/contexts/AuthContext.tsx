@@ -308,6 +308,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         updated_at: new Date().toISOString(),
       };
       MOCK_PROFILES[newId] = newProfile;
+
+      // BUG-008: Also create student record & lead in local store
+      // so Admin > Student Leads section shows the newly registered student
+      if (role === "student") {
+        const { MOCK_STUDENTS } = await import("@/lib/mockData");
+        const studentRecId = `stu-${Date.now()}`;
+        MOCK_STUDENTS.push({
+          id: studentRecId,
+          profile_id: newId,
+          student_id: `STU-${Math.floor(1000 + Math.random() * 9000)}`,
+          assigned_executor_id: null,
+          assigned_faculty_id: null,
+          status: "active",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        });
+
+        dataStore.createStudentLead({
+          student_id: studentRecId,
+          profile_id: newId,
+          interested_course: extras?.interestedCourse || null,
+          education: extras?.education || null,
+          city: extras?.city || null,
+          status: "new",
+          assigned_executor_id: null,
+          followup_date: null,
+          notes: null,
+        });
+      }
+
       return { error: null };
     }
 

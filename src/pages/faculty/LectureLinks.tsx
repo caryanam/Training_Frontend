@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDataStore } from "@/lib/store";
-import { formatDate } from "@/lib/utils";
+import { api } from "@/lib/api";
+import { formatDate, formatExternalUrl } from "@/lib/utils";
 import { PageHeader } from "@/components/shared/PageHeader";
 import {
   Share2,
@@ -18,14 +19,23 @@ import {
   Calendar,
   Clock,
   Radio,
+  PlusCircle,
 } from "lucide-react";
 
 export default function FacultyLectureLinks() {
   const { profile } = useAuth();
   const store = useDataStore();
 
-  const lectures = store.getLectures();
-  const [selectedLectureId, setSelectedLectureId] = useState(lectures[0]?.id || "");
+  const [courseList, setCourseList] = useState<Array<{ id: string; name: string }>>([
+    { id: "101", name: "Full Stack Web Development" },
+    { id: "102", name: "Java Microservices & Cloud Architecture" },
+    { id: "103", name: "Data Science & AI Engineering" },
+    { id: "104", name: "Cyber Security & Ethical Hacking" },
+  ]);
+  const [lectures, setLectures] = useState(store.getLectures());
+  const [selectedLectureId, setSelectedLectureId] = useState(lectures[0]?.id || "new");
+  const [selectedCourseId, setSelectedCourseId] = useState("101");
+  const [customTitle, setCustomTitle] = useState("Live Interactive Session & Q&A");
   const [targetAudience, setTargetAudience] = useState<"both" | "student" | "executor">("both");
   const [meetUrl, setMeetUrl] = useState("https://meet.google.com/eduflow-live-session");
   const [instructions, setInstructions] = useState(
@@ -34,15 +44,52 @@ export default function FacultyLectureLinks() {
   const [copied, setCopied] = useState(false);
   const [broadcastSent, setBroadcastSent] = useState(false);
 
-  const selectedLecture = lectures.find((l) => l.id === selectedLectureId) || lectures[0];
-  const course = selectedLecture ? store.getCourse(selectedLecture.course_id) : null;
+  useEffect(() => {
+    const loadCourses = async () => {
+      try {
+        const res = await api.getAllCourses();
+        if (res.success && res.data && res.data.length > 0) {
+          const mapped = res.data.map((c: any) => ({
+            id: String(c.id),
+            name: c.title || c.name,
+          }));
+          setCourseList(mapped);
+          setSelectedCourseId(mapped[0].id);
+        } else {
+          const storeCourses = store.getCourses();
+          if (storeCourses.length > 0) {
+            const mapped = storeCourses.map((c) => ({ id: c.id, name: c.name }));
+            setCourseList(mapped);
+            setSelectedCourseId(mapped[0].id);
+          }
+        }
+      } catch {
+        const storeCourses = store.getCourses();
+        if (storeCourses.length > 0) {
+          const mapped = storeCourses.map((c) => ({ id: c.id, name: c.name }));
+          setCourseList(mapped);
+          setSelectedCourseId(mapped[0].id);
+        }
+      }
+    };
+
+    loadCourses();
+
+    const list = store.getLectures();
+    setLectures(list);
+    if (list.length > 0 && (!selectedLectureId || selectedLectureId === "new")) {
+      setSelectedLectureId(list[0].id);
+    }
+  }, []);
+
+  const selectedLecture = lectures.find((l) => l.id === selectedLectureId);
+  const activeCourseName = selectedLecture
+    ? store.getCourse(selectedLecture.course_id)?.name || "Course"
+    : courseList.find((c) => c.id === selectedCourseId)?.name || "Course";
 
   const handleGenerateMeet = () => {
-    const chars = "abcdefghijklmnopqrstuvwxyz";
-    const segment = (len: number) =>
-      Array.from({ length: len }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
-    const randomMeet = `https://meet.google.com/${segment(3)}-${segment(4)}-${segment(3)}`;
-    setMeetUrl(randomMeet);
+    window.open("https://meet.google.com/new", "_blank", "noopener,noreferrer");
+    setMeetUrl("https://meet.google.com/new");
   };
 
   const handleCopyMeet = () => {
@@ -53,34 +100,73 @@ export default function FacultyLectureLinks() {
 
   const handleBroadcast = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedLecture || !profile) return;
+    if (!profile) return;
 
-    // Update meeting link on the lecture in store
-    store.updateLecture(selectedLecture.id, {
-      meeting_link: meetUrl,
-    });
+    let targetLecture = selectedLecture;
 
-    // Broadcast notifications
+    if (!targetLecture || selectedLectureId === "new") {
+      // Create new live lecture on the fly
+      targetLecture = store.createLecture({
+        course_id: selectedCourseId || courseList[0]?.id || "101",
+        faculty_id: profile.id,
+        created_by: profile.id,
+        title: customTitle.trim() || "Live Interactive Session & Q&A",
+        description: instructions,
+        lecture_date: new Date().toISOString().split("T")[0],
+        start_time: "18:00",
+        end_time: "19:30",
+        meeting_link: meetUrl,
+        lecture_url: meetUrl,
+        recording_url: null,
+        downloadable_file_path: null,
+        is_downloadable: true,
+        status: "live",
+      });
+      setSelectedLectureId(targetLecture.id);
+      setLectures(store.getLectures());
+    } else {
+      store.updateLecture(targetLecture.id, {
+        meeting_link: meetUrl,
+        lecture_url: meetUrl,
+        status: "live",
+      });
+    }
+
+    // Call API to sync backend lecture if enabled
+    api.createLecture({
+      courseId: targetLecture.course_id,
+      facultyId: profile.id,
+      title: targetLecture.title,
+      description: instructions,
+      lectureDate: new Date().toISOString().split("T")[0],
+      startTime: "18:00",
+      endTime: "19:30",
+      lectureUrl: meetUrl,
+      isDownloadable: true,
+    }).catch(() => {});
+
+    // Broadcast notifications to students
     if (targetAudience === "student" || targetAudience === "both") {
       store.getStudentsWithProfiles().forEach((stu) => {
         store.createNotification({
           user_id: stu.profile_id,
-          title: `🔴 Google Meet Link Released: ${selectedLecture.title}`,
-          message: `Live class link for '${course?.name || "Course"}' is ready. Meet Link: ${meetUrl}. ${instructions}`,
+          title: `🔴 Google Meet Link Released: ${targetLecture!.title}`,
+          message: `Live class link for '${activeCourseName}' is ready. Meet Link: ${meetUrl}. ${instructions}`,
           type: "lecture",
-          metadata: { lectureId: selectedLecture.id, meetUrl },
+          metadata: { lectureId: targetLecture!.id, meetUrl },
         });
       });
     }
 
+    // Broadcast notifications to executors
     if (targetAudience === "executor" || targetAudience === "both") {
       store.getExecutorsWithProfiles().forEach((exe) => {
         store.createNotification({
           user_id: exe.profile_id,
-          title: `📹 Live Google Meet Shared for Admissions: ${selectedLecture.title}`,
-          message: `Dr. Ananya shared Google Meet link (${meetUrl}) for '${selectedLecture.title}'. You may share this with prospective leads or join as observer.`,
+          title: `📹 Live Google Meet Shared for Admissions: ${targetLecture!.title}`,
+          message: `${profile.full_name || "Faculty"} shared Google Meet link (${meetUrl}) for '${targetLecture!.title}'. You may share this with prospective leads or join as observer.`,
           type: "lecture",
-          metadata: { lectureId: selectedLecture.id, meetUrl },
+          metadata: { lectureId: targetLecture!.id, meetUrl },
         });
       });
     }
@@ -90,7 +176,7 @@ export default function FacultyLectureLinks() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-xs">
       <PageHeader
         title="Google Meet Link Distribution Hub"
         subtitle="Broadcast live Google Meet classrooms to Enrolled Students and Admissions Executors with real-time notifications."
@@ -129,20 +215,55 @@ export default function FacultyLectureLinks() {
             {/* Lecture Selection */}
             <div>
               <label className="block font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
-                1. Select Lecture Session
+                1. Select Lecture Session or Create New
               </label>
               <select
                 value={selectedLectureId}
                 onChange={(e) => setSelectedLectureId(e.target.value)}
-                className="h-10 w-full rounded-xl border border-input bg-background px-3 text-xs text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="h-10 w-full rounded-xl border border-input bg-background px-3 text-xs text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
               >
+                <option value="new">➕ Create New Live Session Link</option>
                 {lectures.map((lec) => (
                   <option key={lec.id} value={lec.id}>
-                    {lec.title} ({store.getCourse(lec.course_id)?.name || "Course"}) — {lec.start_time} to {lec.end_time}
+                    {lec.title} ({store.getCourse(lec.course_id)?.name || "Course"}) — {lec.start_time || "Live"}
                   </option>
                 ))}
               </select>
             </div>
+
+            {selectedLectureId === "new" && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 bg-muted/30 rounded-xl border border-border">
+                <div>
+                  <label className="block font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                    Select Target Course *
+                  </label>
+                  <select
+                    value={selectedCourseId}
+                    onChange={(e) => setSelectedCourseId(e.target.value)}
+                    className="h-10 w-full rounded-xl border border-input bg-background px-3 text-xs text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+                  >
+                    {courseList.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                    Session Title *
+                  </label>
+                  <input
+                    type="text"
+                    value={customTitle}
+                    onChange={(e) => setCustomTitle(e.target.value)}
+                    placeholder="Session title e.g. Live Q&A and Project Review"
+                    required
+                    className="h-10 w-full rounded-xl border border-input bg-background px-3 text-xs text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  />
+                </div>
+              </div>
+            )}
 
             {/* Target Audience Selector */}
             <div>
@@ -153,7 +274,7 @@ export default function FacultyLectureLinks() {
                 <button
                   type="button"
                   onClick={() => setTargetAudience("both")}
-                  className={`rounded-xl border p-3.5 text-left transition-all ${
+                  className={`rounded-xl border p-3.5 text-left transition-all cursor-pointer ${
                     targetAudience === "both"
                       ? "border-primary bg-primary/5 ring-2 ring-primary/20 shadow-xs"
                       : "border-border hover:bg-accent"
@@ -170,7 +291,7 @@ export default function FacultyLectureLinks() {
                 <button
                   type="button"
                   onClick={() => setTargetAudience("student")}
-                  className={`rounded-xl border p-3.5 text-left transition-all ${
+                  className={`rounded-xl border p-3.5 text-left transition-all cursor-pointer ${
                     targetAudience === "student"
                       ? "border-primary bg-primary/5 ring-2 ring-primary/20 shadow-xs"
                       : "border-border hover:bg-accent"
@@ -187,7 +308,7 @@ export default function FacultyLectureLinks() {
                 <button
                   type="button"
                   onClick={() => setTargetAudience("executor")}
-                  className={`rounded-xl border p-3.5 text-left transition-all ${
+                  className={`rounded-xl border p-3.5 text-left transition-all cursor-pointer ${
                     targetAudience === "executor"
                       ? "border-primary bg-primary/5 ring-2 ring-primary/20 shadow-xs"
                       : "border-border hover:bg-accent"
@@ -212,9 +333,9 @@ export default function FacultyLectureLinks() {
                 <button
                   type="button"
                   onClick={handleGenerateMeet}
-                  className="inline-flex items-center gap-1 text-[11px] font-bold text-primary hover:underline"
+                  className="inline-flex items-center gap-1 text-[11px] font-bold text-primary hover:underline cursor-pointer"
                 >
-                  <Sparkles className="h-3.5 w-3.5" /> Generate New Google Meet Room
+                  <Sparkles className="h-3.5 w-3.5" /> Create Real Room on Google Meet (meet.google.com/new)
                 </button>
               </div>
 
@@ -230,16 +351,16 @@ export default function FacultyLectureLinks() {
                 <button
                   type="button"
                   onClick={handleCopyMeet}
-                  className="flex h-10 items-center justify-center gap-1.5 rounded-xl border border-border bg-card px-3.5 text-xs font-semibold text-foreground hover:bg-accent transition-colors shrink-0"
+                  className="flex h-10 items-center justify-center gap-1.5 rounded-xl border border-border bg-card px-3.5 text-xs font-semibold text-foreground hover:bg-accent transition-colors shrink-0 cursor-pointer"
                 >
                   {copied ? <CheckCircle2 className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
                   {copied ? "Copied" : "Copy Meet Link"}
                 </button>
                 <a
-                  href={meetUrl}
+                  href={formatExternalUrl(meetUrl)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex h-10 items-center justify-center gap-1.5 rounded-xl border border-border bg-muted/30 px-3.5 text-xs font-semibold text-foreground hover:bg-accent transition-colors shrink-0"
+                  className="flex h-10 items-center justify-center gap-1.5 rounded-xl border border-border bg-muted/30 px-3.5 text-xs font-semibold text-foreground hover:bg-accent transition-colors shrink-0 cursor-pointer"
                 >
                   <ExternalLink className="h-4 w-4" /> Open Meet
                 </a>
@@ -267,7 +388,7 @@ export default function FacultyLectureLinks() {
               </div>
               <button
                 type="submit"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 px-6 py-2.5 text-xs font-bold text-white shadow-md hover:bg-red-700 transition-all"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 px-6 py-2.5 text-xs font-bold text-white shadow-md hover:bg-red-700 transition-all cursor-pointer"
               >
                 <Send className="h-4 w-4" /> Broadcast Google Meet Link
               </button>
@@ -289,22 +410,22 @@ export default function FacultyLectureLinks() {
             <div className="space-y-2">
               <a
                 href={`https://wa.me/?text=${encodeURIComponent(
-                  `Join live class for ${selectedLecture?.title}: ${meetUrl}\n\n${instructions}`
+                  `Join live class for ${selectedLecture?.title || customTitle}: ${meetUrl}\n\n${instructions}`
                 )}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition-all"
+                className="flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition-all cursor-pointer"
               >
                 <MessageCircle className="h-4 w-4" /> Share via WhatsApp
               </a>
 
               <a
                 href={`mailto:?subject=${encodeURIComponent(
-                  `Live Class: ${selectedLecture?.title}`
+                  `Live Class: ${selectedLecture?.title || customTitle}`
                 )}&body=${encodeURIComponent(
                   `Hello,\n\nPlease join the live class using the Google Meet link below:\n${meetUrl}\n\n${instructions}`
                 )}`}
-                className="flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-border bg-background text-foreground font-semibold hover:bg-accent transition-all"
+                className="flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-border bg-background text-foreground font-semibold hover:bg-accent transition-all cursor-pointer"
               >
                 <Mail className="h-4 w-4" /> Share via Email
               </a>

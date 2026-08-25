@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useDataStore } from "@/lib/store";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatExternalUrl } from "@/lib/utils";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -100,10 +100,10 @@ export default function ExecutorLectureLinks() {
                   </button>
 
                   <a
-                    href={meetUrl}
+                    href={formatExternalUrl(meetUrl)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex h-9 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 text-xs font-semibold text-foreground hover:bg-accent transition-colors"
+                    className="flex h-9 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 text-xs font-semibold text-foreground hover:bg-accent transition-colors cursor-pointer"
                   >
                     <ExternalLink className="h-3.5 w-3.5" /> Join Meet
                   </a>
