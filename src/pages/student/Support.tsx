@@ -13,14 +13,29 @@ export default function StudentSupport() {
   const [submitted, setSubmitted] = useState(false);
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  const validateForm = (): boolean => {
+    const errors: Record<string, string> = {};
+    if (!subject.trim() || subject.trim().length < 5) {
+      errors.subject = "Subject must be at least 5 characters.";
+    }
+    if (!message.trim() || message.trim().length < 10) {
+      errors.message = "Detailed message must be at least 10 characters.";
+    }
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateForm()) return;
     setSubmitted(true);
     setTimeout(() => {
       setSubmitted(false);
       setSubject("");
       setMessage("");
+      setFieldErrors({});
     }, 3000);
   };
 
@@ -60,30 +75,38 @@ export default function StudentSupport() {
 
             <div>
               <label className="block font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
-                Subject
+                Subject <span className="text-destructive">*</span>
               </label>
               <input
                 type="text"
                 value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-                placeholder="Brief description of the issue"
+                onChange={(e) => { setSubject(e.target.value); setFieldErrors((p) => ({ ...p, subject: "" })); }}
+                placeholder="Brief description of the issue (min 5 characters)"
                 required
-                className="h-10 w-full rounded-xl border border-input bg-background px-3.5 text-xs text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                minLength={5}
+                className={`h-10 w-full rounded-xl border ${fieldErrors.subject ? "border-destructive" : "border-input"} bg-background px-3.5 text-xs text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
               />
+              {fieldErrors.subject && (
+                <p className="mt-1 text-xs text-destructive">{fieldErrors.subject}</p>
+              )}
             </div>
 
             <div>
               <label className="block font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
-                Detailed Message
+                Detailed Message <span className="text-destructive">*</span>
               </label>
               <textarea
                 rows={4}
                 value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Provide complete details about your problem..."
+                onChange={(e) => { setMessage(e.target.value); setFieldErrors((p) => ({ ...p, message: "" })); }}
+                placeholder="Provide complete details about your problem (min 10 characters)"
                 required
-                className="w-full rounded-xl border border-input bg-background p-3 text-xs text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                minLength={10}
+                className={`w-full rounded-xl border ${fieldErrors.message ? "border-destructive" : "border-input"} bg-background p-3 text-xs text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
               />
+              {fieldErrors.message && (
+                <p className="mt-1 text-xs text-destructive">{fieldErrors.message}</p>
+              )}
             </div>
 
             <button

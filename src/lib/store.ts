@@ -131,7 +131,7 @@ export function calculateCourseDates(startDateStr: string, durationMonths: numbe
   const start = new Date(startDateStr);
   const expiry = new Date(start);
   expiry.setMonth(expiry.getMonth() + durationMonths);
-  
+
   return {
     startDate: start.toISOString().split("T")[0],
     expiryDate: expiry.toISOString().split("T")[0],
@@ -421,11 +421,11 @@ export const dataStore = {
     enrollmentsState = enrollmentsState.map((e) =>
       e.id === params.enrollmentId
         ? {
-            ...e,
-            expiry_date: params.newExpiryDate,
-            status: new Date(params.newExpiryDate) >= new Date() ? "active" : e.status,
-            updated_at: new Date().toISOString(),
-          }
+          ...e,
+          expiry_date: params.newExpiryDate,
+          status: new Date(params.newExpiryDate) >= new Date() ? "active" : e.status,
+          updated_at: new Date().toISOString(),
+        }
         : e
     );
 
@@ -550,7 +550,9 @@ export const dataStore = {
     return [...paymentsState];
   },
   getPaymentsForStudent(studentId: string): Payment[] {
-    return paymentsState.filter((p) => p.student_id === studentId);
+    const student = MOCK_STUDENTS.find((s) => s.id === studentId || s.profile_id === studentId);
+    const validIds = new Set([studentId, student?.id, student?.profile_id].filter(Boolean));
+    return paymentsState.filter((p) => validIds.has(p.student_id));
   },
 
   // --- FOLLOWUPS (Executor) ---
@@ -824,12 +826,12 @@ export const dataStore = {
     studentLeadsState = studentLeadsState.map((l) =>
       l.id === leadId
         ? {
-            ...l,
-            assigned_executor_id: executorId,
-            status: (l.status === "new" ? "assigned" : l.status) as StudentLead["status"],
-            last_activity: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          }
+          ...l,
+          assigned_executor_id: executorId,
+          status: (l.status === "new" ? "assigned" : l.status) as StudentLead["status"],
+          last_activity: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }
         : l
     );
 

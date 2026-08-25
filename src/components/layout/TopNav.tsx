@@ -2,22 +2,13 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDataStore } from "@/lib/store";
-import { ROLE_DASHBOARD_PATHS, ROLE_LABELS } from "@/lib/constants";
-import type { Role } from "@/lib/constants";
+import { ROLE_LABELS } from "@/lib/constants";
 import {
   Bell,
   LogOut,
   User,
   Menu,
-  Sparkles,
   ChevronDown,
-  Check,
-  GraduationCap,
-  BookOpen,
-  UserCheck,
-  Briefcase,
-  ShieldAlert,
-  Zap,
 } from "lucide-react";
 
 interface TopNavProps {
@@ -25,22 +16,15 @@ interface TopNavProps {
 }
 
 export function TopNav({ onMobileMenuToggle }: TopNavProps) {
-  const { profile, role, signOut, loginAsRole, isMockMode } = useAuth();
+  const { profile, role, signOut } = useAuth();
   const store = useDataStore();
   const navigate = useNavigate();
 
-  const [showRoleMenu, setShowRoleMenu] = useState(false);
   const [showNotifMenu, setShowNotifMenu] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
 
   const notifications = profile ? store.getNotificationsForUser(profile.id) : [];
   const unreadCount = notifications.filter((n) => !n.is_read).length;
-
-  const handleRoleSwitch = async (targetRole: Role) => {
-    setShowRoleMenu(false);
-    await loginAsRole(targetRole);
-    navigate(ROLE_DASHBOARD_PATHS[targetRole], { replace: true });
-  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -85,105 +69,12 @@ export function TopNav({ onMobileMenuToggle }: TopNavProps) {
 
       {/* Right Controls */}
       <div className="flex items-center gap-2 sm:gap-3">
-        {/* 1-Click Role Switcher - BUG-SEC-010: Only available to Admin for security */}
-        {isMockMode && role === "admin" && (
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => {
-                setShowRoleMenu(!showRoleMenu);
-                setShowNotifMenu(false);
-                setShowUserMenu(false);
-              }}
-              className="flex items-center gap-1.5 rounded-xl border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/20 transition-all shadow-xs"
-            >
-              <Sparkles className="h-3.5 w-3.5 text-primary animate-spin" style={{ animationDuration: "8s" }} />
-              <span className="hidden md:inline">Admin Switcher:</span>
-              <span className="capitalize">{role || "admin"}</span>
-              <ChevronDown className="h-3.5 w-3.5 opacity-70" />
-            </button>
-
-            {showRoleMenu && (
-              <div className="absolute right-0 mt-2 w-60 rounded-2xl border border-border bg-card/95 p-2 shadow-2xl backdrop-blur-xl z-50 animate-in fade-in zoom-in-95">
-                <div className="px-2.5 py-2 text-[11px] font-bold text-muted-foreground uppercase tracking-wider border-b border-border mb-1 flex items-center justify-between">
-                  <span>Admin Dev Switcher</span>
-                  <Zap className="h-3.5 w-3.5 text-amber-500" />
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleRoleSwitch("student")}
-                  className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs transition-colors ${
-                    (role as string) === "student" ? "bg-primary/10 text-primary font-bold" : "text-foreground hover:bg-accent"
-                  }`}
-                >
-                  <span className="flex items-center gap-2">
-                    <BookOpen className="h-4 w-4 text-blue-500" /> Student (Rahul)
-                  </span>
-                  {(role as string) === "student" && <Check className="h-3.5 w-3.5" />}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleRoleSwitch("faculty")}
-                  className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs transition-colors ${
-                    (role as string) === "faculty" ? "bg-primary/10 text-primary font-bold" : "text-foreground hover:bg-accent"
-                  }`}
-                >
-                  <span className="flex items-center gap-2">
-                    <GraduationCap className="h-4 w-4 text-purple-500" /> Faculty (Dr. Ananya)
-                  </span>
-                  {(role as string) === "faculty" && <Check className="h-3.5 w-3.5" />}
-                </button>
-                <div className="border-t border-border/40 my-1 pt-1">
-                  <div className="px-2 py-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                    Executors
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowRoleMenu(false);
-                      loginAsRole("executor", {
-                        id: "exe-prof-3",
-                        full_name: "Dinesh Sapkla",
-                        email: "dsapkal141@gmail.com",
-                      });
-                      navigate(ROLE_DASHBOARD_PATHS["executor"], { replace: true });
-                    }}
-                    className={`flex w-full items-center justify-between rounded-xl px-3 py-1.5 text-xs transition-colors ${
-                      (role as string) === "executor" && profile?.email === "dsapkal141@gmail.com" ? "bg-primary/10 text-primary font-bold" : "text-foreground hover:bg-accent"
-                    }`}
-                  >
-                    <span className="flex items-center gap-2">
-                      <UserCheck className="h-3.5 w-3.5 text-amber-500" /> Dinesh Sapkla
-                    </span>
-                    {(role as string) === "executor" && profile?.email === "dsapkal141@gmail.com" && <Check className="h-3.5 w-3.5" />}
-                  </button>
-                </div>
-                <div className="border-t border-border/40 my-1 pt-1">
-                  <button
-                    type="button"
-                    onClick={() => handleRoleSwitch("admin")}
-                    className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs transition-colors ${
-                      (role as string) === "admin" ? "bg-primary/10 text-primary font-bold" : "text-foreground hover:bg-accent"
-                    }`}
-                  >
-                    <span className="flex items-center gap-2">
-                      <Briefcase className="h-4 w-4 text-rose-500" /> Admin (Siddharth)
-                    </span>
-                    {(role as string) === "admin" && <Check className="h-3.5 w-3.5" />}
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
         {/* Notifications Popover */}
         <div className="relative">
           <button
             type="button"
             onClick={() => {
               setShowNotifMenu(!showNotifMenu);
-              setShowRoleMenu(false);
               setShowUserMenu(false);
             }}
             className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground transition-colors shadow-2xs"
@@ -242,7 +133,6 @@ export function TopNav({ onMobileMenuToggle }: TopNavProps) {
             type="button"
             onClick={() => {
               setShowUserMenu(!showUserMenu);
-              setShowRoleMenu(false);
               setShowNotifMenu(false);
             }}
             className="flex items-center gap-2 rounded-xl border border-border bg-card p-1.5 hover:bg-accent transition-colors shadow-2xs"
@@ -264,7 +154,7 @@ export function TopNav({ onMobileMenuToggle }: TopNavProps) {
               </div>
 
               <Link
-                to={`/${role}/profile`}
+                to={`/${role || "student"}/profile`}
                 onClick={() => setShowUserMenu(false)}
                 className="flex items-center gap-2 rounded-xl px-3 py-2 text-foreground hover:bg-accent transition-colors"
               >

@@ -58,8 +58,8 @@ export default function AdminStudents() {
           full_name: l.fullName || l.full_name || "Student",
           email: l.email || "",
           phone: l.phone || "9876543210",
-          course_name: l.interestedCourse || "Not Enrolled",
-          expiry_date: new Date(Date.now() + 90 * 86400000).toISOString(),
+          course_name: l.enrolledCourse || "Not Enrolled",
+          expiry_date: l.expiryDate || new Date(Date.now() + 90 * 86400000).toISOString(),
           status: l.status ? l.status.toLowerCase() : "active",
         }));
       }

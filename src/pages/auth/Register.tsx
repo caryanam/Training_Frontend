@@ -48,7 +48,7 @@ export default function Register() {
   }, []);
 
   const courses = springCourses.length > 0
-    ? springCourses.map((c: any) => ({ id: c.courseId, name: c.name }))
+    ? springCourses.map((c: any) => ({ id: c.courseCode || c.courseId || c.id, name: c.title || c.name }))
     : store.getCourses().filter((c) => c.status === "active");
 
   const validateFields = (): boolean => {
@@ -74,6 +74,22 @@ export default function Register() {
     // Confirm password match
     if (password !== confirmPassword) {
       errors.confirmPassword = "Passwords do not match.";
+    }
+
+    // BUG-013: Education must be at least 2 characters if provided
+    if (education.trim().length > 0 && education.trim().length < 2) {
+      errors.education = "Education must be at least 2 characters.";
+    }
+    if (education.trim().length > 0 && /^\d+$/.test(education.trim())) {
+      errors.education = "Education cannot be only digits.";
+    }
+
+    // BUG-014: City must be at least 2 characters, no digits only
+    if (city.trim().length > 0 && city.trim().length < 2) {
+      errors.city = "City must be at least 2 characters.";
+    }
+    if (city.trim().length > 0 && /\d/.test(city.trim())) {
+      errors.city = "City name should not contain digits.";
     }
 
     setFieldErrors(errors);
@@ -350,29 +366,26 @@ export default function Register() {
                     Interested Course
                   </label>
                   <div className="relative">
-                    <BookOpen className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <input
+                    <BookOpen className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                    <select
                       id="interestedCourse"
-                      list="interested-courses-list"
-                      type="text"
                       value={interestedCourse}
                       onChange={(e) => setInterestedCourse(e.target.value)}
-                      placeholder="Select or type your interested course (e.g. Full Stack Web Development)"
-                      className="flex h-11 w-full rounded-lg border border-input bg-background pl-10 pr-4 text-sm ring-offset-background placeholder:text-muted-foreground text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
-                    />
-                    <datalist id="interested-courses-list">
+                      className="flex h-11 w-full rounded-lg border border-input bg-background pl-10 pr-4 text-sm ring-offset-background text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors cursor-pointer appearance-none"
+                    >
+                      <option value="">-- Select a Course --</option>
                       {courses.map((c) => (
-                        <option key={c.id} value={c.name} />
+                        <option key={c.id} value={c.name}>{c.name}</option>
                       ))}
-                      <option value="Full Stack Web Development" />
-                      <option value="Java Full Stack Development" />
-                      <option value="Python & AI / Data Science" />
-                      <option value="DevOps & Cloud Engineering" />
-                      <option value="Cyber Security & Ethical Hacking" />
-                      <option value="React & Node.js Masterclass" />
-                    </datalist>
+                      {!courses.some((c) => c.name === "Full Stack Web Development") && <option value="Full Stack Web Development">Full Stack Web Development</option>}
+                      {!courses.some((c) => c.name === "Java Full Stack Development") && <option value="Java Full Stack Development">Java Full Stack Development</option>}
+                      {!courses.some((c) => c.name === "Python & AI / Data Science") && <option value="Python & AI / Data Science">Python & AI / Data Science</option>}
+                      {!courses.some((c) => c.name === "DevOps & Cloud Engineering") && <option value="DevOps & Cloud Engineering">DevOps & Cloud Engineering</option>}
+                      {!courses.some((c) => c.name === "Cyber Security & Ethical Hacking") && <option value="Cyber Security & Ethical Hacking">Cyber Security & Ethical Hacking</option>}
+                      {!courses.some((c) => c.name === "React & Node.js Masterclass") && <option value="React & Node.js Masterclass">React & Node.js Masterclass</option>}
+                    </select>
                   </div>
-                  <p className="mt-1 text-[11px] text-muted-foreground">Select from the dropdown suggestions or type any custom course</p>
+                  <p className="mt-1 text-[11px] text-muted-foreground">Select a course you are interested in</p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
@@ -381,32 +394,40 @@ export default function Register() {
                       Education
                     </label>
                     <div className="relative">
-                      <Education className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Education className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                       <input
                         id="education"
                         type="text"
                         value={education}
-                        onChange={(e) => setEducation(e.target.value)}
+                        onChange={(e) => { setEducation(e.target.value); setFieldErrors((p) => ({ ...p, education: "" })); }}
                         placeholder="e.g. B.Tech CS"
-                        className="flex h-11 w-full rounded-lg border border-input bg-background pl-10 pr-4 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
+                        minLength={2}
+                        className={`flex h-11 w-full rounded-lg border ${fieldErrors.education ? "border-destructive" : "border-input"} bg-background pl-10 pr-4 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors`}
                       />
                     </div>
+                    {fieldErrors.education && (
+                      <p className="mt-1 text-xs text-destructive flex items-center gap-1"><AlertCircle className="h-3 w-3" />{fieldErrors.education}</p>
+                    )}
                   </div>
                   <div>
                     <label htmlFor="city" className="block text-xs font-medium text-muted-foreground mb-1.5">
                       City
                     </label>
                     <div className="relative">
-                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                       <input
                         id="city"
                         type="text"
                         value={city}
-                        onChange={(e) => setCity(e.target.value)}
+                        onChange={(e) => { setCity(e.target.value); setFieldErrors((p) => ({ ...p, city: "" })); }}
                         placeholder="e.g. Bangalore"
-                        className="flex h-11 w-full rounded-lg border border-input bg-background pl-10 pr-4 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
+                        minLength={2}
+                        className={`flex h-11 w-full rounded-lg border ${fieldErrors.city ? "border-destructive" : "border-input"} bg-background pl-10 pr-4 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors`}
                       />
                     </div>
+                    {fieldErrors.city && (
+                      <p className="mt-1 text-xs text-destructive flex items-center gap-1"><AlertCircle className="h-3 w-3" />{fieldErrors.city}</p>
+                    )}
                   </div>
                 </div>
               </div>

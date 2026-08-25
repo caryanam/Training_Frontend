@@ -2,6 +2,40 @@ import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { ROLE_DASHBOARD_PATHS, type Role } from "@/lib/constants";
 
+function getActiveRole(contextRole: Role | null): Role | null {
+  if (contextRole) {
+    const clean = contextRole.toLowerCase().replace(/^role_/, "").trim();
+    if (clean === "admin" || clean === "faculty" || clean === "executor" || clean === "student") {
+      return clean as Role;
+    }
+  }
+
+  // Fallback to localStorage if state hasn't re-rendered yet
+  try {
+    const savedStr = localStorage.getItem("eduflow_user_profile");
+    if (savedStr) {
+      const saved = JSON.parse(savedStr);
+      if (saved && saved.role) {
+        const clean = saved.role.toString().toLowerCase().replace(/^role_/, "").trim();
+        if (clean === "admin" || clean === "faculty" || clean === "executor" || clean === "student") {
+          return clean as Role;
+        }
+      }
+    }
+  } catch (e) {}
+
+  return null;
+}
+
+function hasActiveSession(contextSession: any): boolean {
+  if (contextSession) return true;
+  return Boolean(
+    localStorage.getItem("eduflow_jwt_token") ||
+    localStorage.getItem("eduflow_mock_auth_profile_id") ||
+    localStorage.getItem("eduflow_user_profile")
+  );
+}
+
 /**
  * ProtectedRoute — Blocks unauthenticated users.
  * Redirects to /login if no session.
@@ -18,7 +52,7 @@ export function ProtectedRoute() {
       );
     }
 
-    if (!session) {
+    if (!hasActiveSession(session)) {
       return <Navigate to="/login" replace />;
     }
 
@@ -44,8 +78,8 @@ export function RoleRoute({ allowedRoles }: { allowedRoles: string[] }) {
       );
     }
 
-    const currentRole = role ? (role.toLowerCase() as Role) : null;
-    const allowedNormalized = allowedRoles.map((r) => r.toLowerCase());
+    const currentRole = getActiveRole(role);
+    const allowedNormalized = allowedRoles.map((r) => r.toLowerCase().replace(/^role_/, "").trim());
 
     if (!currentRole || !allowedNormalized.includes(currentRole)) {
       const dashboardPath = currentRole && ROLE_DASHBOARD_PATHS[currentRole]
@@ -76,8 +110,8 @@ export function PublicOnlyRoute() {
       );
     }
 
-    const currentRole = role ? (role.toLowerCase() as Role) : null;
-    if (session && currentRole && ROLE_DASHBOARD_PATHS[currentRole]) {
+    const currentRole = getActiveRole(role);
+    if (hasActiveSession(session) && currentRole && ROLE_DASHBOARD_PATHS[currentRole]) {
       return <Navigate to={ROLE_DASHBOARD_PATHS[currentRole]} replace />;
     }
 
