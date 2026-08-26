@@ -1,8 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { ROLE_DASHBOARD_PATHS } from "@/lib/constants";
-import type { Role } from "@/lib/constants";
+import { ROLE_DASHBOARD_PATHS, type Role } from "@/lib/constants";
 import {
   Code,
   Eye,
@@ -26,57 +25,6 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const { signIn } = useAuth();
   const navigate = useNavigate();
-
-  const handleFillDemoCredentials = async (targetRole: Role) => {
-    setError("");
-    let targetEmail = "";
-    let targetPassword = "";
-
-    switch (targetRole) {
-      case "student":
-        targetEmail = "student@codextechnology.com";
-        targetPassword = "Password@123";
-        break;
-      case "faculty":
-        targetEmail = "faculty@codex.com";
-        targetPassword = "ChangeMe@123";
-        break;
-      case "executor":
-        targetEmail = "dsapkal141@gmail.com";
-        targetPassword = "ChangeMe@123";
-        break;
-      case "admin":
-        targetEmail = "admin@gmail.com";
-        targetPassword = "admin@123";
-        break;
-    }
-
-    setEmail(targetEmail);
-    setPassword(targetPassword);
-    setInfoMsg(`Loaded ${targetRole.toUpperCase()} credentials. Authenticating...`);
-    setLoading(true);
-
-    try {
-      const result = await signIn(targetEmail, targetPassword);
-      if (result.error) {
-        setError(result.error.message);
-        setLoading(false);
-        return;
-      }
-      const rawRole = (result as any).role?.toString() || targetRole;
-      const cleanRole = (rawRole.toLowerCase().replace(/^role_/, "").trim() as Role) || targetRole;
-      if (cleanRole && ROLE_DASHBOARD_PATHS[cleanRole]) {
-        navigate(ROLE_DASHBOARD_PATHS[cleanRole], { replace: true });
-      } else {
-        navigate("/student", { replace: true });
-      }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Authentication failed";
-      setError(msg);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -170,7 +118,7 @@ export default function Login() {
         </div>
       </div>
 
-      {/* Right panel — Login form & Demo Credentials */}
+      {/* Right panel — Production Login form */}
       <div className="flex w-full lg:w-1/2 flex-col justify-center p-6 sm:p-12 overflow-y-auto">
         <div className="mx-auto w-full max-w-[440px]">
           {/* Mobile branding */}
@@ -181,73 +129,12 @@ export default function Login() {
             <span className="text-xl font-bold text-foreground">CodeX Technology</span>
           </div>
 
-          {/* Demo Mode Credentials Helper */}
-          <div className="mb-6 rounded-xl border border-indigo-500/20 bg-indigo-500/5 p-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5">
-                <Sparkles className="h-3.5 w-3.5" /> Demo Credentials
-              </span>
-              <span className="text-[11px] rounded-full bg-indigo-100 dark:bg-indigo-950 px-2 py-0.5 font-medium text-indigo-700 dark:text-indigo-300">
-                Click to Pre-fill
-              </span>
-            </div>
-            <p className="text-xs text-muted-foreground mb-3">
-              Click any role to load its login credentials into the form, then click Sign In to authenticate:
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => handleFillDemoCredentials("student")}
-                className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-foreground shadow-xs hover:border-primary hover:bg-primary/5 hover:text-primary transition-all text-left cursor-pointer"
-              >
-                <BookOpen className="h-3.5 w-3.5 text-indigo-600 shrink-0" />
-                <div>
-                  <div className="font-semibold">Student</div>
-                  <div className="text-[10px] text-muted-foreground">Rahul Sharma</div>
-                </div>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleFillDemoCredentials("faculty")}
-                className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-foreground shadow-xs hover:border-emerald-500 hover:bg-emerald-500/5 hover:text-emerald-600 transition-all text-left cursor-pointer"
-              >
-                <UserCheck className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                <div>
-                  <div className="font-semibold">Faculty</div>
-                  <div className="text-[10px] text-muted-foreground">Dr. Rajesh</div>
-                </div>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleFillDemoCredentials("executor")}
-                className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-foreground shadow-xs hover:border-amber-500 hover:bg-amber-500/5 hover:text-amber-600 transition-all text-left cursor-pointer"
-              >
-                <Briefcase className="h-3.5 w-3.5 text-amber-600 shrink-0" />
-                <div>
-                  <div className="font-semibold">Executor</div>
-                  <div className="text-[10px] text-muted-foreground">Dinesh Sapkla</div>
-                </div>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleFillDemoCredentials("admin")}
-                className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-foreground shadow-xs hover:border-rose-500 hover:bg-rose-500/5 hover:text-rose-600 transition-all text-left cursor-pointer"
-              >
-                <ShieldAlert className="h-3.5 w-3.5 text-rose-600 shrink-0" />
-                <div>
-                  <div className="font-semibold">Admin</div>
-                  <div className="text-[10px] text-muted-foreground">System Admin</div>
-                </div>
-              </button>
-            </div>
-          </div>
-
           <div className="mb-6">
             <h2 className="text-2xl font-bold tracking-tight text-foreground mb-1">
               Sign In
             </h2>
             <p className="text-sm text-muted-foreground">
-              Enter your credentials to access your dashboard
+              Enter your account credentials to access your dashboard
             </p>
           </div>
 
@@ -277,7 +164,7 @@ export default function Login() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="e.g. student@gmail.com"
+                placeholder="Enter your email"
                 required
                 className="flex h-11 w-full rounded-lg border border-input bg-background px-4 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
               />

@@ -56,33 +56,13 @@ export default function AdminExecutors() {
       if (res.success && res.data) {
         setExecutors(res.data);
       } else {
-        const mockData = dataStore.getExecutorsWithProfiles();
-        setExecutors(
-          mockData.map((e) => ({
-            profileId: e.profile_id,
-            executorId: e.executor_id,
-            fullName: e.profile.full_name,
-            email: e.profile.email,
-            phone: e.profile.phone || "",
-            role: e.profile.role.toUpperCase(),
-            status: e.status,
-          }))
-        );
+        setError(res.error || "Failed to load executors.");
+        setExecutors([]);
       }
     } catch (err) {
       console.error("Failed to load executors:", err);
-      const mockData = dataStore.getExecutorsWithProfiles();
-      setExecutors(
-        mockData.map((e) => ({
-          profileId: e.profile_id,
-          executorId: e.executor_id,
-          fullName: e.profile.full_name,
-          email: e.profile.email,
-          phone: e.profile.phone || "",
-          role: e.profile.role.toUpperCase(),
-          status: e.status,
-        }))
-      );
+      setError("Unable to connect to server.");
+      setExecutors([]);
     } finally {
       setLoading(false);
     }

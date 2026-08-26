@@ -84,55 +84,10 @@ export default function AdminStudents() {
         });
       }
 
-      // 3. Fallback default student list if empty
-      if (combined.length === 0) {
-        combined = [
-          {
-            id: "std-1",
-            student_id: "STD-1001",
-            full_name: "Valmik Kolte",
-            email: "valmik.kolte@example.com",
-            phone: "9812345678",
-            course_name: "Full Stack Web Development",
-            expiry_date: "2026-12-31T00:00:00.000Z",
-            status: "active",
-          },
-          {
-            id: "std-2",
-            student_id: "STD-1002",
-            full_name: "Rishab Raj",
-            email: "rishab.raj@example.com",
-            phone: "9876543210",
-            course_name: "Java Microservices & Cloud",
-            expiry_date: "2026-11-30T00:00:00.000Z",
-            status: "active",
-          },
-          {
-            id: "std-3",
-            student_id: "STD-1003",
-            full_name: "Priya Sharma",
-            email: "priya.sharma@example.com",
-            phone: "9823456789",
-            course_name: "Data Science & AI Engineering",
-            expiry_date: "2026-10-15T00:00:00.000Z",
-            status: "active",
-          },
-          {
-            id: "std-4",
-            student_id: "STD-1004",
-            full_name: "Akash Verma",
-            email: "akash.verma@example.com",
-            phone: "9834567890",
-            course_name: "Cyber Security & Ethical Hacking",
-            expiry_date: "2026-09-30T00:00:00.000Z",
-            status: "active",
-          },
-        ];
-      }
-
       setStudents(combined);
     } catch (err) {
       console.error("Failed to load admin student directory:", err);
+      setStudents([]);
     } finally {
       setLoading(false);
     }

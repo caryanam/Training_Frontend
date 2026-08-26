@@ -57,52 +57,7 @@ export default function ExecutorStudents() {
       }))
     : (profile ? store.getStudentsForExecutor(profile.id || profile.email) : []);
 
-  if (rawAssignedStudents.length === 0) {
-    rawAssignedStudents = [
-      {
-        id: "std-1",
-        student_id: "STD-1001",
-        profile_id: "std-1",
-        status: "active",
-        interestedCourse: "Full Stack Web Development",
-        created_at: new Date().toISOString(),
-        profile: {
-          id: "std-1",
-          full_name: "Valmik Kolte",
-          email: "valmik.kolte@example.com",
-          phone: "9812345678",
-        },
-      },
-      {
-        id: "std-2",
-        student_id: "STD-1002",
-        profile_id: "std-2",
-        status: "active",
-        interestedCourse: "Java Microservices & Cloud",
-        created_at: new Date().toISOString(),
-        profile: {
-          id: "std-2",
-          full_name: "Rishab Raj",
-          email: "rishab.raj@example.com",
-          phone: "9876543210",
-        },
-      },
-      {
-        id: "std-3",
-        student_id: "STD-1003",
-        profile_id: "std-3",
-        status: "active",
-        interestedCourse: "Data Science & AI Engineering",
-        created_at: new Date().toISOString(),
-        profile: {
-          id: "std-3",
-          full_name: "Priya Sharma",
-          email: "priya.sharma@example.com",
-          phone: "9823456789",
-        },
-      },
-    ];
-  }
+
 
   const filteredStudents = rawAssignedStudents.filter((s: any) => {
     const matchesSearch =

@@ -50,35 +50,13 @@ export default function AdminFaculty() {
       if (res.success && res.data) {
         setFaculty(res.data);
       } else {
-        const mockData = dataStore.getFacultyWithProfiles();
-        setFaculty(
-          mockData.map((f) => ({
-            profileId: f.profile_id,
-            facultyId: f.faculty_id,
-            fullName: f.profile.full_name,
-            email: f.profile.email,
-            phone: f.profile.phone || "",
-            role: f.profile.role.toUpperCase(),
-            status: f.status,
-            department: (f as any).department || "General",
-          }))
-        );
+        setError(res.error || "Failed to load faculty roster.");
+        setFaculty([]);
       }
     } catch (err) {
       console.error("Failed to load faculty roster:", err);
-      const mockData = dataStore.getFacultyWithProfiles();
-      setFaculty(
-        mockData.map((f) => ({
-          profileId: f.profile_id,
-          facultyId: f.faculty_id,
-          fullName: f.profile.full_name,
-          email: f.profile.email,
-          phone: f.profile.phone || "",
-          role: f.profile.role.toUpperCase(),
-          status: f.status,
-          department: (f as any).department || "General",
-        }))
-      );
+      setError("Unable to connect to server.");
+      setFaculty([]);
     } finally {
       setLoading(false);
     }
