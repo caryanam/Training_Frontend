@@ -1,14 +1,13 @@
 /**
  * Notification Service Abstraction
- * 
- * Current: InAppNotificationProvider (Supabase table + Realtime)
+ * InAppNotificationProvider (centralized store)
  * Future: EmailNotificationProvider (Resend/SendGrid/etc.)
  * 
  * Business logic calls NotificationService.send() — never ties directly
  * to a specific provider.
  */
 
-import { supabase } from "@/lib/supabase";
+import { dataStore } from "@/lib/store";
 import type { NotificationType } from "@/lib/constants";
 
 export interface NotificationPayload {
@@ -26,23 +25,23 @@ export interface NotificationProvider {
 
 /**
  * In-App Notification Provider
- * Stores notifications in the Supabase `notifications` table.
- * Uses Supabase Realtime for live updates.
+ * Stores notifications in local state/store.
  */
 class InAppNotificationProvider implements NotificationProvider {
   readonly name = "in-app";
 
   async send(payload: NotificationPayload): Promise<{ error: Error | null }> {
-    const { error } = await (supabase.from("notifications") as any).insert({
-      user_id: payload.userId,
-      title: payload.title,
-      message: payload.message,
-      type: payload.type,
-      metadata: payload.metadata ?? {},
-      is_read: false,
-    });
-
-    return { error: error ? new Error(error.message) : null };
+    try {
+      dataStore.createNotification({
+        user_id: payload.userId,
+        title: payload.title,
+        message: payload.message,
+        type: payload.type,
+      });
+      return { error: null };
+    } catch (e: any) {
+      return { error: e };
+    }
   }
 }
 

@@ -6,17 +6,26 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
-import type { Session, User } from "@supabase/supabase-js";
-import { supabase, isSupabaseConfigured } from "@/lib/supabase";
-import { dataStore } from "@/lib/store";
-import { api, setAuthToken } from "@/lib/api";
+import { api, setAuthToken, removeAuthToken } from "@/lib/api";
 import type { Profile } from "@/types/database";
 import type { Role } from "@/lib/constants";
-import { MOCK_PROFILES } from "@/lib/mockData";
+
+export interface SessionUser {
+  id: string;
+  email: string;
+  fullName: string;
+  role: Role;
+}
+
+export interface UserSession {
+  access_token: string;
+  token_type: string;
+  user: SessionUser;
+}
 
 interface AuthContextType {
-  session: Session | null;
-  user: User | null;
+  session: UserSession | null;
+  user: SessionUser | null;
   profile: Profile | null;
   role: Role | null;
   loading: boolean;
@@ -42,134 +51,19 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const LOCAL_STORAGE_MOCK_KEY = "eduflow_mock_auth_profile_id";
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<UserSession | null>(null);
+  const [user, setUser] = useState<SessionUser | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Live Supabase profile fetcher
-  const fetchProfile = useCallback(async (userId: string) => {
-    if (!isSupabaseConfigured) {
-      return MOCK_PROFILES[userId] || null;
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", userId)
-        .single();
-
-      if (error) {
-        console.error("Error fetching live profile:", error);
-        return null;
-      }
-      return data as Profile;
-    } catch (err) {
-      console.error("Network exception fetching profile:", err);
-      return null;
-    }
-  }, []);
-
-  const refreshProfile = useCallback(async () => {
-    if (!user) return;
-    const profileData = await fetchProfile(user.id);
-    if (profileData) {
-      setProfile(profileData);
-    }
-  }, [user, fetchProfile]);
-
-  // Direct login as a designated role for quick testing/demo
-  const loginAsRole = useCallback(async (targetRole: Role, customProfile?: Partial<Profile>) => {
-    let matchedProfile: Profile | undefined;
-
-    if (customProfile && customProfile.email) {
-      matchedProfile = Object.values(MOCK_PROFILES).find(
-        (p) => p.email?.toLowerCase() === customProfile.email!.toLowerCase()
-      );
-      if (!matchedProfile) {
-        matchedProfile = {
-          id: customProfile.id || `prof-${customProfile.email}`,
-          full_name: customProfile.full_name || "User",
-          email: customProfile.email,
-          phone: customProfile.phone || null,
-          avatar_url: null,
-          role: targetRole,
-          status: "active",
-          last_login: new Date().toISOString(),
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-        MOCK_PROFILES[matchedProfile.id] = matchedProfile;
-      }
-    } else {
-      matchedProfile = Object.values(MOCK_PROFILES).find(
-        (p) => p.role === targetRole
-      );
-    }
-
-    if (!matchedProfile) {
-      const fallbackEmail =
-        customProfile?.email ||
-        (targetRole === "admin"
-          ? "admin@codextechnology.com"
-          : targetRole === "faculty"
-          ? "faculty@codex.com"
-          : targetRole === "executor"
-          ? "dsapkal141@gmail.com"
-          : "student@codextechnology.com");
-
-      matchedProfile = {
-        id: customProfile?.id || `${targetRole}-prof-${Date.now()}`,
-        full_name: customProfile?.full_name || (targetRole.charAt(0).toUpperCase() + targetRole.slice(1) + " User"),
-        email: fallbackEmail,
-        phone: customProfile?.phone || "9876543210",
-        avatar_url: null,
-        role: targetRole,
-        status: "active",
-        last_login: new Date().toISOString(),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-      MOCK_PROFILES[matchedProfile.id] = matchedProfile;
-    }
-
-    localStorage.setItem(LOCAL_STORAGE_MOCK_KEY, matchedProfile.id);
-    localStorage.setItem("eduflow_user_profile", JSON.stringify(matchedProfile));
-
-    const mockUser: User = {
-      id: matchedProfile.id,
-      app_metadata: {},
-      user_metadata: { full_name: matchedProfile.full_name, role: matchedProfile.role },
-      aud: "authenticated",
-      created_at: matchedProfile.created_at,
-      email: matchedProfile.email,
-      phone: matchedProfile.phone ?? undefined,
-      confirmed_at: matchedProfile.created_at,
-    };
-
-    const mockSession: Session = {
-      access_token: "mock-jwt-token",
-      refresh_token: "mock-refresh-token",
-      expires_in: 3600,
-      token_type: "bearer",
-      user: mockUser,
-    };
-
-    setUser(mockUser);
-    setSession(mockSession);
-    setProfile(matchedProfile);
-  }, []);
-
+  // Restore session from localStorage on initial load
   useEffect(() => {
-    // 1. First check if there is a Spring Boot JWT token in localStorage
     const springToken = localStorage.getItem("eduflow_jwt_token");
+    const savedProfileStr = localStorage.getItem("eduflow_user_profile");
+
     if (springToken) {
       try {
-        const savedProfileStr = localStorage.getItem("eduflow_user_profile");
         const savedProfile = savedProfileStr ? JSON.parse(savedProfileStr) : null;
         let claims: any = null;
         try {
@@ -186,17 +80,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           );
           claims = JSON.parse(jsonPayload);
         } catch (e) {
-          console.warn("Non-JWT token format or parse error:", e);
+          // Token claims parsing fallback
         }
 
-        const userRole = claims?.role
-          ? (claims.role.replace("ROLE_", "").toLowerCase() as Role)
-          : savedProfile?.role || "student";
+        const rawRole = claims?.role || savedProfile?.role || "STUDENT";
+        const userRole = (rawRole.toString().replace("ROLE_", "").toLowerCase() as Role) || "student";
         const email = claims?.sub || savedProfile?.email || "user@eduflow.com";
         const fullName = savedProfile?.full_name || (email.split("@")[0].charAt(0).toUpperCase() + email.split("@")[0].slice(1));
+        const profileId = savedProfile?.id || claims?.profileId || email;
 
-        const springProfile: Profile = {
-          id: savedProfile?.id || email,
+        const activeProfile: Profile = {
+          id: profileId,
           full_name: fullName,
           email: email,
           phone: savedProfile?.phone || null,
@@ -204,114 +98,88 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           role: userRole,
           status: "active",
           last_login: new Date().toISOString(),
-          created_at: new Date().toISOString(),
+          created_at: savedProfile?.created_at || new Date().toISOString(),
           updated_at: new Date().toISOString(),
         };
 
-        const springUser: User = {
-          id: springProfile.id,
-          app_metadata: {},
-          user_metadata: { full_name: springProfile.full_name, role: userRole },
-          aud: "authenticated",
-          created_at: new Date().toISOString(),
+        const activeUser: SessionUser = {
+          id: profileId,
           email: email,
-          confirmed_at: new Date().toISOString(),
+          fullName: fullName,
+          role: userRole,
         };
 
-        const springSession: Session = {
+        const activeSession: UserSession = {
           access_token: springToken,
-          refresh_token: "spring-refresh-token",
-          expires_in: 3600,
-          token_type: "bearer",
-          user: springUser,
+          token_type: "Bearer",
+          user: activeUser,
         };
 
-        setProfile(springProfile);
-        setUser(springUser);
-        setSession(springSession);
-        setLoading(false);
-        return;
+        setProfile(activeProfile);
+        setUser(activeUser);
+        setSession(activeSession);
       } catch (e) {
-        console.error("Failed to restore Spring Boot session:", e);
+        console.error("Failed to restore authentication session:", e);
       }
     }
+    setLoading(false);
+  }, []);
 
-    if (!isSupabaseConfigured) {
-      // Restore session from localStorage if present
-      const savedProfileId = localStorage.getItem(LOCAL_STORAGE_MOCK_KEY);
-      let p = savedProfileId ? MOCK_PROFILES[savedProfileId] : null;
-
-      if (!p) {
-        try {
-          const savedProfileStr = localStorage.getItem("eduflow_user_profile");
-          if (savedProfileStr) {
-            p = JSON.parse(savedProfileStr);
-            if (p && p.id) {
-              MOCK_PROFILES[p.id] = p;
-            }
-          }
-        } catch (e) {
-          console.error("Failed to restore profile from localStorage:", e);
-        }
+  const refreshProfile = useCallback(async () => {
+    const savedProfileStr = localStorage.getItem("eduflow_user_profile");
+    if (savedProfileStr) {
+      try {
+        setProfile(JSON.parse(savedProfileStr));
+      } catch (e) {
+        console.warn("Error refreshing profile:", e);
       }
-
-      if (p) {
-        const mockUser: User = {
-          id: p.id,
-          app_metadata: {},
-          user_metadata: { full_name: p.full_name, role: p.role },
-          aud: "authenticated",
-          created_at: p.created_at,
-          email: p.email,
-          phone: p.phone ?? undefined,
-          confirmed_at: p.created_at,
-        };
-        setUser(mockUser);
-        setSession({
-          access_token: "mock-jwt-token",
-          refresh_token: "mock-refresh-token",
-          expires_in: 3600,
-          token_type: "bearer",
-          user: mockUser,
-        });
-        setProfile(p);
-      }
-      setLoading(false);
-      return;
     }
+  }, []);
 
-    // Live Supabase mode
-    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
-      setSession(initialSession);
-      setUser(initialSession?.user ?? null);
+  const loginAsRole = useCallback(async (targetRole: Role, customProfile?: Partial<Profile>) => {
+    const fallbackEmail =
+      customProfile?.email ||
+      (targetRole === "admin"
+        ? "admin@gmail.com"
+        : targetRole === "faculty"
+        ? "faculty@codex.com"
+        : targetRole === "executor"
+        ? "dsapkal141@gmail.com"
+        : "student@codextechnology.com");
 
-      if (initialSession?.user) {
-        fetchProfile(initialSession.user.id).then((profileData) => {
-          setProfile(profileData);
-          setLoading(false);
-        });
-      } else {
-        setLoading(false);
-      }
-    });
+    const matchedProfile: Profile = {
+      id: customProfile?.id || `prof-${targetRole}-${Date.now()}`,
+      full_name: customProfile?.full_name || (targetRole.charAt(0).toUpperCase() + targetRole.slice(1) + " User"),
+      email: fallbackEmail,
+      phone: customProfile?.phone || "9876543210",
+      avatar_url: null,
+      role: targetRole,
+      status: "active",
+      last_login: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
-      setSession(newSession);
-      setUser(newSession?.user ?? null);
+    const sessionUser: SessionUser = {
+      id: matchedProfile.id,
+      email: matchedProfile.email,
+      fullName: matchedProfile.full_name,
+      role: targetRole,
+    };
 
-      if (newSession?.user) {
-        const profileData = await fetchProfile(newSession.user.id);
-        setProfile(profileData);
-      } else {
-        setProfile(null);
-      }
-      setLoading(false);
-    });
+    const sessionObj: UserSession = {
+      access_token: "mock-jwt-token",
+      token_type: "Bearer",
+      user: sessionUser,
+    };
 
-    return () => subscription.unsubscribe();
-  }, [fetchProfile]);
+    localStorage.setItem("eduflow_jwt_token", sessionObj.access_token);
+    localStorage.setItem("eduflow_user_profile", JSON.stringify(matchedProfile));
+
+    setUser(sessionUser);
+    setSession(sessionObj);
+    setProfile(matchedProfile);
+  }, []);
 
   const signUp = async (
     email: string,
@@ -320,7 +188,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     role: Role = "student",
     extras?: { phone?: string; interestedCourse?: string; education?: string; city?: string }
   ) => {
-    // Try Spring Boot REST API Backend First
     const springRes = await api.registerStudent({
       fullName,
       email,
@@ -332,124 +199,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     if (springRes.success && springRes.data) {
-      const newId = springRes.data.profileId;
-      const newProfile: Profile = {
-        id: newId,
-        full_name: springRes.data.fullName,
-        email: springRes.data.email,
-        phone: springRes.data.phone || null,
-        avatar_url: null,
-        role: (springRes.data.role.toLowerCase() as Role) || "student",
-        status: "active",
-        last_login: new Date().toISOString(),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-      MOCK_PROFILES[newId] = newProfile;
-
-      // BUG-008: Also create student record & lead in local store
-      // so Admin > Student Leads section shows the newly registered student
-      if (role === "student") {
-        const { MOCK_STUDENTS } = await import("@/lib/mockData");
-        const studentRecId = `stu-${Date.now()}`;
-        MOCK_STUDENTS.push({
-          id: studentRecId,
-          profile_id: newId,
-          student_id: `STU-${Math.floor(1000 + Math.random() * 9000)}`,
-          assigned_executor_id: null,
-          assigned_faculty_id: null,
-          status: "active",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        });
-
-        dataStore.createStudentLead({
-          student_id: studentRecId,
-          profile_id: newId,
-          interested_course: extras?.interestedCourse || null,
-          education: extras?.education || null,
-          city: extras?.city || null,
-          status: "new",
-          assigned_executor_id: null,
-          followup_date: null,
-          notes: null,
-        });
-      }
-
       return { error: null };
     }
 
-    if (!isSupabaseConfigured) {
-      // Mock signup fallback
-      const newId = `student-${Date.now()}`;
-      const newProfile: Profile = {
-        id: newId,
-        full_name: fullName,
-        email,
-        phone: extras?.phone || null,
-        avatar_url: null,
-        role,
-        status: "active",
-        last_login: new Date().toISOString(),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-      MOCK_PROFILES[newId] = newProfile;
-
-      // Create student record in mock
-      if (role === "student") {
-        const { MOCK_STUDENTS } = await import("@/lib/mockData");
-        const studentRecId = `stu-${Date.now()}`;
-        MOCK_STUDENTS.push({
-          id: studentRecId,
-          profile_id: newId,
-          student_id: `STU-${Math.floor(1000 + Math.random() * 9000)}`,
-          assigned_executor_id: null,
-          assigned_faculty_id: null,
-          status: "active",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        });
-
-        // Create student lead
-        dataStore.createStudentLead({
-          student_id: studentRecId,
-          profile_id: newId,
-          interested_course: extras?.interestedCourse || null,
-          education: extras?.education || null,
-          city: extras?.city || null,
-          status: "new",
-          assigned_executor_id: null,
-          followup_date: null,
-          notes: null,
-        });
-      }
-
-      return { error: null };
+    if (springRes.error) {
+      return { error: new Error(springRes.error) };
     }
 
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: fullName,
-          role,
-          phone: extras?.phone,
-          interested_course: extras?.interestedCourse,
-          education: extras?.education,
-          city: extras?.city,
-        },
-      },
-    });
-    return { error: error ? new Error(error.message) : null };
+    return { error: new Error("Registration failed") };
   };
 
   const signIn = async (email: string, password: string) => {
-    // Try Spring Boot REST API Backend First
     const springRes = await api.login({ email, password });
     
-    // Check for token and user payload in both top-level and nested data property
     const token = (springRes as any).token || springRes.data?.token;
     const userData = (springRes as any).user || springRes.data?.user;
 
@@ -471,21 +233,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         updated_at: new Date().toISOString(),
       };
       
-      const springUser: User = {
+      const springUser: SessionUser = {
         id: springProfile.id,
-        app_metadata: {},
-        user_metadata: { full_name: springProfile.full_name, role: userRole },
-        aud: "authenticated",
-        created_at: new Date().toISOString(),
         email: springProfile.email,
-        confirmed_at: new Date().toISOString(),
+        fullName: springProfile.full_name,
+        role: userRole,
       };
 
-      const springSession: Session = {
+      const springSession: UserSession = {
         access_token: token,
-        refresh_token: "spring-refresh-token",
-        expires_in: 3600,
-        token_type: "bearer",
+        token_type: "Bearer",
         user: springUser,
       };
 
@@ -499,97 +256,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: null, role: userRole };
     }
 
-    // If Spring Boot server returned an error (e.g. 401 Unauthorized, Bad credentials)
-    if (springRes.error && !springRes.error.includes("Unable to connect")) {
+    if (springRes.error) {
       return { error: new Error(springRes.error) };
     }
 
-    if (!isSupabaseConfigured) {
-      // Look up mock profile by email
-      const matched = Object.values(MOCK_PROFILES).find(
-        (p) => p.email?.toLowerCase() === email.toLowerCase()
-      );
-
-      let detectedRole: Role = "student";
-      const cleanEmail = email.toLowerCase();
-      if (cleanEmail.includes("admin")) detectedRole = "admin";
-      else if (cleanEmail.includes("faculty")) detectedRole = "faculty";
-      else if (cleanEmail.includes("executor") || cleanEmail.includes("dsapkal")) detectedRole = "executor";
-
-      const targetRole = matched ? (matched.role as Role) : detectedRole;
-
-      const profileToUse: Partial<Profile> = matched || {
-        id: `prof-${email}`,
-        email: email,
-        full_name: email.split("@")[0].charAt(0).toUpperCase() + email.split("@")[0].slice(1),
-        role: targetRole,
-      };
-
-      await loginAsRole(targetRole, profileToUse);
-      return { error: null, role: targetRole };
-    }
-
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        return { error: new Error(error.message) };
-      }
-
-      if (data?.user) {
-        await (supabase.from("profiles") as any)
-          .update({ last_login: new Date().toISOString() })
-          .eq("id", data.user.id);
-
-        const prof = await fetchProfile(data.user.id);
-        return { error: null, role: prof?.role as Role };
-      }
-
-      return { error: null };
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to connect to authentication server";
-      return { error: new Error(message) };
-    }
+    return { error: new Error("Invalid email or password") };
   };
 
   const signOut = async () => {
-    localStorage.removeItem(LOCAL_STORAGE_MOCK_KEY);
-    localStorage.removeItem("eduflow_jwt_token");
+    removeAuthToken();
+    localStorage.removeItem("eduflow_mock_auth_profile_id");
     localStorage.removeItem("eduflow_user_profile");
-
-    if (isSupabaseConfigured) {
-      try {
-        await supabase.auth.signOut();
-      } catch (e) {
-        console.warn("Sign out network error ignored in clean cleanup:", e);
-      }
-    }
-
     setSession(null);
     setUser(null);
     setProfile(null);
   };
 
-  const resetPassword = async (email: string) => {
-    if (!isSupabaseConfigured) {
-      return { error: null };
-    }
-
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
-    return { error: error ? new Error(error.message) : null };
+  const resetPassword = async (_email: string) => {
+    return { error: new Error("Password reset via email is managed through system admin.") };
   };
 
-  const updatePassword = async (password: string) => {
-    if (!isSupabaseConfigured) {
-      return { error: null };
-    }
-    const { error } = await supabase.auth.updateUser({ password });
-    return { error: error ? new Error(error.message) : null };
+  const updatePassword = async (_password: string) => {
+    return { error: new Error("Password update is managed through user profile settings.") };
   };
 
   const updateProfile = async (data: { full_name?: string; phone?: string }) => {
@@ -602,50 +290,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       updated_at: new Date().toISOString(),
     };
 
-    // Update state
     setProfile(updatedProfile);
 
-    // Update user metadata
     if (user) {
       setUser({
         ...user,
-        user_metadata: { ...user.user_metadata, full_name: updatedProfile.full_name },
-        phone: updatedProfile.phone ?? undefined,
+        fullName: updatedProfile.full_name,
       });
     }
 
-    // Persist to localStorage
     try {
       localStorage.setItem("eduflow_user_profile", JSON.stringify(updatedProfile));
     } catch (e) {
       console.warn("Could not save updated profile to localStorage", e);
     }
 
-    // Update Mock store / memory if in mock mode
-    if (MOCK_PROFILES[profile.id]) {
-      MOCK_PROFILES[profile.id] = { ...MOCK_PROFILES[profile.id], ...updatedProfile };
-    }
-
-    // Supabase update if configured
-    if (isSupabaseConfigured) {
-      try {
-        await (supabase.from("profiles") as any)
-          .update({
-            full_name: updatedProfile.full_name,
-            phone: updatedProfile.phone,
-            updated_at: updatedProfile.updated_at,
-          })
-          .eq("id", profile.id);
-      } catch (err) {
-        console.warn("Supabase profile sync error:", err);
-      }
-    }
-
     return { error: null };
   };
 
   const computedRole = (() => {
-    const raw = profile?.role || user?.user_metadata?.role || (() => {
+    const raw = profile?.role || user?.role || (() => {
       try { return JSON.parse(localStorage.getItem("eduflow_user_profile") || "{}")?.role; } catch { return null; }
     })();
     if (!raw) return session ? ("student" as Role) : null;
@@ -662,7 +326,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     profile,
     role: computedRole,
     loading,
-    isMockMode: !isSupabaseConfigured,
+    isMockMode: false,
     signUp,
     signIn,
     loginAsRole,
@@ -685,7 +349,7 @@ export function useAuth() {
       profile: null,
       role: null,
       loading: true,
-      isMockMode: true,
+      isMockMode: false,
       signUp: async () => ({ error: null }),
       signIn: async () => ({ error: null }),
       loginAsRole: async () => { },

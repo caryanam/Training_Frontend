@@ -1,5 +1,5 @@
 // ============================================================
-// Database Types — Supabase Schema
+// Database & Domain Entity Schemas
 // ============================================================
 
 export type Json =

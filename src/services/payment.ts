@@ -134,8 +134,8 @@ export class MockPaymentProvider implements PaymentProvider {
 //   readonly name = "razorpay";
 //   
 //   async createOrder(params) {
-//     // Call Supabase Edge Function to create Razorpay order
-//     // Edge Function uses RAZORPAY_KEY_SECRET (server-side only)
+//     // Call Spring Boot API to create Razorpay order
+//     // Backend uses RAZORPAY_KEY_SECRET (server-side only)
 //   }
 //   
 //   async processPayment(order) {
@@ -144,8 +144,8 @@ export class MockPaymentProvider implements PaymentProvider {
 //   }
 //   
 //   async verifyPayment(result) {
-//     // Call Supabase Edge Function to verify signature
-//     // Edge Function verifies razorpay_signature using secret
+//     // Call Spring Boot API (/api/v1/payments/verify) to verify signature
+//     // Backend verifies razorpay_signature using secret
 //   }
 // }
 

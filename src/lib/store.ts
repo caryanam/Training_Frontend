@@ -2,8 +2,7 @@
  * EduFlow Central Data Store & Repository
  * 
  * Manages reactive data state across all 4 roles (Student, Faculty, Executor, Admin).
- * Works seamlessly in demo/mock mode with localStorage persistence and provides
- * clean async API wrappers that delegate to Supabase when live credentials exist.
+ * Integrates directly with the Java Spring Boot REST API.
  */
 
 import { useState, useEffect } from "react";

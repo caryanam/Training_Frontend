@@ -24,7 +24,7 @@ export default function Login() {
   const [error, setError] = useState("");
   const [infoMsg, setInfoMsg] = useState("");
   const [loading, setLoading] = useState(false);
-  const { signIn, isMockMode } = useAuth();
+  const { signIn } = useAuth();
   const navigate = useNavigate();
 
   const handleFillDemoCredentials = async (targetRole: Role) => {
@@ -46,7 +46,7 @@ export default function Login() {
         targetPassword = "ChangeMe@123";
         break;
       case "admin":
-        targetEmail = "admin@codextechnology.com";
+        targetEmail = "admin@gmail.com";
         targetPassword = "admin@123";
         break;
     }
@@ -165,7 +165,7 @@ export default function Login() {
           <span>Enterprise SaaS LMS v2.0</span>
           <span className="flex items-center gap-1.5">
             <Database className="h-3.5 w-3.5" />
-            {isMockMode ? "Spring Boot API + React" : "Connected to Supabase"}
+            Spring Boot REST API + React
           </span>
         </div>
       </div>

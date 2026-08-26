@@ -47,7 +47,7 @@ async function apiRequest<T>(
     // When Spring Boot backend server is not running on port 8080
     return {
       success: false,
-      error: "Spring Boot server offline. Falling back to demo mode.",
+      error: "Unable to connect to Spring Boot server. Please check your backend connection.",
     };
   }
 }
