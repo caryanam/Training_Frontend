@@ -14,7 +14,6 @@ import type {
   Payment,
   Followup,
   Notification,
-  AuditLog,
   StudentWithProfile,
   FacultyWithProfile,
   ExecutorWithProfile,
@@ -34,7 +33,6 @@ import {
   MOCK_PAYMENTS,
   MOCK_FOLLOWUPS,
   MOCK_NOTIFICATIONS,
-  MOCK_AUDIT_LOGS,
   MOCK_PROFILES,
   MOCK_STUDENTS,
   MOCK_FACULTY,
@@ -54,7 +52,7 @@ const STORAGE_KEYS = {
   PAYMENTS: "eduflow_payments",
   FOLLOWUPS: "eduflow_followups",
   NOTIFICATIONS: "eduflow_notifications",
-  AUDIT_LOGS: "eduflow_audit_logs",
+
   ADJUSTMENTS: "eduflow_adjustments",
   STUDENT_LEADS: "eduflow_student_leads",
   DEMO_SESSIONS: "eduflow_demo_sessions",
@@ -64,7 +62,7 @@ const STORAGE_KEYS = {
 // Initial state helpers
 function getInitialData<T>(key: string, fallback: T): T {
   try {
-    if (Array.isArray(fallback) && fallback.length === 0) {
+    if ((Array.isArray(fallback) && fallback.length === 0) || (typeof fallback === 'object' && fallback !== null && Object.keys(fallback).length === 0)) {
       localStorage.removeItem(key);
       return [] as unknown as T;
     }
@@ -84,7 +82,7 @@ let enrollmentsState: CourseEnrollment[] = getInitialData(STORAGE_KEYS.ENROLLMEN
 let paymentsState: Payment[] = getInitialData(STORAGE_KEYS.PAYMENTS, MOCK_PAYMENTS);
 let followupsState: Followup[] = getInitialData(STORAGE_KEYS.FOLLOWUPS, MOCK_FOLLOWUPS);
 let notificationsState: Notification[] = getInitialData(STORAGE_KEYS.NOTIFICATIONS, MOCK_NOTIFICATIONS);
-let auditLogsState: AuditLog[] = getInitialData(STORAGE_KEYS.AUDIT_LOGS, MOCK_AUDIT_LOGS);
+
 let adjustmentsState: EnrollmentAccessAdjustment[] = getInitialData(STORAGE_KEYS.ADJUSTMENTS, []);
 let studentLeadsState: StudentLead[] = getInitialData(STORAGE_KEYS.STUDENT_LEADS, MOCK_STUDENT_LEADS);
 let demoSessionsState: DemoSession[] = getInitialData(STORAGE_KEYS.DEMO_SESSIONS, MOCK_DEMO_SESSIONS);
@@ -107,7 +105,7 @@ function persistAll() {
     localStorage.setItem(STORAGE_KEYS.PAYMENTS, JSON.stringify(paymentsState));
     localStorage.setItem(STORAGE_KEYS.FOLLOWUPS, JSON.stringify(followupsState));
     localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(notificationsState));
-    localStorage.setItem(STORAGE_KEYS.AUDIT_LOGS, JSON.stringify(auditLogsState));
+
     localStorage.setItem(STORAGE_KEYS.ADJUSTMENTS, JSON.stringify(adjustmentsState));
     localStorage.setItem(STORAGE_KEYS.STUDENT_LEADS, JSON.stringify(studentLeadsState));
     localStorage.setItem(STORAGE_KEYS.DEMO_SESSIONS, JSON.stringify(demoSessionsState));
@@ -157,12 +155,7 @@ export const dataStore = {
       updated_at: new Date().toISOString(),
     };
     coursesState = [newCourse, ...coursesState];
-    dataStore.addAuditLog({
-      action: "course.created",
-      entity: "courses",
-      entity_id: newCourse.id,
-      details: { name: newCourse.name },
-    });
+    
     persistAll();
     return newCourse;
   },
@@ -171,23 +164,13 @@ export const dataStore = {
       c.id === id ? { ...c, ...updates, updated_at: new Date().toISOString() } : c
     );
     const updated = coursesState.find((c) => c.id === id);
-    dataStore.addAuditLog({
-      action: "course.updated",
-      entity: "courses",
-      entity_id: id,
-      details: updates,
-    });
+    
     persistAll();
     return updated;
   },
   deleteCourse(id: string) {
     coursesState = coursesState.filter((c) => c.id !== id);
-    dataStore.addAuditLog({
-      action: "course.deleted",
-      entity: "courses",
-      entity_id: id,
-      details: {},
-    });
+    
     persistAll();
   },
 
@@ -228,12 +211,7 @@ export const dataStore = {
       updated_at: new Date().toISOString(),
     };
     lecturesState = [newLecture, ...lecturesState];
-    dataStore.addAuditLog({
-      action: "lecture.created",
-      entity: "lectures",
-      entity_id: newLecture.id,
-      details: { title: newLecture.title, course_id: newLecture.course_id },
-    });
+    
     // Send notifications to enrolled students
     const enrolled = enrollmentsState.filter(
       (e) => e.course_id === newLecture.course_id && e.status === "active"
@@ -257,23 +235,13 @@ export const dataStore = {
     lecturesState = lecturesState.map((l) =>
       l.id === id ? { ...l, ...updates, updated_at: new Date().toISOString() } : l
     );
-    dataStore.addAuditLog({
-      action: "lecture.updated",
-      entity: "lectures",
-      entity_id: id,
-      details: updates,
-    });
+    
     persistAll();
     return lecturesState.find((l) => l.id === id);
   },
   deleteLecture(id: string) {
     lecturesState = lecturesState.filter((l) => l.id !== id);
-    dataStore.addAuditLog({
-      action: "lecture.deleted",
-      entity: "lectures",
-      entity_id: id,
-      details: {},
-    });
+    
     persistAll();
   },
 
@@ -376,17 +344,7 @@ export const dataStore = {
       metadata: { courseId: params.courseId, expiryDate },
     });
 
-    dataStore.addAuditLog({
-      action: "payment.verified",
-      entity: "payments",
-      entity_id: newPayment.id,
-      details: {
-        student: MOCK_PROFILES[params.studentProfileId]?.full_name || "Student",
-        course: course?.name,
-        amount: params.amount,
-        expiryDate,
-      },
-    });
+    
 
     persistAll();
     return { enrollment: newEnrollment, payment: newPayment };
@@ -429,16 +387,7 @@ export const dataStore = {
     );
 
     // Audit log
-    dataStore.addAuditLog({
-      action: "access.extended",
-      entity: "course_enrollments",
-      entity_id: enrollment.id,
-      details: {
-        previousExpiry,
-        newExpiry: params.newExpiryDate,
-        reason: params.reason,
-      },
-    });
+    
 
     // Notify student
     const student = MOCK_STUDENTS.find((s) => s.id === enrollment.student_id);
@@ -616,20 +565,8 @@ export const dataStore = {
   },
 
   // --- AUDIT LOGS (Append-Only) ---
-  getAuditLogs(): AuditLog[] {
-    return [...auditLogsState];
-  },
-  addAuditLog(log: Omit<AuditLog, "id" | "created_at" | "user_id" | "ip_address"> & { user_id?: string }) {
-    const newLog: AuditLog = {
-      ...log,
-      id: `audit-${Date.now()}`,
-      user_id: log.user_id || "admin-1",
-      ip_address: "127.0.0.1",
-      created_at: new Date().toISOString(),
-    };
-    auditLogsState = [newLog, ...auditLogsState];
-    persistAll();
-  },
+  
+  
 
   // --- USERS & PROFILES ---
   getStudentsWithProfiles(): StudentWithProfile[] {
@@ -782,12 +719,7 @@ export const dataStore = {
       metadata: { leadId: newLead.id },
     });
 
-    dataStore.addAuditLog({
-      action: "lead.created",
-      entity: "student_leads",
-      entity_id: newLead.id,
-      details: { student: MOCK_PROFILES[lead.profile_id]?.full_name },
-    });
+    
 
     persistAll();
     return newLead;
@@ -810,13 +742,7 @@ export const dataStore = {
       details: { previous: previousStatus, new: status },
     });
 
-    dataStore.addAuditLog({
-      action: "lead.status_changed",
-      entity: "student_leads",
-      entity_id: leadId,
-      details: { previous: previousStatus, new: status },
-      user_id: performedBy,
-    });
+    
 
     persistAll();
     return studentLeadsState.find((l) => l.id === leadId);
@@ -857,13 +783,7 @@ export const dataStore = {
       });
     }
 
-    dataStore.addAuditLog({
-      action: "lead.assigned",
-      entity: "student_leads",
-      entity_id: leadId,
-      details: { executor: executorProfile?.full_name, executor_id: executorId },
-      user_id: adminProfileId,
-    });
+    
 
     persistAll();
     return studentLeadsState.find((l) => l.id === leadId);
@@ -936,12 +856,7 @@ export const dataStore = {
       });
     }
 
-    dataStore.addAuditLog({
-      action: "demo.scheduled",
-      entity: "demo_sessions",
-      entity_id: newDemo.id,
-      details: { lead_id: demo.lead_id, date: demo.demo_date },
-    });
+    
 
     persistAll();
     return newDemo;
@@ -963,12 +878,7 @@ export const dataStore = {
           details: { feedback: updates.feedback },
         });
 
-        dataStore.addAuditLog({
-          action: "demo.completed",
-          entity: "demo_sessions",
-          entity_id: id,
-          details: { lead_id: demo.lead_id },
-        });
+        
       }
     }
 
@@ -1029,13 +939,7 @@ export const dataStore = {
       updated_at: new Date().toISOString(),
     });
 
-    dataStore.addAuditLog({
-      action: "faculty.created",
-      entity: "faculty",
-      entity_id: facRecId,
-      details: { name: data.fullName, email: data.email },
-      user_id: data.adminProfileId,
-    });
+    
 
     persistAll();
     return { profileId: newId, facultyId };
@@ -1072,13 +976,7 @@ export const dataStore = {
       updated_at: new Date().toISOString(),
     });
 
-    dataStore.addAuditLog({
-      action: "executor.created",
-      entity: "executors",
-      entity_id: exeRecId,
-      details: { name: data.fullName, email: data.email },
-      user_id: data.adminProfileId,
-    });
+    
 
     persistAll();
     return { profileId: newId, executorId };
@@ -1109,13 +1007,7 @@ export const dataStore = {
       };
     }
 
-    dataStore.addAuditLog({
-      action: `executor.status.${newStatus}`,
-      entity: "executors",
-      entity_id: executor.id,
-      details: { previousStatus, newStatus, executorId: executor.executor_id },
-      user_id: adminProfileId,
-    });
+    
 
     persistAll();
     notify();
@@ -1145,13 +1037,7 @@ export const dataStore = {
       };
     }
 
-    dataStore.addAuditLog({
-      action: `faculty.status.${newStatus}`,
-      entity: "faculty",
-      entity_id: fac.id,
-      details: { previousStatus, newStatus, facultyId: fac.faculty_id },
-      user_id: adminProfileId,
-    });
+    
 
     persistAll();
     notify();
@@ -1202,3 +1088,7 @@ export function useDataStore() {
 
   return dataStore;
 }
+
+
+
+

@@ -28,7 +28,7 @@ export function TopNav({ onMobileMenuToggle }: TopNavProps) {
 
   const handleSignOut = async () => {
     await signOut();
-    navigate("/login", { replace: true });
+    window.location.href = '/login';
   };
 
   const getRoleGlowBadge = () => {
@@ -153,13 +153,15 @@ export function TopNav({ onMobileMenuToggle }: TopNavProps) {
                 <div className="text-[11px] text-muted-foreground truncate">{profile?.email}</div>
               </div>
 
-              <Link
-                to={`/${role || "student"}/profile`}
-                onClick={() => setShowUserMenu(false)}
-                className="flex items-center gap-2 rounded-xl px-3 py-2 text-foreground hover:bg-accent transition-colors"
-              >
-                <User className="h-4 w-4 text-primary" /> Profile Settings
-              </Link>
+              {role !== "admin" && (
+                <Link
+                  to={`/${role || "student"}/profile`}
+                  onClick={() => setShowUserMenu(false)}
+                  className="flex items-center gap-2 rounded-xl px-3 py-2 text-foreground hover:bg-accent transition-colors"
+                >
+                  <User className="h-4 w-4 text-primary" /> Profile Settings
+                </Link>
+              )}
 
               <button
                 type="button"

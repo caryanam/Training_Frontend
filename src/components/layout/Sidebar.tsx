@@ -75,12 +75,9 @@ const NAV_CONFIG: Record<Role, NavItem[]> = {
     { label: "Faculty", href: "/admin/faculty", icon: Users },
     { label: "Courses", href: "/admin/courses", icon: BookOpen },
     { label: "Lectures", href: "/admin/lectures", icon: Video },
-    { label: "Lecture Access", href: "/admin/access", icon: Lock, badge: "Security" },
     { label: "Payments", href: "/admin/payments", icon: CreditCard },
     { label: "Reports", href: "/admin/reports", icon: FileText },
-    { label: "Roles & Perms", href: "/admin/roles", icon: Key },
-    { label: "Audit Logs", href: "/admin/audit", icon: History },
-    { label: "Settings", href: "/admin/settings", icon: Settings },
+
   ],
 };
 
@@ -199,3 +196,4 @@ export function Sidebar({ onNavigate }: SidebarProps) {
     </aside>
   );
 }
+

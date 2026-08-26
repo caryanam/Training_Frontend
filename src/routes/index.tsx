@@ -55,13 +55,16 @@ import AdminExecutors from "@/pages/admin/Executors";
 import AdminFaculty from "@/pages/admin/Faculty";
 import AdminCourses from "@/pages/admin/Courses";
 import AdminLectures from "@/pages/admin/Lectures";
-import AdminLectureAccess from "@/pages/admin/LectureAccess";
 import AdminPayments from "@/pages/admin/Payments";
 import AdminReports from "@/pages/admin/Reports";
+<<<<<<< HEAD
 import AdminRolesPermissions from "@/pages/admin/RolesPermissions";
 import AdminAuditLogs from "@/pages/admin/AuditLogs";
 import AdminSettings from "@/pages/admin/Settings";
 import AdminProfile from "@/pages/admin/Profile";
+=======
+
+>>>>>>> 1889c19 (updt)
 import { RouteErrorBoundary } from "@/components/shared/RouteErrorBoundary";
 import LandingPage from "@/pages/public/LandingPage";
 
@@ -154,13 +157,16 @@ export const router = createBrowserRouter([
               { path: "/admin/faculty", element: <AdminFaculty /> },
               { path: "/admin/courses", element: <AdminCourses /> },
               { path: "/admin/lectures", element: <AdminLectures /> },
-              { path: "/admin/access", element: <AdminLectureAccess /> },
               { path: "/admin/payments", element: <AdminPayments /> },
               { path: "/admin/reports", element: <AdminReports /> },
+<<<<<<< HEAD
               { path: "/admin/roles", element: <AdminRolesPermissions /> },
               { path: "/admin/audit", element: <AdminAuditLogs /> },
               { path: "/admin/settings", element: <AdminSettings /> },
               { path: "/admin/profile", element: <AdminProfile /> },
+=======
+
+>>>>>>> 1889c19 (updt)
             ],
           },
 
@@ -174,3 +180,4 @@ export const router = createBrowserRouter([
   // 404
   { path: "*", element: <NotFound /> },
 ]);
+

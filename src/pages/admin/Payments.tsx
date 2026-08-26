@@ -50,13 +50,7 @@ export default function AdminPayments() {
       }
     });
 
-    store.addAuditLog({
-      action: "payment.refunded",
-      entity: "payments",
-      entity_id: pId,
-      details: { previousStatus: currentStatus, newStatus: "refunded" },
-      user_id: profile.id,
-    });
+    
   };
 
   return (
@@ -188,3 +182,4 @@ export default function AdminPayments() {
     </div>
   );
 }
+

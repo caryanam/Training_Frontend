@@ -116,13 +116,7 @@ export default function AdminStudents() {
     );
 
     if (profile) {
-      store.addAuditLog({
-        action: "user.status_changed",
-        entity: "students",
-        entity_id: studentId,
-        details: { previousStatus: currentStatus, newStatus },
-        user_id: profile.id,
-      });
+      
     }
   };
 
@@ -234,3 +228,4 @@ export default function AdminStudents() {
     </div>
   );
 }
+

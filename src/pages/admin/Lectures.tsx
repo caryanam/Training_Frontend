@@ -42,13 +42,7 @@ export default function AdminLectures() {
 
     store.updateLecture(lecId, { status: newStatus as any });
 
-    store.addAuditLog({
-      action: newStatus === "disabled" ? "lecture.disabled" : "lecture.enabled",
-      entity: "lectures",
-      entity_id: lecId,
-      details: { previousStatus: currentStatus, newStatus },
-      user_id: profile.id,
-    });
+    
   };
 
   return (
@@ -167,3 +161,4 @@ export default function AdminLectures() {
     </div>
   );
 }
+

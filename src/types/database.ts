@@ -103,12 +103,7 @@ export interface Database {
         Update: Partial<Permission>;
         Relationships: [];
       };
-      audit_logs: {
-        Row: AuditLog;
-        Insert: Partial<AuditLog> & { action: string; entity: string };
-        Update: Partial<AuditLog>;
-        Relationships: [];
-      };
+      
       student_leads: {
         Row: StudentLead;
         Insert: Partial<StudentLead> & { student_id: string; profile_id: string };
@@ -364,16 +359,7 @@ export interface Permission {
   updated_at: string;
 }
 
-export interface AuditLog {
-  id: string;
-  user_id: string | null;
-  action: string;
-  entity: string;
-  entity_id: string | null;
-  details: unknown;
-  ip_address: string | null;
-  created_at: string;
-}
+
 
 export type LeadStatusType =
   | "new"
@@ -481,3 +467,4 @@ export interface DemoSessionWithDetails extends DemoSession {
   student: StudentWithProfile;
   course?: Course | null;
 }
+
