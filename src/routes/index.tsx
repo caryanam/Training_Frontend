@@ -61,6 +61,7 @@ import AdminReports from "@/pages/admin/Reports";
 import AdminRolesPermissions from "@/pages/admin/RolesPermissions";
 import AdminAuditLogs from "@/pages/admin/AuditLogs";
 import AdminSettings from "@/pages/admin/Settings";
+import AdminProfile from "@/pages/admin/Profile";
 import { RouteErrorBoundary } from "@/components/shared/RouteErrorBoundary";
 import LandingPage from "@/pages/public/LandingPage";
 
@@ -159,6 +160,7 @@ export const router = createBrowserRouter([
               { path: "/admin/roles", element: <AdminRolesPermissions /> },
               { path: "/admin/audit", element: <AdminAuditLogs /> },
               { path: "/admin/settings", element: <AdminSettings /> },
+              { path: "/admin/profile", element: <AdminProfile /> },
             ],
           },
 
