@@ -48,47 +48,69 @@ export default function AdminStudentLeads() {
   const [springExecutors, setSpringExecutors] = useState<any[]>([]);
 
   useEffect(() => {
-    // Fetch live Spring Boot leads & executors
-    api.getLeads(activeTab, search).then((res) => {
-      if (res.success && res.data) {
-        setSpringLeads(res.data);
-      }
-    });
-    api.getAllExecutors().then((res) => {
-      if (res.success && res.data) {
-        setSpringExecutors(res.data);
-      }
-    });
+    const loadData = () => {
+      api.getLeads(activeTab, search).then((res) => {
+        if (res.success && res.data) {
+          setSpringLeads(res.data);
+        }
+      });
+      api.getAllExecutors().then((res) => {
+        if (res.success && res.data) {
+          setSpringExecutors(res.data);
+        }
+      });
+    };
+
+    loadData();
+    // Auto-sync every 3 seconds so status changed by Executor is reflected automatically
+    const interval = setInterval(loadData, 3000);
+    return () => clearInterval(interval);
   }, [activeTab, search]);
 
-  const leads = springLeads.map((l: any) => ({
-    id: l.leadId,
-    student_id: l.studentId || l.leadId,
-    profile_id: l.profileId || l.leadId,
-    interested_course: l.interestedCourse,
-    education: l.education,
-    city: l.city,
-    status: (l.status || "new").toLowerCase(),
-    assigned_executor_id: l.assignedExecutor,
-    followup_date: l.followupDate || null,
-    notes: null,
-    last_activity: l.lastActivity || l.createdAt,
-    created_at: l.createdAt || new Date().toISOString(),
-    updated_at: l.createdAt || new Date().toISOString(),
-    profile: {
-      id: l.profileId || l.leadId,
-      full_name: l.fullName || "Student",
-      email: l.email || "",
-      phone: l.phone || null,
-      avatar_url: null,
-      role: "student" as const,
-      status: "active" as const,
-      last_login: null,
-      created_at: l.createdAt || new Date().toISOString(),
-      updated_at: l.createdAt || new Date().toISOString(),
-    },
-    executor: l.assignedExecutor ? { profile: { full_name: l.assignedExecutor } } : null,
-  }));
+  const storeLeads = store.getStudentLeads();
+
+  const leads = (springLeads.length > 0 ? springLeads : store.getStudentLeadsWithProfiles()).map((l: any) => {
+    const leadId = String(l.leadId || l.id);
+    const storeMatch = storeLeads.find((sl) =>
+      String(sl.id) === leadId ||
+      String(sl.student_id) === leadId ||
+      String(sl.profile_id) === leadId
+    );
+
+    // If reactive store has updated status, reflect it immediately
+    const status = storeMatch ? storeMatch.status : (l.status || "new").toLowerCase();
+
+    return {
+      id: leadId,
+      student_id: l.studentId || l.student_id || leadId,
+      profile_id: l.profileId || l.profile_id || leadId,
+      interested_course: l.interestedCourse || l.interested_course || "Full Stack Web Development",
+      education: l.education || l.profile?.education || "—",
+      city: l.city || l.profile?.city || "—",
+      status: status,
+      assigned_executor_id: l.assignedExecutor || l.assigned_executor_id,
+      followup_date: l.followupDate || l.followup_date || null,
+      notes: null,
+      last_activity: l.lastActivity || l.last_activity || l.createdAt || new Date().toISOString(),
+      created_at: l.createdAt || l.created_at || new Date().toISOString(),
+      updated_at: l.updatedAt || l.updated_at || new Date().toISOString(),
+      profile: {
+        id: l.profileId || l.profile_id || leadId,
+        full_name: l.fullName || l.full_name || l.profile?.full_name || "Student",
+        email: l.email || l.profile?.email || "",
+        phone: l.phone || l.profile?.phone || null,
+        avatar_url: null,
+        role: "student" as const,
+        status: "active" as const,
+        last_login: null,
+        created_at: l.createdAt || l.created_at || new Date().toISOString(),
+        updated_at: l.createdAt || l.created_at || new Date().toISOString(),
+      },
+      executor: (l.assignedExecutor || l.executor)
+        ? { profile: { full_name: l.assignedExecutor || l.executor?.profile?.full_name || "Executor" } }
+        : null,
+    };
+  });
 
   const executors = springExecutors.length > 0
     ? springExecutors.map((e: any) => ({
@@ -137,13 +159,25 @@ export default function AdminStudentLeads() {
   };
 
   const handleStatusChange = async (leadId: string, newStatus: string) => {
-    await api.updateLeadStatus(leadId, newStatus);
+    // 1. Immediate optimistic UI update
+    setSpringLeads((prev) =>
+      prev.map((l) =>
+        l.leadId === leadId || l.id === leadId
+          ? { ...l, status: newStatus }
+          : l
+      )
+    );
+
+    // 2. Update central store
     store.updateLeadStatus(leadId, newStatus, profile?.id);
     setStatusModalLeadId(null);
-    // Refresh leads
-    api.getLeads(activeTab, search).then((res) => {
-      if (res.success && res.data) setSpringLeads(res.data);
-    });
+
+    // 3. Call backend API
+    try {
+      await api.updateLeadStatus(leadId, newStatus);
+    } catch (e) {
+      console.error("Failed to update status on server:", e);
+    }
   };
 
   const leadActivity = activityLeadId ? store.getLeadActivity(activityLeadId) : [];
@@ -153,7 +187,7 @@ export default function AdminStudentLeads() {
   const newLeads = leads.filter((l) => l.status === "new").length;
   const assignedLeads = leads.filter((l) => l.status === "assigned").length;
   const demoScheduled = leads.filter((l) => l.status === "demo_scheduled").length;
-  const interested = leads.filter((l) => l.status === "interested").length;
+  const interested = leads.filter((l) => l.status === "interested" || l.status === "demo_completed").length;
   const paymentPending = leads.filter((l) => l.status === "payment_pending").length;
   const enrolled = leads.filter((l) => l.status === "enrolled").length;
 
@@ -279,15 +313,9 @@ export default function AdminStudentLeads() {
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <button
-                        type="button"
-                        onClick={() => setStatusModalLeadId(lead.id)}
-                        className="cursor-pointer"
-                      >
-                        <StatusBadge status={lead.status} />
-                      </button>
+                      {/* Read-only status badge for Admin: only Executor changes status */}
+                      <StatusBadge status={lead.status} />
                     </td>
-
                     <td className="px-4 py-3 hidden lg:table-cell">
                       {lead.executor ? (
                         <span className="text-xs font-medium text-foreground">

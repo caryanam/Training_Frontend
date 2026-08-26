@@ -70,6 +70,7 @@ const NAV_CONFIG: Record<Role, NavItem[]> = {
   admin: [
     { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
     { label: "Student Leads", href: "/admin/leads", icon: Target, badge: "Pipeline" },
+    { label: "Free Demos", href: "/admin/demos", icon: Video, badge: "Live" },
     { label: "Students", href: "/admin/students", icon: Users },
     { label: "Follow-ups", href: "/admin/followups", icon: Target, badge: "New" },
     { label: "Executors", href: "/admin/executors", icon: UserPlus },
@@ -78,7 +79,6 @@ const NAV_CONFIG: Record<Role, NavItem[]> = {
     { label: "Lectures", href: "/admin/lectures", icon: Video },
     { label: "Payments", href: "/admin/payments", icon: CreditCard },
     { label: "Reports", href: "/admin/reports", icon: FileText },
-
   ],
 };
 

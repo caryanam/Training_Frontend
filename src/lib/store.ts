@@ -725,27 +725,56 @@ export const dataStore = {
     return newLead;
   },
   updateLeadStatus(leadId: string, status: string, performedBy?: string): StudentLead | undefined {
-    const prev = studentLeadsState.find((l) => l.id === leadId);
-    if (!prev) return undefined;
-    const previousStatus = prev.status;
+    const cleanId = String(leadId);
+    const cleanStatus = status.toLowerCase() as StudentLead["status"];
 
-    studentLeadsState = studentLeadsState.map((l) =>
-      l.id === leadId
-        ? { ...l, status: status as StudentLead["status"], last_activity: new Date().toISOString(), updated_at: new Date().toISOString() }
-        : l
+    const idx = studentLeadsState.findIndex((l) =>
+      String(l.id) === cleanId ||
+      String((l as any).leadId) === cleanId ||
+      String(l.student_id) === cleanId ||
+      String(l.profile_id) === cleanId
     );
 
-    dataStore.addLeadActivity({
-      lead_id: leadId,
-      action: `Status changed to ${status}`,
-      performed_by: performedBy || null,
-      details: { previous: previousStatus, new: status },
-    });
+    let updatedLead: StudentLead;
+    if (idx !== -1) {
+      const prev = studentLeadsState[idx];
+      const previousStatus = prev.status;
+      studentLeadsState[idx] = {
+        ...prev,
+        status: cleanStatus,
+        last_activity: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      updatedLead = studentLeadsState[idx];
 
-    
+      dataStore.addLeadActivity({
+        lead_id: prev.id,
+        action: `Status changed to ${status}`,
+        performed_by: performedBy || null,
+        details: { previous: previousStatus, new: status },
+      });
+    } else {
+      // Create new lead record in store to track this backend lead
+      updatedLead = {
+        id: cleanId,
+        student_id: cleanId,
+        profile_id: cleanId,
+        interested_course: "Full Stack Web Development",
+        education: "BTech",
+        city: "India",
+        status: cleanStatus,
+        assigned_executor_id: "exe-rec-1",
+        followup_date: null,
+        notes: null,
+        last_activity: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      studentLeadsState.push(updatedLead);
+    }
 
     persistAll();
-    return studentLeadsState.find((l) => l.id === leadId);
+    return updatedLead;
   },
   assignExecutorToLead(leadId: string, executorId: string, adminProfileId: string): StudentLead | undefined {
     studentLeadsState = studentLeadsState.map((l) =>
@@ -862,23 +891,83 @@ export const dataStore = {
     return newDemo;
   },
   updateDemoSession(id: string, updates: Partial<DemoSession>): DemoSession | undefined {
+    const prevDemo = demoSessionsState.find((d) => d.id === id);
     demoSessionsState = demoSessionsState.map((d) =>
       d.id === id ? { ...d, ...updates, updated_at: new Date().toISOString() } : d
     );
 
-    // If completed, add activity and update lead
-    if (updates.status === "completed") {
-      const demo = demoSessionsState.find((d) => d.id === id);
-      if (demo) {
+    const demo = demoSessionsState.find((d) => d.id === id);
+    if (demo && updates.status) {
+      const statusLower = updates.status.toLowerCase();
+      const course = demo.course_id ? coursesState.find((c) => c.id === demo.course_id) : null;
+      const courseName = course?.name || "Demo Session";
+
+      if (statusLower === "completed") {
         dataStore.updateLeadStatus(demo.lead_id, "demo_completed");
         dataStore.addLeadActivity({
           lead_id: demo.lead_id,
-          action: "Demo completed",
+          action: "Demo session completed successfully",
           performed_by: MOCK_EXECUTORS.find((e) => e.id === demo.executor_id)?.profile_id || null,
-          details: { feedback: updates.feedback },
+          details: { feedback: updates.feedback, notes: updates.notes },
         });
 
-        
+        // Notify Admin
+        dataStore.createNotification({
+          user_id: "admin-1",
+          title: "Demo Session Completed ✅",
+          message: `Executor marked demo for '${courseName}' as COMPLETED.`,
+          type: "system",
+          metadata: { demoId: demo.id },
+        });
+      } else if (statusLower === "cancelled") {
+        dataStore.updateLeadStatus(demo.lead_id, "assigned");
+        dataStore.addLeadActivity({
+          lead_id: demo.lead_id,
+          action: "Demo session cancelled",
+          performed_by: MOCK_EXECUTORS.find((e) => e.id === demo.executor_id)?.profile_id || null,
+          details: { reason: updates.notes || "Cancelled by executor" },
+        });
+
+        // Notify Admin
+        dataStore.createNotification({
+          user_id: "admin-1",
+          title: "Demo Session Cancelled ⚠️",
+          message: `Demo for '${courseName}' was CANCELLED.`,
+          type: "system",
+          metadata: { demoId: demo.id },
+        });
+      } else if (statusLower === "no_show") {
+        dataStore.addLeadActivity({
+          lead_id: demo.lead_id,
+          action: "Student marked as NO-SHOW for demo session",
+          performed_by: MOCK_EXECUTORS.find((e) => e.id === demo.executor_id)?.profile_id || null,
+          details: { notes: updates.notes },
+        });
+
+        // Notify Admin
+        dataStore.createNotification({
+          user_id: "admin-1",
+          title: "Demo Session No-Show ⚠️",
+          message: `Student was marked as NO-SHOW for '${courseName}' demo.`,
+          type: "system",
+          metadata: { demoId: demo.id },
+        });
+      } else {
+        dataStore.addLeadActivity({
+          lead_id: demo.lead_id,
+          action: `Demo status updated to ${updates.status}`,
+          performed_by: MOCK_EXECUTORS.find((e) => e.id === demo.executor_id)?.profile_id || null,
+          details: { status: updates.status },
+        });
+
+        // Notify Admin
+        dataStore.createNotification({
+          user_id: "admin-1",
+          title: "Demo Status Updated 🔄",
+          message: `Demo for '${courseName}' status changed to ${updates.status}.`,
+          type: "system",
+          metadata: { demoId: demo.id },
+        });
       }
     }
 

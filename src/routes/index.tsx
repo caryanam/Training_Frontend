@@ -58,6 +58,7 @@ import AdminCourses from "@/pages/admin/Courses";
 import AdminLectures from "@/pages/admin/Lectures";
 import AdminPayments from "@/pages/admin/Payments";
 import AdminReports from "@/pages/admin/Reports";
+import AdminDemoSessions from "@/pages/admin/DemoSessions";
 import { RouteErrorBoundary } from "@/components/shared/RouteErrorBoundary";
 import LandingPage from "@/pages/public/LandingPage";
 
@@ -144,6 +145,7 @@ export const router = createBrowserRouter([
             children: [
               { path: "/admin", element: <AdminDashboard /> },
               { path: "/admin/leads", element: <AdminStudentLeads /> },
+              { path: "/admin/demos", element: <AdminDemoSessions /> },
               { path: "/admin/students", element: <AdminStudents /> },
               { path: "/admin/student/:studentId", element: <AdminStudentDetail /> },
               { path: "/admin/followups", element: <AdminFollowupReports /> },

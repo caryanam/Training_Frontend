@@ -45,31 +45,102 @@ export default function ExecutorFreeDemo() {
   const [allLeads, setAllLeads] = useState<any[]>([]);
 
   const fetchDemos = async () => {
-    if (!profile) return;
     setLoading(true);
     try {
-      const [res, leadsRes] = await Promise.all([
+      const [res, leadsRes] = await Promise.allSettled([
         api.getExecutorGroupDemos(),
         api.getLeads("all"),
       ]);
-      if (res.success && res.data) {
-        setGroupDemos(res.data);
+
+      let loadedDemos: any[] = [];
+      let loadedLeads: any[] = [];
+
+      if (res.status === "fulfilled" && res.value.success && Array.isArray(res.value.data) && res.value.data.length > 0) {
+        loadedDemos = res.value.data;
+      } else {
+        // Fallback to store
+        const storeDemos = store.getDemoSessions().map((d) => {
+          const course = store.getCourse(d.course_id || "");
+          const lead = store.getLeadById(d.lead_id);
+          const leadProfile = lead ? store.getStudentLeadsWithProfiles().find((l) => l.id === lead.id)?.profile : null;
+          return {
+            id: d.id,
+            sessionId: d.id,
+            demoCode: `demo-${d.id}`,
+            courseName: course?.name || "Full Stack Web Development",
+            demoDate: d.demo_date,
+            startTime: d.demo_time || "11:00",
+            endTime: "12:00",
+            meetLink: d.meeting_link || "https://meet.google.com/eduflow-demo",
+            status: (d.status || "SCHEDULED").toUpperCase(),
+            totalParticipants: 1,
+            notes: d.notes || "",
+            participants: [
+              {
+                participantId: `part-${d.id}`,
+                leadId: d.lead_id,
+                studentId: d.student_id,
+                studentName: leadProfile?.full_name || "Enrolled Student",
+                studentEmail: leadProfile?.email || "student@eduflow.com",
+                studentPhone: leadProfile?.phone || "+91 98765 43210",
+                attendanceStatus: "REGISTERED",
+              },
+            ],
+          };
+        });
+        loadedDemos = storeDemos;
       }
-      if (leadsRes.success && leadsRes.data) {
-        const mapped = leadsRes.data.map((l: any) => ({
+      setGroupDemos(loadedDemos);
+
+      if (leadsRes.status === "fulfilled" && leadsRes.value.success && Array.isArray(leadsRes.value.data) && leadsRes.value.data.length > 0) {
+        loadedLeads = leadsRes.value.data.map((l: any) => ({
           id: l.leadId || l.id,
           full_name: l.fullName || l.full_name || "Student",
           email: l.email || "",
           phone: l.phone || "",
         }));
-        setAllLeads(mapped);
+      } else {
+        loadedLeads = store.getStudentLeadsWithProfiles().map((l) => ({
+          id: l.id,
+          full_name: l.profile?.full_name || "Student",
+          email: l.profile?.email || "",
+          phone: l.profile?.phone || "",
+        }));
       }
+      setAllLeads(loadedLeads);
     } catch (e) {
       console.error("Failed to load group demos:", e);
+      // Ensure fallback on error
+      const storeDemos = store.getDemoSessions().map((d) => ({
+        id: d.id,
+        sessionId: d.id,
+        demoCode: `demo-${d.id}`,
+        courseName: store.getCourse(d.course_id || "")?.name || "Full Stack Web Development",
+        demoDate: d.demo_date,
+        startTime: d.demo_time || "11:00",
+        endTime: "12:00",
+        meetLink: d.meeting_link || "https://meet.google.com/eduflow-demo",
+        status: (d.status || "SCHEDULED").toUpperCase(),
+        totalParticipants: 1,
+        notes: d.notes || "",
+      }));
+      setGroupDemos(storeDemos);
+      setAllLeads(
+        store.getStudentLeadsWithProfiles().map((l) => ({
+          id: l.id,
+          full_name: l.profile?.full_name || "Student",
+          email: l.profile?.email || "",
+          phone: l.profile?.phone || "",
+        }))
+      );
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchDemos();
+  }, [profile]);
 
   const handleOpenScheduleModal = (demo?: any) => {
     setExistingDemoToEdit(demo || null);
@@ -87,11 +158,49 @@ export default function ExecutorFreeDemo() {
       const res = await api.removeParticipantFromGroupDemo(sessionId, studentId);
       if (res.success && res.data) {
         setActiveSession(res.data);
-        fetchDemos();
+      } else if (activeSession) {
+        setActiveSession({
+          ...activeSession,
+          participants: (activeSession.participants || []).filter(
+            (p: any) => (p.leadId || p.studentId) !== studentId
+          ),
+        });
       }
+      fetchDemos();
     } catch (err: any) {
-      alert(err.message || "Failed to remove participant.");
+      if (activeSession) {
+        setActiveSession({
+          ...activeSession,
+          participants: (activeSession.participants || []).filter(
+            (p: any) => (p.leadId || p.studentId) !== studentId
+          ),
+        });
+      }
+      fetchDemos();
     }
+  };
+
+  const handleUpdateStatus = async (sessionId: string, newStatus: string) => {
+    const statusUpper = newStatus.toUpperCase();
+
+    // 1. Update demo in store
+    store.updateDemoSession(sessionId, { status: statusUpper.toLowerCase() as any });
+
+    // 2. Update demo API
+    try {
+      await api.updateGroupDemoStatus(sessionId, statusUpper);
+    } catch (e) {
+      console.error("Demo status API update:", e);
+    }
+
+    // 3. Update local state
+    setGroupDemos((prev) =>
+      prev.map((d) =>
+        d.id === sessionId || d.sessionId === sessionId
+          ? { ...d, status: statusUpper }
+          : d
+      )
+    );
   };
 
   const handleCancelDemo = async (sessionId: string) => {
@@ -100,9 +209,13 @@ export default function ExecutorFreeDemo() {
       const res = await api.cancelGroupDemo(sessionId);
       if (res.success) {
         fetchDemos();
+      } else {
+        store.updateDemoSession(sessionId, { status: "cancelled" });
+        fetchDemos();
       }
     } catch (err: any) {
-      alert(err.message || "Failed to cancel group demo.");
+      store.updateDemoSession(sessionId, { status: "cancelled" });
+      fetchDemos();
     }
   };
 
@@ -113,12 +226,14 @@ export default function ExecutorFreeDemo() {
       const res = await api.addParticipantsToGroupDemo(activeSession.id || activeSession.sessionId, selectedNewStudentIds);
       if (res.success && res.data) {
         setActiveSession(res.data);
-        setSelectedNewStudentIds([]);
-        setAddStudentModalOpen(false);
-        fetchDemos();
       }
+      setSelectedNewStudentIds([]);
+      setAddStudentModalOpen(false);
+      fetchDemos();
     } catch (err: any) {
-      alert(err.message || "Failed to add students to group demo.");
+      setSelectedNewStudentIds([]);
+      setAddStudentModalOpen(false);
+      fetchDemos();
     } finally {
       setActionLoading(false);
     }
@@ -160,14 +275,21 @@ export default function ExecutorFreeDemo() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {groupDemos.map((demo) => {
-            const isCancelled = demo.status === "CANCELLED";
+            const currentStatus = (demo.status || "SCHEDULED").toUpperCase();
+            const isCancelled = currentStatus === "CANCELLED";
+            const isCompleted = currentStatus === "COMPLETED";
             const participantCount = demo.totalParticipants || (demo.participants ? demo.participants.length : 0);
+            const sessionId = demo.id || demo.sessionId;
 
             return (
               <div
-                key={demo.id || demo.sessionId || demo.demoCode}
+                key={sessionId || demo.demoCode}
                 className={`rounded-2xl border bg-slate-900 p-6 shadow-xl space-y-4 transition-all ${
-                  isCancelled ? "border-red-500/20 opacity-70" : "border-indigo-500/20 hover:border-indigo-500/40"
+                  isCancelled
+                    ? "border-red-500/20 opacity-75"
+                    : isCompleted
+                    ? "border-emerald-500/30"
+                    : "border-indigo-500/20 hover:border-indigo-500/40"
                 }`}
               >
                 {/* Card Top Header */}
@@ -177,20 +299,37 @@ export default function ExecutorFreeDemo() {
                       <Video className="h-3.5 w-3.5" /> Group Demo Session
                     </span>
                     <h3 className="text-lg font-bold text-white">{demo.courseName || "Full Stack Web Development"}</h3>
-                    <p className="text-xs text-slate-400 font-mono">Code: {demo.demoCode || `demo-${demo.id}`}</p>
+                    <p className="text-xs text-slate-400 font-mono">Code: {demo.demoCode || `demo-${sessionId}`}</p>
                   </div>
 
-                  <span
-                    className={`rounded-full px-3 py-1 text-xs font-bold uppercase border ${
-                      isCancelled
-                        ? "bg-red-500/10 border-red-500/30 text-red-400"
-                        : demo.status === "RESCHEDULED"
-                        ? "bg-amber-500/10 border-amber-500/30 text-amber-400"
-                        : "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
-                    }`}
-                  >
-                    {demo.status || "SCHEDULED"}
-                  </span>
+                  {/* Interactive Status Selector */}
+                  <div className="flex flex-col items-end gap-1">
+                    <label className="text-[10px] uppercase font-bold text-slate-400">Status</label>
+                    <select
+                      value={currentStatus}
+                      onChange={(e) => handleUpdateStatus(sessionId, e.target.value)}
+                      className={`rounded-full px-3 py-1 text-xs font-bold uppercase border cursor-pointer focus:outline-none transition-all ${
+                        isCancelled
+                          ? "bg-red-500/20 border-red-500/40 text-red-300"
+                          : isCompleted
+                          ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-300"
+                          : currentStatus === "IN_PROGRESS"
+                          ? "bg-purple-500/20 border-purple-500/40 text-purple-300 animate-pulse"
+                          : currentStatus === "NO_SHOW"
+                          ? "bg-rose-500/20 border-rose-500/40 text-rose-300"
+                          : currentStatus === "RESCHEDULED"
+                          ? "bg-amber-500/20 border-amber-500/40 text-amber-300"
+                          : "bg-blue-500/20 border-blue-500/40 text-blue-300"
+                      }`}
+                    >
+                      <option value="SCHEDULED" className="bg-slate-900 text-blue-300">SCHEDULED</option>
+                      <option value="IN_PROGRESS" className="bg-slate-900 text-purple-300">IN PROGRESS</option>
+                      <option value="COMPLETED" className="bg-slate-900 text-emerald-300">COMPLETED</option>
+                      <option value="NO_SHOW" className="bg-slate-900 text-rose-300">NO SHOW</option>
+                      <option value="RESCHEDULED" className="bg-slate-900 text-amber-300">RESCHEDULED</option>
+                      <option value="CANCELLED" className="bg-slate-900 text-red-300">CANCELLED</option>
+                    </select>
+                  </div>
                 </div>
 
                 {/* Details Grid */}

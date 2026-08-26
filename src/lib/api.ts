@@ -317,6 +317,24 @@ export const api = {
       method: "PUT",
     }),
 
+  updateGroupDemoStatus: (
+    sessionId: string,
+    status: string,
+    payload?: { feedback?: string; notes?: string; attendanceStatus?: string }
+  ) =>
+    apiRequest<any>(`/api/v1/demo-sessions/${sessionId}/status?status=${encodeURIComponent(status)}`, {
+      method: "PUT",
+      body: payload ? JSON.stringify(payload) : undefined,
+    }),
+
+  getAllGroupDemosAdmin: (status?: string, date?: string) => {
+    const params = new URLSearchParams();
+    if (status && status !== "ALL") params.append("status", status);
+    if (date) params.append("date", date);
+    const query = params.toString() ? `?${params.toString()}` : "";
+    return apiRequest<any[]>(`/api/v1/admin/demo-sessions${query}`, { method: "GET" });
+  },
+
   getStudentDemoHistory: () =>
     apiRequest<
       Array<{

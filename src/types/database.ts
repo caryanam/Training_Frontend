@@ -361,18 +361,21 @@ export interface Permission {
 
 
 
-export type LeadStatusType =
-  | "new"
-  | "assigned"
-  | "contacted"
-  | "demo_scheduled"
-  | "demo_completed"
-  | "interested"
-  | "payment_pending"
-  | "enrolled"
-  | "not_interested"
-  | "follow_up_required"
-  | "closed";
+export const LeadStatus = {
+  NEW: "new",
+  ASSIGNED: "assigned",
+  CONTACTED: "contacted",
+  DEMO_SCHEDULED: "demo_scheduled",
+  DEMO_COMPLETED: "demo_completed",
+  INTERESTED: "interested",
+  PAYMENT_PENDING: "payment_pending",
+  ENROLLED: "enrolled",
+  NOT_INTERESTED: "not_interested",
+  FOLLOW_UP_REQUIRED: "follow_up_required",
+  CLOSED: "closed",
+} as const;
+
+export type LeadStatusType = (typeof LeadStatus)[keyof typeof LeadStatus];
 
 export type DemoStatusType = "scheduled" | "completed" | "cancelled" | "no_show";
 
