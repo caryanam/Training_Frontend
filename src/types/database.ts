@@ -468,3 +468,17 @@ export interface DemoSessionWithDetails extends DemoSession {
   course?: Course | null;
 }
 
+export interface FollowupReport {
+  id: number;
+  leadId: number;
+  leadName: string;
+  executorId: string;
+  executorName: string;
+  rating: number;
+  interested: boolean;
+  expectedJoiningDate: string | null;
+  demoDiscussion: string | null;
+  projectCapability: string | null;
+  additionalComments: string | null;
+  createdAt: string;
+}

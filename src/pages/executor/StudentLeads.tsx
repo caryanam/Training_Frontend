@@ -34,6 +34,8 @@ export default function ExecutorStudentLeads() {
   // Demo modal state
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<any | null>(null);
+  const [followupModalOpen, setFollowupModalOpen] = useState(false);
+  const [selectedLeadForFollowup, setSelectedLeadForFollowup] = useState<any | null>(null);
   const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([]);
   const [executorDemos, setExecutorDemos] = useState<any[]>([]);
 
@@ -228,12 +230,6 @@ export default function ExecutorStudentLeads() {
                     <Clock className="h-3 w-3" /> Assigned {formatDate(lead.created_at)}
                   </div>
                   <div className="flex items-center gap-2">
-                    <Link
-                      to={`/executor/onboarding?leadId=${lead.id}`}
-                      className="inline-flex items-center gap-1 rounded-lg bg-emerald-500/10 px-2.5 py-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-600 hover:text-white transition-all"
-                    >
-                      <UserPlus className="h-3.5 w-3.5" /> Onboard
-                    </Link>
                     <button
                       type="button"
                       onClick={() => handleOpenScheduleModal(lead)}
@@ -248,9 +244,7 @@ export default function ExecutorStudentLeads() {
             );
           })}
         </div>
-      )}
-
-      {/* Schedule Demo Modal */}
+      )}      {/* Schedule Demo Modal */}
       <ScheduleDemoModal
         isOpen={modalOpen}
         onClose={() => {
@@ -264,3 +258,4 @@ export default function ExecutorStudentLeads() {
     </div>
   );
 }
+

@@ -5,6 +5,7 @@ import { formatCurrency, getDaysRemaining, formatDate, formatExternalUrl } from 
 import { StatsCard } from "@/components/shared/StatsCard";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { FollowupReportsList } from "@/components/shared/FollowupReportsList";
 import {
   BookOpen,
   Calendar,
@@ -436,6 +437,12 @@ export default function StudentDashboard() {
               ))
             )}
           </div>
+        </div>
+        <div className="rounded-2xl border border-border/60 bg-card p-6 shadow-sm">
+          <h2 className="text-sm font-bold text-foreground mb-4 uppercase tracking-wider flex items-center gap-2">
+            <UserCheck className="h-4 w-4 text-primary" /> Mentor Feedback & Follow-ups
+          </h2>
+          <FollowupReportsList isStudent={true} />
         </div>
       </div>
     </div>

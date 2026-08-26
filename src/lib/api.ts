@@ -499,7 +499,7 @@ export const api = {
           currency: string;
         }>;
       }>
-    >("/api/v1/admin/courses", { method: "GET" }),
+    >("/api/v1/courses", { method: "GET" }),
 
   getCourseById: (id: number) =>
     apiRequest<{
@@ -522,7 +522,7 @@ export const api = {
         price: number;
         currency: string;
       }>;
-    }>(`/api/v1/admin/courses/${id}`, { method: "GET" }),
+    }>(`/api/v1/courses/${id}`, { method: "GET" }),
 
   createCourse: (payload: {
     title: string;
@@ -620,6 +620,23 @@ export const api = {
       lectureUrl?: string | null;
       recordingUrl?: string | null;
     }>(`/api/v1/lectures/${lectureId}/access`, {
+      method: "GET",
+    }),
+  submitFollowupReport: (leadId: string | number, payload: any) =>
+    apiRequest<any>(`/api/v1/followups/leads/${leadId}`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  getFollowupReportsForLead: (leadId: string | number) =>
+    apiRequest<any[]>(`/api/v1/followups/leads/${leadId}`, {
+      method: "GET",
+    }),
+  getMyFollowupReports: () =>
+    apiRequest<any[]>('/api/v1/followups/student/me', {
+      method: "GET",
+    }),
+  getAllFollowupReports: () =>
+    apiRequest<any[]>('/api/v1/followups', {
       method: "GET",
     }),
 };

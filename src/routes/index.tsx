@@ -51,6 +51,7 @@ import AdminDashboard from "@/pages/admin/Dashboard";
 import AdminStudentLeads from "@/pages/admin/StudentLeads";
 import AdminStudents from "@/pages/admin/Students";
 import AdminStudentDetail from "@/pages/admin/StudentDetail";
+import AdminFollowupReports from "@/pages/admin/FollowupReports";
 import AdminExecutors from "@/pages/admin/Executors";
 import AdminFaculty from "@/pages/admin/Faculty";
 import AdminCourses from "@/pages/admin/Courses";
@@ -153,6 +154,7 @@ export const router = createBrowserRouter([
               { path: "/admin/leads", element: <AdminStudentLeads /> },
               { path: "/admin/students", element: <AdminStudents /> },
               { path: "/admin/student/:studentId", element: <AdminStudentDetail /> },
+              { path: "/admin/followups", element: <AdminFollowupReports /> },
               { path: "/admin/executors", element: <AdminExecutors /> },
               { path: "/admin/faculty", element: <AdminFaculty /> },
               { path: "/admin/courses", element: <AdminCourses /> },
@@ -180,4 +182,5 @@ export const router = createBrowserRouter([
   // 404
   { path: "*", element: <NotFound /> },
 ]);
+
 
