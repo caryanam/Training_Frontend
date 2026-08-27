@@ -55,7 +55,7 @@ export default function ExecutorFreeDemo() {
       let loadedDemos: any[] = [];
       let loadedLeads: any[] = [];
 
-      if (res.status === "fulfilled" && res.value.success && Array.isArray(res.value.data) && res.value.data.length > 0) {
+      if (res.status === "fulfilled" && res.value.success && Array.isArray(res.value.data)) {
         loadedDemos = res.value.data;
       } else {
         // Fallback to store
@@ -92,7 +92,7 @@ export default function ExecutorFreeDemo() {
       }
       setGroupDemos(loadedDemos);
 
-      if (leadsRes.status === "fulfilled" && leadsRes.value.success && Array.isArray(leadsRes.value.data) && leadsRes.value.data.length > 0) {
+      if (leadsRes.status === "fulfilled" && leadsRes.value.success && Array.isArray(leadsRes.value.data)) {
         loadedLeads = leadsRes.value.data.map((l: any) => ({
           id: l.leadId || l.id,
           full_name: l.fullName || l.full_name || "Student",

@@ -43,7 +43,6 @@ export default function AdminStudentLeads() {
   const [assignModalOpen, setAssignModalOpen] = useState(false);
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
   const [activityLeadId, setActivityLeadId] = useState<string | null>(null);
-  const [statusModalLeadId, setStatusModalLeadId] = useState<string | null>(null);
   const [springLeads, setSpringLeads] = useState<any[]>([]);
   const [springExecutors, setSpringExecutors] = useState<any[]>([]);
 
@@ -67,18 +66,8 @@ export default function AdminStudentLeads() {
     return () => clearInterval(interval);
   }, [activeTab, search]);
 
-  const storeLeads = store.getStudentLeads();
-
   const leads = (springLeads.length > 0 ? springLeads : store.getStudentLeadsWithProfiles()).map((l: any) => {
     const leadId = String(l.leadId || l.id);
-    const storeMatch = storeLeads.find((sl) =>
-      String(sl.id) === leadId ||
-      String(sl.student_id) === leadId ||
-      String(sl.profile_id) === leadId
-    );
-
-    // If reactive store has updated status, reflect it immediately
-    const status = storeMatch ? storeMatch.status : (l.status || "new").toLowerCase();
 
     return {
       id: leadId,
@@ -87,7 +76,7 @@ export default function AdminStudentLeads() {
       interested_course: l.interestedCourse || l.interested_course || "Full Stack Web Development",
       education: l.education || l.profile?.education || "—",
       city: l.city || l.profile?.city || "—",
-      status: status,
+      status: (l.status || "new").toLowerCase(),
       assigned_executor_id: l.assignedExecutor || l.assigned_executor_id,
       followup_date: l.followupDate || l.followup_date || null,
       notes: null,
@@ -158,27 +147,6 @@ export default function AdminStudentLeads() {
     });
   };
 
-  const handleStatusChange = async (leadId: string, newStatus: string) => {
-    // 1. Immediate optimistic UI update
-    setSpringLeads((prev) =>
-      prev.map((l) =>
-        l.leadId === leadId || l.id === leadId
-          ? { ...l, status: newStatus }
-          : l
-      )
-    );
-
-    // 2. Update central store
-    store.updateLeadStatus(leadId, newStatus, profile?.id);
-    setStatusModalLeadId(null);
-
-    // 3. Call backend API
-    try {
-      await api.updateLeadStatus(leadId, newStatus);
-    } catch (e) {
-      console.error("Failed to update status on server:", e);
-    }
-  };
 
   const leadActivity = activityLeadId ? store.getLeadActivity(activityLeadId) : [];
 
@@ -419,44 +387,7 @@ export default function AdminStudentLeads() {
         </div>
       )}
 
-      {/* Change Status Modal */}
-      {statusModalLeadId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-          <div className="w-full max-w-sm rounded-2xl border border-border/60 bg-card p-6 shadow-2xl">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-foreground">Change Lead Status</h3>
-              <button
-                type="button"
-                onClick={() => setStatusModalLeadId(null)}
-                className="rounded-lg p-1.5 hover:bg-accent/60 transition-colors"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            <div className="grid grid-cols-2 gap-2 max-h-72 overflow-y-auto">
-              {Object.entries(LEAD_STATUS_LABELS).map(([key, label]) => {
-                const currentLead = leads.find((l) => l.id === statusModalLeadId);
-                const isActive = currentLead?.status === key;
-                return (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => handleStatusChange(statusModalLeadId, key)}
-                    disabled={isActive}
-                    className={`rounded-lg border px-3 py-2 text-xs font-bold transition-all ${
-                      isActive
-                        ? "border-primary bg-primary/10 text-primary cursor-default"
-                        : "border-border/60 hover:border-primary/40 hover:bg-primary/5 text-foreground"
-                    }`}
-                  >
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
+
 
       {/* Activity Slide Panel */}
       {activityLeadId && (

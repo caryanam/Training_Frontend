@@ -4,7 +4,6 @@ import { useDataStore } from "@/lib/store";
 import { api } from "@/lib/api";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { formatDate } from "@/lib/utils";
-import { ScheduleDemoModal } from "@/components/modals/ScheduleDemoModal";
 import {
   Video,
   Calendar,
@@ -41,8 +40,7 @@ export default function AdminDemoSessions() {
   const [groupDemos, setGroupDemos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [modalOpen, setModalOpen] = useState(false);
-  const [existingDemoToEdit, setExistingDemoToEdit] = useState<any | null>(null);
+
 
   // Participants View Modal
   const [participantsModalOpen, setParticipantsModalOpen] = useState(false);
@@ -53,7 +51,7 @@ export default function AdminDemoSessions() {
     setLoading(true);
     try {
       const res = await api.getAllGroupDemosAdmin();
-      if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+      if (res.success && Array.isArray(res.data)) {
         setGroupDemos(res.data);
       } else {
         // Fallback to central reactive store
@@ -120,40 +118,7 @@ export default function AdminDemoSessions() {
     fetchDemos();
   }, [profile]);
 
-  const handleUpdateStatus = async (sessionId: string, newStatus: string) => {
-    try {
-      await api.updateGroupDemoStatus(sessionId, newStatus);
-      store.updateDemoSession(sessionId, { status: newStatus.toLowerCase() as any });
-      setGroupDemos((prev) =>
-        prev.map((d) =>
-          d.id === sessionId || d.sessionId === sessionId
-            ? { ...d, status: newStatus.toUpperCase() }
-            : d
-        )
-      );
-    } catch (e) {
-      store.updateDemoSession(sessionId, { status: newStatus.toLowerCase() as any });
-      setGroupDemos((prev) =>
-        prev.map((d) =>
-          d.id === sessionId || d.sessionId === sessionId
-            ? { ...d, status: newStatus.toUpperCase() }
-            : d
-        )
-      );
-    }
-  };
 
-  const handleCancelDemo = async (sessionId: string) => {
-    if (!confirm("Are you sure you want to cancel this entire demo session?")) return;
-    try {
-      await api.cancelGroupDemo(sessionId);
-      store.updateDemoSession(sessionId, { status: "cancelled" });
-      fetchDemos();
-    } catch (err: any) {
-      store.updateDemoSession(sessionId, { status: "cancelled" });
-      fetchDemos();
-    }
-  };
 
   const filteredDemos = groupDemos.filter((demo) => {
     const matchesFilter =
@@ -183,17 +148,6 @@ export default function AdminDemoSessions() {
       <PageHeader
         title="Demo Sessions Management"
         subtitle="Real-time visibility and status tracking for all scheduled student demo sessions"
-        actions={
-          <button
-            onClick={() => {
-              setExistingDemoToEdit(null);
-              setModalOpen(true);
-            }}
-            className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-500 shadow-md transition-all"
-          >
-            <Plus className="h-4 w-4" /> Schedule Demo
-          </button>
-        }
       />
 
       {/* KPI Overview Cards */}
@@ -315,13 +269,11 @@ export default function AdminDemoSessions() {
                     </p>
                   </div>
 
-                  {/* Status Dropdown (Admin can override) */}
+                  {/* Status Badge (Admin is read-only) */}
                   <div className="flex flex-col items-end gap-1">
                     <label className="text-[10px] uppercase font-bold text-slate-400">Live Status</label>
-                    <select
-                      value={currentStatus}
-                      onChange={(e) => handleUpdateStatus(sessionId, e.target.value)}
-                      className={`rounded-full px-3 py-1 text-xs font-bold uppercase border cursor-pointer focus:outline-none transition-all ${
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-bold uppercase border ${
                         isCancelled
                           ? "bg-red-500/20 border-red-500/40 text-red-300"
                           : isCompleted
@@ -335,13 +287,8 @@ export default function AdminDemoSessions() {
                           : "bg-blue-500/20 border-blue-500/40 text-blue-300"
                       }`}
                     >
-                      <option value="SCHEDULED" className="bg-slate-900 text-blue-300">SCHEDULED</option>
-                      <option value="IN_PROGRESS" className="bg-slate-900 text-purple-300">IN PROGRESS</option>
-                      <option value="COMPLETED" className="bg-slate-900 text-emerald-300">COMPLETED</option>
-                      <option value="NO_SHOW" className="bg-slate-900 text-rose-300">NO SHOW</option>
-                      <option value="RESCHEDULED" className="bg-slate-900 text-amber-300">RESCHEDULED</option>
-                      <option value="CANCELLED" className="bg-slate-900 text-red-300">CANCELLED</option>
-                    </select>
+                      {currentStatus.replace("_", " ")}
+                    </span>
                   </div>
                 </div>
 
@@ -405,27 +352,6 @@ export default function AdminDemoSessions() {
                       </a>
                     )}
 
-                    {!isCancelled && (
-                      <>
-                        <button
-                          onClick={() => {
-                            setExistingDemoToEdit(demo);
-                            setModalOpen(true);
-                          }}
-                          className="rounded-xl border border-slate-700 p-2 text-slate-300 hover:bg-slate-800 hover:text-white"
-                          title="Edit Demo"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => handleCancelDemo(sessionId)}
-                          className="rounded-xl border border-red-500/30 p-2 text-red-400 hover:bg-red-500/10"
-                          title="Cancel Demo"
-                        >
-                          <XCircle className="h-4 w-4" />
-                        </button>
-                      </>
-                    )}
                   </div>
                 </div>
               </div>
@@ -434,13 +360,6 @@ export default function AdminDemoSessions() {
         </div>
       )}
 
-      {/* Modal */}
-      <ScheduleDemoModal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        existingDemo={existingDemoToEdit}
-        onSuccess={fetchDemos}
-      />
 
       {/* Participants View Modal */}
       {participantsModalOpen && activeSession && (
