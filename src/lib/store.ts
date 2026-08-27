@@ -1,5 +1,5 @@
 /**
- * EduFlow Central Data Store & Repository
+ * Nexora Central Data Store & Repository
  * 
  * Manages reactive data state across all 4 roles (Student, Faculty, Executor, Admin).
  * Integrates directly with the Java Spring Boot REST API.
@@ -45,18 +45,18 @@ import { generateTransactionId } from "./utils";
 
 // LocalStorage Keys for persistence
 const STORAGE_KEYS = {
-  COURSES: "eduflow_courses",
-  PLANS: "eduflow_plans",
-  LECTURES: "eduflow_lectures",
-  ENROLLMENTS: "eduflow_enrollments",
-  PAYMENTS: "eduflow_payments",
-  FOLLOWUPS: "eduflow_followups",
-  NOTIFICATIONS: "eduflow_notifications",
+  COURSES: "nexora_courses",
+  PLANS: "nexora_plans",
+  LECTURES: "nexora_lectures",
+  ENROLLMENTS: "nexora_enrollments",
+  PAYMENTS: "nexora_payments",
+  FOLLOWUPS: "nexora_followups",
+  NOTIFICATIONS: "nexora_notifications",
 
-  ADJUSTMENTS: "eduflow_adjustments",
-  STUDENT_LEADS: "eduflow_student_leads",
-  DEMO_SESSIONS: "eduflow_demo_sessions",
-  LEAD_ACTIVITY: "eduflow_lead_activity",
+  ADJUSTMENTS: "nexora_adjustments",
+  STUDENT_LEADS: "nexora_student_leads",
+  DEMO_SESSIONS: "nexora_demo_sessions",
+  LEAD_ACTIVITY: "nexora_lead_activity",
 };
 
 // Initial state helpers
@@ -269,7 +269,28 @@ export const dataStore = {
     planId: string;
     amount: number;
     paymentMethod: string;
+    studentInfo?: {
+      fullName?: string;
+      email?: string;
+      phone?: string;
+      leadId?: string;
+    };
   }): { enrollment: CourseEnrollment; payment: Payment } {
+    if (params.studentInfo && params.studentInfo.email) {
+      MOCK_PROFILES[params.studentProfileId] = {
+        id: params.studentProfileId,
+        full_name: params.studentInfo.fullName || "Student",
+        email: params.studentInfo.email,
+        phone: params.studentInfo.phone || null,
+        avatar_url: null,
+        role: "student",
+        status: "active",
+        last_login: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+    }
+
     let student = MOCK_STUDENTS.find((s) => s.profile_id === params.studentProfileId);
     if (!student) {
       student = {
@@ -283,6 +304,15 @@ export const dataStore = {
         updated_at: new Date().toISOString(),
       };
       MOCK_STUDENTS.push(student);
+    }
+
+    const targetLeadId = params.studentInfo?.leadId;
+    if (targetLeadId) {
+      studentLeadsState = studentLeadsState.map((l) =>
+        l.id === targetLeadId || (l as any).leadId === targetLeadId || l.student_id === targetLeadId
+          ? { ...l, status: "enrolled", updated_at: new Date().toISOString() }
+          : l
+      );
     }
 
     const plan = plansState.find((p) => p.id === params.planId);
@@ -575,7 +605,7 @@ export const dataStore = {
       profile: MOCK_PROFILES[s.profile_id] || {
         id: s.profile_id,
         full_name: "Student",
-        email: "student@eduflow.com",
+        email: "student@nexora.com",
         phone: null,
         avatar_url: null,
         role: "student",
@@ -592,7 +622,7 @@ export const dataStore = {
       profile: MOCK_PROFILES[f.profile_id] || {
         id: f.profile_id,
         full_name: "Faculty",
-        email: "faculty@eduflow.com",
+        email: "faculty@nexora.com",
         phone: null,
         avatar_url: null,
         role: "faculty",
@@ -609,7 +639,7 @@ export const dataStore = {
       profile: MOCK_PROFILES[e.profile_id] || {
         id: e.profile_id,
         full_name: "Executor",
-        email: "executor@eduflow.com",
+        email: "executor@nexora.com",
         phone: null,
         avatar_url: null,
         role: "executor",
@@ -632,7 +662,7 @@ export const dataStore = {
       profile: MOCK_PROFILES[lead.profile_id] || {
         id: lead.profile_id,
         full_name: "Student",
-        email: "unknown@eduflow.com",
+        email: "unknown@nexora.com",
         phone: null,
         avatar_url: null,
         role: "student" as const,

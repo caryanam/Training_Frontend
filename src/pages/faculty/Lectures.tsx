@@ -57,7 +57,7 @@ export default function FacultyLectures() {
     setLectureDate(new Date().toISOString().split("T")[0]);
     setStartTime("18:00");
     setEndTime("19:30");
-    setLectureUrl("https://meet.eduflow.internal/live/session");
+    setLectureUrl("https://meet.nexora.internal/live/session");
     setRecordingUrl("");
     setIsDownloadable(true);
     setStatus("scheduled");
@@ -347,7 +347,7 @@ export default function FacultyLectures() {
                     type="url"
                     value={lectureUrl}
                     onChange={(e) => setLectureUrl(e.target.value)}
-                    placeholder="https://meet.eduflow.internal/live/..."
+                    placeholder="https://meet.nexora.internal/live/..."
                     className="h-10 w-full rounded-xl border border-input bg-background px-3.5 text-xs text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   />
                 </div>

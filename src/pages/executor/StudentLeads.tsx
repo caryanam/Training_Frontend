@@ -211,7 +211,7 @@ export default function ExecutorStudentLeads() {
                           ? "bg-amber-500/10 border-amber-500/30 text-amber-500"
                           : lead.status === "not_interested" || lead.status === "closed"
                           ? "bg-rose-500/10 border-rose-500/30 text-rose-500"
-                          : "bg-indigo-500/10 border-indigo-500/30 text-indigo-500"
+                          : "bg-emerald-500/10 border-emerald-500/30 text-emerald-500"
                       }`}
                     >
                       <option value="new" className="bg-slate-900 text-white">New</option>
@@ -236,7 +236,7 @@ export default function ExecutorStudentLeads() {
                       </div>
                     )}
                     <div className="flex items-center gap-2 text-foreground font-medium">
-                      <BookOpen className="h-3.5 w-3.5 text-indigo-500 shrink-0" /> {lead.interested_course || "Course not selected"}
+                      <BookOpen className="h-3.5 w-3.5 text-emerald-500 shrink-0" /> {lead.interested_course || "Course not selected"}
                     </div>
                   </div>
                 </div>

@@ -46,19 +46,22 @@ export default function LandingPage() {
   const t = TRANSLATIONS[lang];
   const courses = store.getCourses();
 
-  const handleDemoLogin = async (role: "student" | "faculty" | "executor" | "admin") => {
-    await loginAsRole(role);
-    navigate(`/${role}`);
+  const handleDemoLogin = async (_role?: "student" | "faculty" | "executor" | "admin") => {
+    if (user && profile?.role) {
+      navigate(`/${profile.role}`);
+    } else {
+      navigate("/login");
+    }
   };
 
   const faqs = [
     {
       q: lang === "hi" ? "कैलेंडर-आधारित पाठ्यक्रम वैधता कैसे काम करती है?" : lang === "mr" ? "कॅलेंडर-आधारित कोर्स वैधता कशी कार्य करते?" : "How does the calendar-based course validity work?",
-      a: lang === "hi" ? "CodeX Technology फिक्स्ड 30 दिनों के बजाय सटीक कैलेंडर गणित (प्रारंभ तिथि + अवधि महीने) का उपयोग करता है। उदाहरण के लिए, 20 अगस्त को 3 महीने की योजना 20 नवंबर को समाप्त होती है।" : lang === "mr" ? "CodeX Technology निश्चित ३० दिवसांऐवजी अचूक कॅलेंडर गणिताचा (प्रारंभ तारीख + कालावधी महिने) वापर करते. उदाहरणार्थ, २० ऑगस्टला ३ महिन्यांची योजना २० नोव्हेंबरला संपते." : "Unlike legacy systems that calculate 30 fixed days per month, CodeX Technology uses strict calendar arithmetic (start_date + duration_months). For example, enrolling on August 20 for a 3-month plan expires on November 20, accounting for actual days per month.",
+      a: lang === "hi" ? "Nexora फिक्स्ड 30 दिनों के बजाय सटीक कैलेंडर गणित (प्रारंभ तिथि + अवधि महीने) का उपयोग करता है। उदाहरण के लिए, 20 अगस्त को 3 महीने की योजना 20 नवंबर को समाप्त होती है।" : lang === "mr" ? "Nexora निश्चित ३० दिवसांऐवजी अचूक कॅलेंडर गणिताचा (प्रारंभ तारीख + कालावधी महिने) वापर करते. उदाहरणार्थ, २० ऑगस्टला ३ महिन्यांची योजना २० नोव्हेंबरला संपते." : "Unlike legacy systems that calculate 30 fixed days per month, Nexora uses strict calendar arithmetic (start_date + duration_months). For example, enrolling on August 20 for a 3-month plan expires on November 20, accounting for actual days per month.",
     },
     {
       q: lang === "hi" ? "लाइव व्याख्यान स्ट्रीम कैसे सुरक्षित हैं?" : lang === "mr" ? "लाइव्ह लेक्चर स्ट्रीम्स कसे सुरक्षित आहेत?" : "How are live lecture streams secured?",
-      a: lang === "hi" ? "CodeX Technology स्ट्रीमिंग से पहले 8-चरण सर्वर सत्यापन करता है: प्रमाणीकरण, भूमिका, नामांकन स्थिति, भुगतान और समाप्ति तिथि सीमा की जांच।" : lang === "mr" ? "CodeX Technology स्ट्रीमिंगपूर्वी ८-स्टेप सर्व्हर पडताळणी करते: ऑथेंटिकेशन, भूमिका, एनरोलमेंट स्थिती, पेमेंट आणि एक्सपायरी तारीख सीमा तपासणे." : "CodeX Technology performs an 8-step server validation before streaming: checking authentication, role, valid enrollment, verified payment, non-expired date threshold, and lecture status. Expired users see a locked renewal prompt.",
+      a: lang === "hi" ? "Nexora स्ट्रीमिंग से पहले 8-चरण सर्वर सत्यापन करता है: प्रमाणीकरण, भूमिका, नामांकन स्थिति, भुगतान और समाप्ति तिथि सीमा की जांच।" : lang === "mr" ? "Nexora स्ट्रीमिंगपूर्वी ८-स्टेप सर्व्हर पडताळणी करते: ऑथेंटिकेशन, भूमिका, एनरोलमेंट स्थिती, पेमेंट आणि एक्सपायरी तारीख सीमा तपासणे." : "Nexora performs an 8-step server validation before streaming: checking authentication, role, valid enrollment, verified payment, non-expired date threshold, and lecture status. Expired users see a locked renewal prompt.",
     },
     {
       q: lang === "hi" ? "क्या प्रवेश अधिकारी भुगतान सत्यापित कर सकते हैं?" : lang === "mr" ? "प्रवेश अधिकारी पेमेंट पडताळणी करू शकतात का?" : "Can admissions executors verify payments or change pricing?",
@@ -80,16 +83,16 @@ export default function LandingPage() {
     <div className="relative min-h-screen overflow-hidden bg-background text-foreground selection:bg-primary selection:text-primary-foreground">
       {/* 3D FLOATING AMBIENT GLOW ORBS */}
       <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
-        <div className="animate-float-orb absolute -top-40 -left-40 h-[600px] w-[600px] rounded-full bg-gradient-to-tr from-indigo-600/20 via-purple-600/15 to-pink-600/20 blur-[130px]" />
-        <div className="animate-float-orb absolute top-1/2 -right-40 h-[700px] w-[700px] rounded-full bg-gradient-to-bl from-cyan-600/20 via-blue-600/15 to-indigo-600/20 blur-[140px]" style={{ animationDelay: "-5s" }} />
-        <div className="animate-float-orb absolute -bottom-40 left-1/3 h-[600px] w-[600px] rounded-full bg-gradient-to-tr from-emerald-600/15 via-teal-600/10 to-indigo-600/15 blur-[120px]" style={{ animationDelay: "-9s" }} />
+        <div className="animate-float-orb absolute -top-40 -left-40 h-[600px] w-[600px] rounded-full bg-gradient-to-tr from-[#014122]/20 via-purple-600/15 to-pink-600/20 blur-[130px]" />
+        <div className="animate-float-orb absolute top-1/2 -right-40 h-[700px] w-[700px] rounded-full bg-gradient-to-bl from-#026637/20 via-[#026637]/15 to-[#026637]/20 blur-[140px]" style={{ animationDelay: "-5s" }} />
+        <div className="animate-float-orb absolute -bottom-40 left-1/3 h-[600px] w-[600px] rounded-full bg-gradient-to-tr from-emerald-600/15 via-teal-600/10 to-[#026637]/15 blur-[120px]" style={{ animationDelay: "-9s" }} />
       </div>
 
       {/* 1. TOP NAVIGATION BAR WITH MULTILINGUAL LANGUAGE SWITCHER */}
       <header className="sticky top-0 z-50 border-b border-border/70 bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-indigo-600 via-primary to-purple-500 text-white shadow-lg shadow-primary/30 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#014122] via-primary to-purple-500 text-white shadow-lg shadow-primary/30 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
               <GraduationCap className="h-6 w-6" />
             </div>
             <div className="flex flex-col">
@@ -139,11 +142,10 @@ export default function LandingPage() {
                         setLang(opt.code);
                         setLangDropdownOpen(false);
                       }}
-                      className={`w-full flex items-center justify-between rounded-xl px-3 py-2 text-xs font-bold transition-all text-left ${
-                        lang === opt.code
-                          ? "bg-primary text-primary-foreground shadow-sm"
-                          : "text-foreground hover:bg-accent/60"
-                      }`}
+                      className={`w-full flex items-center justify-between rounded-xl px-3 py-2 text-xs font-bold transition-all text-left ${lang === opt.code
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "text-foreground hover:bg-accent/60"
+                        }`}
                     >
                       <span className="flex items-center gap-2">
                         <span>{opt.flag}</span>
@@ -159,7 +161,7 @@ export default function LandingPage() {
             {profile ? (
               <Link
                 to={`/${profile.role}`}
-                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-indigo-600 px-5 py-2 text-xs font-bold text-white shadow-md shadow-primary/25 hover:opacity-95 transition-all"
+                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-[#026637] px-5 py-2 text-xs font-bold text-white shadow-md shadow-primary/25 hover:opacity-95 transition-all"
               >
                 {t.goToDashboard} ({profile.role.toUpperCase()}) <ArrowRight className="h-3.5 w-3.5" />
               </Link>
@@ -173,7 +175,7 @@ export default function LandingPage() {
                 </Link>
                 <Link
                   to="/register"
-                  className="hidden sm:inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-primary to-indigo-600 px-5 py-2 text-xs font-bold text-white shadow-md shadow-primary/25 hover:opacity-95 transition-all"
+                  className="hidden sm:inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-primary to-[#026637] px-5 py-2 text-xs font-bold text-white shadow-md shadow-primary/25 hover:opacity-95 transition-all"
                 >
                   {t.getStarted} <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
@@ -183,103 +185,219 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {/* 2. 3D HERO SECTION WITH LIVE TRAINING CLASSROOM BACKGROUND IMAGE */}
-      <section className="relative z-10 overflow-hidden pt-12 pb-20 sm:pt-20 sm:pb-28 bg-[url('/images/live_training_session.jpg')] bg-cover bg-center bg-no-repeat border-b border-border/80">
-        {/* Deep Slate Glass Overlay with high contrast */}
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-950/90 via-slate-950/80 to-background backdrop-blur-[2px]" />
+      {/* 2. HERO SECTION MATCHING REFERENCE IMAGE PIXEL-FOR-PIXEL */}
+      <section className="relative overflow-hidden bg-[#e2f0f5] dark:bg-[#021d10] border-b border-[#014122]/15 min-h-[520px] lg:min-h-[580px] flex items-center">
 
-        <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
-          {/* 3D Shimmer Badge */}
-          <div className="inline-flex items-center gap-2 rounded-full border border-indigo-400/40 bg-indigo-500/15 px-5 py-2 text-xs font-bold text-indigo-300 mb-8 shadow-lg backdrop-blur-md animate-in fade-in zoom-in-95">
-            <Sparkles className="h-4 w-4 text-indigo-400 animate-spin" style={{ animationDuration: "8s" }} />
-            <span>{t.shimmerBadge}</span>
-          </div>
+        {/* Right Side Background Image */}
+        <div className="absolute inset-y-0 right-0 w-full lg:w-[58%] h-full overflow-hidden">
+          <img
+            src="/hero_students.jpg"
+            alt="Nexora Training Students"
+            className="w-full h-full object-cover object-center"
+          />
+        </div>
 
-          {/* Main Headline with 3D Hero Gradient & Contrast */}
-          <h1 className="mx-auto max-w-4xl text-3xl sm:text-5xl lg:text-7xl font-black tracking-tight leading-[1.1] text-white drop-shadow-md">
-            {t.heroTitlePrefix}<span className="bg-gradient-to-r from-indigo-400 via-purple-300 to-pink-400 bg-clip-text text-transparent">{t.heroTitleGradient}</span>{t.heroTitleSuffix}
-          </h1>
+        {/* Left Side Light Ice-Blue Layer with Smooth Convex Arc */}
+        <div className="absolute inset-y-0 left-0 w-full lg:w-[48%] bg-[#e2f0f5] dark:bg-[#021d10] z-10">
+          {/* Subtle Dot Grid Pattern on Top Left */}
+          <div className="absolute top-4 left-6 h-36 w-36 bg-[radial-gradient(#014122_1.5px,transparent_1.5px)] [background-size:14px_14px] opacity-20 pointer-events-none" />
 
-          <p className="mx-auto mt-6 max-w-2xl text-sm sm:text-lg text-slate-300 leading-relaxed font-medium">
-            {t.heroSubtitle}
-          </p>
+          {/* Smooth SVG Convex Arch Extension to the Right */}
+          <svg
+            className="absolute top-0 bottom-0 -right-24 lg:-right-36 h-full w-24 lg:w-36 text-[#e2f0f5] dark:text-[#021d10] fill-current pointer-events-none hidden lg:block"
+            viewBox="0 0 100 100"
+            preserveAspectRatio="none"
+          >
+            <path d="M 0,0 C 120,30 120,70 0,100 Z" />
+          </svg>
+        </div>
 
-          {/* 3D Glassmorphic Interactive Demo Switcher */}
-          <div className="mt-12 max-w-2xl mx-auto rounded-3xl border border-white/20 bg-slate-900/85 p-5 shadow-2xl backdrop-blur-2xl transition-all duration-500 hover:shadow-indigo-500/20 hover:border-indigo-400/40">
-            <div className="flex items-center justify-between mb-3 text-xs font-bold text-slate-300 uppercase tracking-wider">
-              <span className="flex items-center gap-1.5 text-white">
-                <Zap className="h-4 w-4 text-amber-400" /> {t.instantSandbox}
-              </span>
-              <span className="text-[10px] text-emerald-300 font-extrabold bg-emerald-500/20 px-2.5 py-0.5 rounded-full border border-emerald-400/30">
-                {t.interactiveSandbox}
-              </span>
+        {/* Foreground Content Grid */}
+        <div className="relative z-20 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full py-14 lg:py-20">
+          <div className="max-w-2xl text-left space-y-6">
+
+            {/* Top Sub-Tag */}
+            <div className="text-sm sm:text-base font-black tracking-[0.3em] text-[#014122] dark:text-emerald-300 uppercase">
+              LEARN. BUILD. GROW.
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {/* Main Display Headline (Serif Font) */}
+            <div className="space-y-0 leading-none">
+              <h1 className="text-6xl sm:text-8xl lg:text-9xl font-black font-serif tracking-tight text-[#014122] dark:text-white uppercase leading-[0.9]">
+                NEXORA
+              </h1>
+              <h1 className="text-6xl sm:text-8xl lg:text-9xl font-black font-serif tracking-tight text-[#014122] dark:text-emerald-400 uppercase leading-[0.9]">
+                TRAINING
+              </h1>
+            </div>
+
+            {/* Sub-Headline & Underline Accent Line */}
+            <div className="space-y-2 pt-2">
+              <div className="text-sm sm:text-lg font-black tracking-widest text-[#014122] dark:text-emerald-300 uppercase">
+                ON-PROJECT TRAINING PROGRAM
+              </div>
+              <div className="h-[3.5px] w-16 bg-[#014122] dark:bg-emerald-400 rounded-full" />
+            </div>
+
+            {/* Body Description */}
+            <div className="space-y-0.5 text-sm sm:text-base font-medium text-slate-800 dark:text-slate-200 leading-snug pt-1">
+              <p className="font-bold text-slate-900 dark:text-white">Learn by Doing.</p>
+              <p className="text-slate-700 dark:text-slate-300">Build Real Projects. Gain Real Skills.</p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-wrap items-center gap-3.5 pt-3">
               <button
                 type="button"
                 onClick={() => handleDemoLogin("student")}
-                className="group relative flex flex-col items-center justify-center gap-1.5 rounded-2xl border border-blue-400/40 bg-blue-500/15 p-3.5 text-xs font-bold text-blue-300 hover:from-blue-600 hover:to-indigo-600 hover:text-white transition-all duration-300 shadow-sm hover:shadow-blue-500/25 hover:-translate-y-1 hover:scale-105"
+                className="inline-flex items-center justify-center gap-2.5 rounded-xl bg-[#014122] px-7 py-3.5 text-xs sm:text-sm font-bold text-white shadow-lg hover:bg-[#026637] hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer"
               >
-                <span className="text-xl group-hover:scale-125 transition-transform duration-300">🎓</span>
-                <span className="text-white">{t.student}</span>
-                <span className="text-[10px] text-blue-200">{t.studentSub}</span>
+                Explore Programs <ArrowRight className="h-4 w-4" />
               </button>
 
-              <button
-                type="button"
-                onClick={() => handleDemoLogin("faculty")}
-                className="group relative flex flex-col items-center justify-center gap-1.5 rounded-2xl border border-purple-400/40 bg-purple-500/15 p-3.5 text-xs font-bold text-purple-300 hover:from-purple-600 hover:to-indigo-600 hover:text-white transition-all duration-300 shadow-sm hover:shadow-purple-500/25 hover:-translate-y-1 hover:scale-105"
+              <a
+                href="tel:+911234567890"
+                className="inline-flex items-center justify-center gap-2.5 rounded-xl border-2 border-[#014122] bg-white px-7 py-3.5 text-xs sm:text-sm font-bold text-[#014122] shadow-sm hover:bg-[#014122] hover:text-white transition-all duration-300 cursor-pointer"
               >
-                <span className="text-xl group-hover:scale-125 transition-transform duration-300">👨‍🏫</span>
-                <span className="text-white">{t.faculty}</span>
-                <span className="text-[10px] text-purple-200">{t.facultySub}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleDemoLogin("executor")}
-                className="group relative flex flex-col items-center justify-center gap-1.5 rounded-2xl border border-amber-400/40 bg-amber-500/15 p-3.5 text-xs font-bold text-amber-300 hover:from-amber-600 hover:to-orange-600 hover:text-white transition-all duration-300 shadow-sm hover:shadow-amber-500/25 hover:-translate-y-1 hover:scale-105"
-              >
-                <span className="text-xl group-hover:scale-125 transition-transform duration-300">🤝</span>
-                <span className="text-white">{t.executor}</span>
-                <span className="text-[10px] text-amber-200">{t.executorSub}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleDemoLogin("admin")}
-                className="group relative flex flex-col items-center justify-center gap-1.5 rounded-2xl border border-rose-400/40 bg-rose-500/15 p-3.5 text-xs font-bold text-rose-300 hover:from-rose-600 hover:to-pink-600 hover:text-white transition-all duration-300 shadow-sm hover:shadow-rose-500/25 hover:-translate-y-1 hover:scale-105"
-              >
-                <span className="text-xl group-hover:scale-125 transition-transform duration-300">⚡</span>
-                <span className="text-white">{t.admin}</span>
-                <span className="text-[10px] text-rose-200">{t.adminSub}</span>
-              </button>
+                📞 Talk to Counselor
+              </a>
             </div>
+
           </div>
+        </div>
+      </section>
 
-          {/* Social Proof Stats with Frosted Glass */}
-          <div className="mt-16 grid grid-cols-2 gap-4 sm:grid-cols-4 max-w-4xl mx-auto text-left">
-            <div className="rounded-3xl border border-white/15 bg-slate-900/85 p-5 backdrop-blur-xl shadow-xl transition-all duration-300 hover:-translate-y-1 hover:border-indigo-400/40">
-              <div className="text-3xl font-black text-white">15,000+</div>
-              <div className="text-xs font-semibold text-slate-300 mt-1">{t.stat1Label}</div>
-              <div className="text-[10px] text-indigo-300 font-bold">{t.stat1Sub}</div>
+      {/* 2.5 ON-PROJECT TRAINING PROGRAM CARD SECTION (SIDE-BY-SIDE SPLIT INSIDE CARD) */}
+      <section className="relative z-10 py-16 lg:py-20 bg-gradient-to-b from-[#e2f0f5] to-background dark:from-[#021d10] dark:to-background border-b border-[#014122]/10">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="relative overflow-hidden rounded-[2.5rem] border-2 border-[#014122]/20 bg-white/95 dark:bg-[#022413]/95 p-6 sm:p-10 lg:p-12 shadow-2xl backdrop-blur-xl">
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+
+              {/* LEFT SIDE (7 columns): Header, Titles & 5 Features */}
+              <div className="lg:col-span-7 space-y-6 text-left">
+                {/* Top Badge */}
+                <div className="inline-flex items-center gap-2 rounded-full bg-[#014122] px-5 py-1.5 text-xs font-black tracking-widest text-white uppercase shadow-md">
+                  <Sparkles className="h-4 w-4 text-[#e6f4ec]" />
+                  <span>{t.programBadgeTag}</span>
+                </div>
+
+                {/* Main Titles */}
+                <div className="space-y-2">
+                  <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-[#014122] dark:text-white">
+                    {t.programMainTitle}
+                  </h2>
+                  <p className="text-lg sm:text-2xl font-black text-[#014122]/80 dark:text-emerald-300">
+                    {t.programMainSubtitle}
+                  </p>
+
+                  {/* Tag Pill */}
+                  <div className="pt-2">
+                    <span className="inline-block rounded-full bg-[#e6f4ec] dark:bg-[#014122] border border-[#014122]/20 px-5 py-1.5 text-xs sm:text-sm font-extrabold text-[#014122] dark:text-emerald-200 shadow-sm">
+                      {t.programPillTags}
+                    </span>
+                  </div>
+                </div>
+
+                {/* 5 Feature Cards Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2">
+                  <div className="flex items-center gap-3 rounded-2xl border border-[#014122]/20 bg-[#f4f9f6] dark:bg-[#01331a] p-3.5 shadow-sm text-left">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#014122] text-lg text-white shrink-0 shadow-sm">💻</span>
+                    <span className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">{t.programFeat1}</span>
+                  </div>
+
+                  <div className="flex items-center gap-3 rounded-2xl border border-[#014122]/20 bg-[#f4f9f6] dark:bg-[#01331a] p-3.5 shadow-sm text-left">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#014122] text-lg text-white shrink-0 shadow-sm">👨‍🏫</span>
+                    <span className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">{t.programFeat2}</span>
+                  </div>
+
+                  <div className="flex items-center gap-3 rounded-2xl border border-[#014122]/20 bg-[#f4f9f6] dark:bg-[#01331a] p-3.5 shadow-sm text-left">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#014122] text-lg text-white shrink-0 shadow-sm">📜</span>
+                    <span className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">{t.programFeat3}</span>
+                  </div>
+
+                  <div className="flex items-center gap-3 rounded-2xl border border-[#014122]/20 bg-[#f4f9f6] dark:bg-[#01331a] p-3.5 shadow-sm text-left">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#014122] text-lg text-white shrink-0 shadow-sm">🏢</span>
+                    <span className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">{t.programFeat4}</span>
+                  </div>
+
+                  <div className="sm:col-span-2 flex items-center justify-center gap-3 rounded-2xl border border-[#014122]/20 bg-[#f4f9f6] dark:bg-[#01331a] p-3.5 shadow-sm text-center">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#014122] text-lg text-white shrink-0 shadow-sm">🚀</span>
+                    <span className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">{t.programFeat5}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* RIGHT SIDE (5 columns): Program Info Box, Notice Box & CTA Button */}
+              <div className="lg:col-span-5 space-y-6">
+
+                {/* Program Details Card Box (Duration, Fee, Seats) */}
+                <div className="rounded-3xl border border-[#014122]/20 bg-[#f4f9f6]/90 dark:bg-[#012b16]/90 p-6 space-y-4 text-center">
+                  <h3 className="text-xs font-black tracking-widest text-[#014122] dark:text-emerald-300 uppercase">
+                    {t.programDetailsTitle}
+                  </h3>
+
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="rounded-2xl bg-white dark:bg-[#02381e] p-3.5 border border-[#014122]/15 shadow-sm text-center">
+                      <div className="text-[11px] font-extrabold text-slate-500 dark:text-slate-300 uppercase tracking-wider">{t.programDurationLabel}</div>
+                      <div className="text-lg font-black text-[#014122] dark:text-white mt-1">{t.programDurationValue}</div>
+                    </div>
+
+                    <div className="rounded-2xl bg-white dark:bg-[#02381e] p-3.5 border border-[#014122]/15 shadow-sm text-center">
+                      <div className="text-[11px] font-extrabold text-slate-500 dark:text-slate-300 uppercase tracking-wider">{t.programFeeLabel}</div>
+                      <div className="text-lg font-black text-[#014122] dark:text-white mt-1">{t.programFeeValue}</div>
+                    </div>
+
+                    <div className="rounded-2xl bg-white dark:bg-[#02381e] p-3.5 border border-[#014122]/15 shadow-sm text-center">
+                      <div className="text-[11px] font-extrabold text-slate-500 dark:text-slate-300 uppercase tracking-wider">{t.programSeatsLabel}</div>
+                      <div className="text-lg font-black text-[#014122] dark:text-white mt-1">{t.programSeatsValue}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Important Notice Box (Orange Border) */}
+                <div className="rounded-3xl border-2 border-amber-400/80 bg-amber-500/10 dark:bg-amber-950/20 p-5 text-left space-y-2 shadow-xs">
+                  <div className="flex items-center gap-2 text-[#014122] dark:text-amber-300 font-extrabold text-sm">
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-white font-black text-xs">!</span>
+                    <span>{t.noticeTitle}</span>
+                  </div>
+                  <p className="text-xs text-slate-800 dark:text-slate-200 leading-relaxed font-medium">
+                    {t.noticeText1}
+                    <span className="font-bold text-rose-600 dark:text-rose-400">{t.noticeNoPlacement}</span>
+                  </p>
+                  <p className="text-xs text-slate-800 dark:text-slate-200 leading-relaxed font-medium">
+                    {t.noticeText2}
+                    <span className="font-bold text-slate-900 dark:text-white">{t.noticeCert}</span>
+                    {t.noticeAnd}
+                    <span className="font-bold text-slate-900 dark:text-white">{t.noticeExp}</span>
+                    {t.noticeGiven}
+                  </p>
+                </div>
+
+                {/* Flame Pill + Enroll CTA Button + Subtext */}
+                <div className="pt-2 text-center space-y-3">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-emerald-900/20 bg-[#e6f4ec] dark:bg-[#014122] px-4 py-1.5 text-xs font-black text-[#014122] dark:text-emerald-200 shadow-sm">
+                    <span>{t.flamePill}</span>
+                  </div>
+
+                  <div>
+                    <Link
+                      to="/login"
+                      className="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-[#014122] hover:bg-[#026637] px-8 py-3.5 text-sm sm:text-base font-black text-white shadow-xl hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer"
+                    >
+                      {t.enrollTodayBtn} <ArrowRight className="h-5 w-5" />
+                    </Link>
+                  </div>
+
+                  <p className="text-[11px] font-extrabold text-[#014122] dark:text-emerald-300">
+                    {t.enrollTodaySub}
+                  </p>
+                </div>
+
+              </div>
+
             </div>
-            <div className="rounded-3xl border border-white/15 bg-slate-900/85 p-5 backdrop-blur-xl shadow-xl transition-all duration-300 hover:-translate-y-1 hover:border-emerald-400/40">
-              <div className="text-3xl font-black text-emerald-400">8-Step</div>
-              <div className="text-xs font-semibold text-slate-300 mt-1">{t.stat2Label}</div>
-              <div className="text-[10px] text-emerald-300 font-bold">{t.stat2Sub}</div>
-            </div>
-            <div className="rounded-3xl border border-white/15 bg-slate-900/85 p-5 backdrop-blur-xl shadow-xl transition-all duration-300 hover:-translate-y-1 hover:border-indigo-400/40">
-              <div className="text-3xl font-black text-indigo-400">4 Role</div>
-              <div className="text-xs font-semibold text-slate-300 mt-1">{t.stat3Label}</div>
-              <div className="text-[10px] text-indigo-300 font-bold">{t.stat3Sub}</div>
-            </div>
-            <div className="rounded-3xl border border-white/15 bg-slate-900/85 p-5 backdrop-blur-xl shadow-xl transition-all duration-300 hover:-translate-y-1 hover:border-purple-400/40">
-              <div className="text-3xl font-black text-purple-400">Razorpay</div>
-              <div className="text-xs font-semibold text-slate-300 mt-1">{t.stat4Label}</div>
-              <div className="text-[10px] text-purple-300 font-bold">{t.stat4Sub}</div>
-            </div>
+
           </div>
         </div>
       </section>
@@ -307,11 +425,10 @@ export default function LandingPage() {
                   key={r}
                   type="button"
                   onClick={() => setActiveRoleTab(r)}
-                  className={`rounded-xl px-5 py-2.5 text-xs font-extrabold capitalize transition-all duration-300 ${
-                    activeRoleTab === r
-                      ? "bg-gradient-to-r from-primary to-indigo-600 text-white shadow-md shadow-primary/25 scale-105"
-                      : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
-                  }`}
+                  className={`rounded-xl px-5 py-2.5 text-xs font-extrabold capitalize transition-all duration-300 ${activeRoleTab === r
+                    ? "bg-gradient-to-r from-primary to-[#026637] text-white shadow-md shadow-primary/25 scale-105"
+                    : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                    }`}
                 >
                   {t[r]}
                 </button>
@@ -324,7 +441,7 @@ export default function LandingPage() {
             {activeRoleTab === "student" && (
               <div className="grid md:grid-cols-2 gap-8 items-center">
                 <div className="space-y-4">
-                  <span className="rounded-full bg-blue-500/10 text-blue-500 border border-blue-500/20 px-3 py-1 text-xs font-bold">
+                  <span className="rounded-full bg-[#014122]/10 text-[#014122] border border-[#014122]/20 px-3 py-1 text-xs font-bold">
                     🎓 {t.student}
                   </span>
                   <h3 className="text-2xl font-extrabold text-foreground">Interactive Learning Dashboard</h3>
@@ -334,7 +451,7 @@ export default function LandingPage() {
                   <button
                     type="button"
                     onClick={() => handleDemoLogin("student")}
-                    className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white shadow-md hover:bg-blue-700 transition-all"
+                    className="inline-flex items-center gap-2.5 rounded-2xl bg-[#014122] hover:bg-[#026637] px-7 py-3.5 text-sm font-black text-white shadow-xl hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer"
                   >
                     Launch Student Demo <ArrowRight className="h-4 w-4" />
                   </button>
@@ -355,7 +472,7 @@ export default function LandingPage() {
                     <span className="flex items-center gap-2">
                       <Radio className="h-4 w-4 text-red-500 animate-ping" /> {t.liveBroadcast}
                     </span>
-                    <span className="rounded-md bg-indigo-600 px-2 py-0.5 text-[10px] font-bold">Join Meet</span>
+                    <span className="rounded-md bg-[#014122] px-2 py-0.5 text-[10px] font-bold">Join Meet</span>
                   </div>
                 </div>
               </div>
@@ -374,7 +491,7 @@ export default function LandingPage() {
                   <button
                     type="button"
                     onClick={() => handleDemoLogin("faculty")}
-                    className="inline-flex items-center gap-2 rounded-xl bg-purple-600 px-5 py-2.5 text-xs font-bold text-white shadow-md hover:bg-purple-700 transition-all"
+                    className="inline-flex items-center gap-2.5 rounded-2xl bg-purple-700 hover:bg-purple-800 px-7 py-3.5 text-sm font-black text-white shadow-xl hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer"
                   >
                     Launch Faculty Demo <ArrowRight className="h-4 w-4" />
                   </button>
@@ -409,7 +526,7 @@ export default function LandingPage() {
                   <button
                     type="button"
                     onClick={() => handleDemoLogin("executor")}
-                    className="inline-flex items-center gap-2 rounded-xl bg-amber-600 px-5 py-2.5 text-xs font-bold text-white shadow-md hover:bg-amber-700 transition-all"
+                    className="inline-flex items-center gap-2.5 rounded-2xl bg-amber-700 hover:bg-amber-800 px-7 py-3.5 text-sm font-black text-white shadow-xl hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer"
                   >
                     Launch Executor Demo <ArrowRight className="h-4 w-4" />
                   </button>
@@ -444,7 +561,7 @@ export default function LandingPage() {
                   <button
                     type="button"
                     onClick={() => handleDemoLogin("admin")}
-                    className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-5 py-2.5 text-xs font-bold text-white shadow-md hover:bg-rose-700 transition-all"
+                    className="inline-flex items-center gap-2.5 rounded-2xl bg-rose-700 hover:bg-rose-800 px-7 py-3.5 text-sm font-black text-white shadow-xl hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer"
                   >
                     Launch Admin Console <ArrowRight className="h-4 w-4" />
                   </button>
@@ -473,7 +590,7 @@ export default function LandingPage() {
       <section id="features" className="scroll-reveal relative z-10 py-24 border-t border-border/80 bg-background">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-16">
-            <span className="rounded-full bg-indigo-500/10 border border-indigo-500/20 px-4 py-1.5 text-xs font-bold text-indigo-500">
+            <span className="rounded-full bg-[#014122]/10 border border-[#014122]/20 px-4 py-1.5 text-xs font-bold text-[#014122]">
               {t.featuresBadge}
             </span>
             <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-foreground mt-4">
@@ -486,7 +603,7 @@ export default function LandingPage() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div className="rounded-3xl border border-border/70 bg-card p-6 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:border-primary/40">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-500/10 text-indigo-500 mb-5">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#014122]/10 text-[#014122] mb-5">
                 <ShieldCheck className="h-6 w-6" />
               </div>
               <h3 className="text-lg font-bold text-foreground mb-2">{t.feat1Title}</h3>
@@ -509,8 +626,8 @@ export default function LandingPage() {
               <p className="text-xs text-muted-foreground leading-relaxed">{t.feat3Desc}</p>
             </div>
 
-            <div className="rounded-3xl border border-border/70 bg-card p-6 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:border-blue-400/40">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-500 mb-5">
+            <div className="rounded-3xl border border-border/70 bg-card p-6 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:border-emerald-400/40">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#014122]/10 text-[#014122] mb-5">
                 <Video className="h-6 w-6" />
               </div>
               <h3 className="text-lg font-bold text-foreground mb-2">{t.feat4Title}</h3>
@@ -555,7 +672,7 @@ export default function LandingPage() {
             {courses.map((course) => {
               const plans = store.getPlansForCourse(course.id);
               const facultyRecord = course.faculty_id ? store.getFacultyWithProfiles().find((f) => f.id === course.faculty_id) : null;
-              
+
               return (
                 <div key={course.id} className="rounded-3xl border border-border/80 bg-card p-6 shadow-2xl flex flex-col justify-between transition-all duration-300 hover:border-primary/40">
                   <div>
@@ -643,7 +760,7 @@ export default function LandingPage() {
 
             {/* 3 Months (Recommended) */}
             <div className="relative rounded-3xl border-2 border-primary bg-card p-6 shadow-2xl flex flex-col justify-between scale-105">
-              <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-primary to-indigo-600 px-4 py-1 text-[10px] font-black uppercase text-white shadow-md">
+              <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-primary to-[#026637] px-4 py-1 text-[10px] font-black uppercase text-white shadow-md">
                 {t.popular}
               </span>
               <div>
@@ -662,7 +779,7 @@ export default function LandingPage() {
               <button
                 type="button"
                 onClick={() => handleDemoLogin("student")}
-                className="mt-8 w-full rounded-xl bg-gradient-to-r from-primary to-indigo-600 text-white py-2.5 text-xs font-bold shadow-md hover:opacity-95 transition-all"
+                className="mt-8 w-full rounded-xl bg-gradient-to-r from-primary to-[#026637] text-white py-2.5 text-xs font-bold shadow-md hover:opacity-95 transition-all"
               >
                 {t.enrollNow}
               </button>
@@ -741,7 +858,7 @@ export default function LandingPage() {
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md">
               <Code className="h-5 w-5" />
             </div>
-            <span className="text-base font-black text-foreground">CodeX Technology</span>
+            <span className="text-base font-black text-foreground">Nexora</span>
           </div>
 
           <p className="text-xs text-muted-foreground max-w-md mx-auto leading-relaxed">
@@ -749,7 +866,7 @@ export default function LandingPage() {
           </p>
 
           <div className="pt-4 border-t border-border/60 text-[11px] text-muted-foreground">
-            © {new Date().getFullYear()} CodeX Technology. All rights reserved. Multilingual Support Active (English, हिंदी, मराठी).
+            © {new Date().getFullYear()} Nexora. All rights reserved. Multilingual Support Active (English, हिंदी, मराठी).
           </div>
         </div>
       </footer>

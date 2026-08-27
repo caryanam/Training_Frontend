@@ -71,7 +71,7 @@ export default function ExecutorFreeDemo() {
             demoDate: d.demo_date,
             startTime: d.demo_time || "11:00",
             endTime: "12:00",
-            meetLink: d.meeting_link || "https://meet.google.com/eduflow-demo",
+            meetLink: d.meeting_link || "https://meet.google.com/nexora-demo",
             status: (d.status || "SCHEDULED").toUpperCase(),
             totalParticipants: 1,
             notes: d.notes || "",
@@ -81,7 +81,7 @@ export default function ExecutorFreeDemo() {
                 leadId: d.lead_id,
                 studentId: d.student_id,
                 studentName: leadProfile?.full_name || "Enrolled Student",
-                studentEmail: leadProfile?.email || "student@eduflow.com",
+                studentEmail: leadProfile?.email || "student@nexora.com",
                 studentPhone: leadProfile?.phone || "+91 98765 43210",
                 attendanceStatus: "REGISTERED",
               },
@@ -119,7 +119,7 @@ export default function ExecutorFreeDemo() {
         demoDate: d.demo_date,
         startTime: d.demo_time || "11:00",
         endTime: "12:00",
-        meetLink: d.meeting_link || "https://meet.google.com/eduflow-demo",
+        meetLink: d.meeting_link || "https://meet.google.com/nexora-demo",
         status: (d.status || "SCHEDULED").toUpperCase(),
         totalParticipants: 1,
         notes: d.notes || "",
@@ -247,7 +247,7 @@ export default function ExecutorFreeDemo() {
         actions={
           <button
             onClick={() => handleOpenScheduleModal()}
-            className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-500 shadow-md"
+            className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-500 shadow-md"
           >
             <Plus className="h-4 w-4" /> Schedule Group Demo
           </button>
@@ -256,7 +256,7 @@ export default function ExecutorFreeDemo() {
 
       {loading ? (
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+          <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
         </div>
       ) : groupDemos.length === 0 ? (
         <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-12 text-center text-slate-400">
@@ -267,7 +267,7 @@ export default function ExecutorFreeDemo() {
           </p>
           <button
             onClick={() => handleOpenScheduleModal()}
-            className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-bold text-white hover:bg-indigo-500 shadow-lg shadow-indigo-600/20"
+            className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-bold text-white hover:bg-emerald-500 shadow-lg shadow-emerald-600/20"
           >
             <Plus className="h-4 w-4" /> Schedule Group Demo
           </button>
@@ -289,13 +289,13 @@ export default function ExecutorFreeDemo() {
                     ? "border-red-500/20 opacity-75"
                     : isCompleted
                     ? "border-emerald-500/30"
-                    : "border-indigo-500/20 hover:border-indigo-500/40"
+                    : "border-emerald-500/20 hover:border-emerald-500/40"
                 }`}
               >
                 {/* Card Top Header */}
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 px-3 py-1 text-xs font-bold text-indigo-300 mb-2">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 text-xs font-bold text-emerald-300 mb-2">
                       <Video className="h-3.5 w-3.5" /> Group Demo Session
                     </span>
                     <h3 className="text-lg font-bold text-white">{demo.courseName || "Full Stack Web Development"}</h3>
@@ -319,10 +319,10 @@ export default function ExecutorFreeDemo() {
                           ? "bg-rose-500/20 border-rose-500/40 text-rose-300"
                           : currentStatus === "RESCHEDULED"
                           ? "bg-amber-500/20 border-amber-500/40 text-amber-300"
-                          : "bg-blue-500/20 border-blue-500/40 text-blue-300"
+                          : "bg-emerald-500/20 border-emerald-500/40 text-emerald-300"
                       }`}
                     >
-                      <option value="SCHEDULED" className="bg-slate-900 text-blue-300">SCHEDULED</option>
+                      <option value="SCHEDULED" className="bg-slate-900 text-emerald-300">SCHEDULED</option>
                       <option value="IN_PROGRESS" className="bg-slate-900 text-purple-300">IN PROGRESS</option>
                       <option value="COMPLETED" className="bg-slate-900 text-emerald-300">COMPLETED</option>
                       <option value="NO_SHOW" className="bg-slate-900 text-rose-300">NO SHOW</option>
@@ -335,12 +335,12 @@ export default function ExecutorFreeDemo() {
                 {/* Details Grid */}
                 <div className="grid grid-cols-2 gap-3 text-xs bg-slate-950/60 p-3.5 rounded-xl border border-slate-800">
                   <div className="flex items-center gap-2 text-slate-300">
-                    <Calendar className="h-4 w-4 text-indigo-400 shrink-0" />
+                    <Calendar className="h-4 w-4 text-emerald-400 shrink-0" />
                     <span>Date: <strong className="text-white">{formatDate(demo.demoDate)}</strong></span>
                   </div>
 
                   <div className="flex items-center gap-2 text-slate-300">
-                    <Clock className="h-4 w-4 text-indigo-400 shrink-0" />
+                    <Clock className="h-4 w-4 text-emerald-400 shrink-0" />
                     <span>Time: <strong className="text-white">{demo.startTime} - {demo.endTime || "12:00"}</strong></span>
                   </div>
 
@@ -352,7 +352,7 @@ export default function ExecutorFreeDemo() {
 
                     <button
                       onClick={() => handleOpenParticipantsModal(demo)}
-                      className="text-xs font-bold text-indigo-400 hover:text-indigo-300 underline"
+                      className="text-xs font-bold text-emerald-400 hover:text-emerald-300 underline"
                     >
                       View Students →
                     </button>
@@ -371,7 +371,7 @@ export default function ExecutorFreeDemo() {
                     onClick={() => handleOpenParticipantsModal(demo)}
                     className="inline-flex items-center gap-1.5 rounded-xl bg-slate-800 px-3.5 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-700 transition-colors"
                   >
-                    <Users className="h-3.5 w-3.5 text-indigo-400" /> View Students ({participantCount})
+                    <Users className="h-3.5 w-3.5 text-emerald-400" /> View Students ({participantCount})
                   </button>
 
                   <div className="flex items-center gap-2">
@@ -423,10 +423,10 @@ export default function ExecutorFreeDemo() {
       {/* View Demo Participants Modal */}
       {participantsModalOpen && activeSession && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="relative w-full max-w-xl overflow-hidden rounded-2xl border border-indigo-500/20 bg-slate-900 shadow-2xl text-slate-100 max-h-[85vh] flex flex-col">
+          <div className="relative w-full max-w-xl overflow-hidden rounded-2xl border border-emerald-500/20 bg-slate-900 shadow-2xl text-slate-100 max-h-[85vh] flex flex-col">
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-950/50">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-400">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400">
                   <Users className="h-5 w-5" />
                 </div>
                 <div>
@@ -455,13 +455,13 @@ export default function ExecutorFreeDemo() {
                     placeholder="Search participant..."
                     value={participantSearch}
                     onChange={(e) => setParticipantSearch(e.target.value)}
-                    className="w-full rounded-xl border border-slate-800 bg-slate-950/60 pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                    className="w-full rounded-xl border border-slate-800 bg-slate-950/60 pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
                   />
                 </div>
 
                 <button
                   onClick={() => setAddStudentModalOpen(true)}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-500 shadow-md shrink-0"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-500 shadow-md shrink-0"
                 >
                   <UserPlus className="h-4 w-4" /> Add Students
                 </button>
@@ -517,7 +517,7 @@ export default function ExecutorFreeDemo() {
       {/* Add Students to Active Session Modal */}
       {addStudentModalOpen && activeSession && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-indigo-500/20 bg-slate-900 shadow-2xl text-slate-100 p-6 space-y-4">
+          <div className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-emerald-500/20 bg-slate-900 shadow-2xl text-slate-100 p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <h3 className="text-base font-bold text-white">Add Students to Existing Session</h3>
               <button onClick={() => setAddStudentModalOpen(false)} className="text-slate-400 hover:text-white">
@@ -532,7 +532,7 @@ export default function ExecutorFreeDemo() {
                 placeholder="Search students to add..."
                 value={addSearchQuery}
                 onChange={(e) => setAddSearchQuery(e.target.value)}
-                className="w-full rounded-xl border border-slate-800 bg-slate-950/60 pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                className="w-full rounded-xl border border-slate-800 bg-slate-950/60 pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
               />
             </div>
 
@@ -545,7 +545,7 @@ export default function ExecutorFreeDemo() {
                     <label
                       key={student.id}
                       className={`flex items-center justify-between p-2 rounded-lg cursor-pointer ${
-                        isChecked ? "bg-indigo-950/40 border border-indigo-500/30" : "hover:bg-slate-800/50"
+                        isChecked ? "bg-emerald-950/40 border border-emerald-500/30" : "hover:bg-slate-800/50"
                       }`}
                     >
                       <div className="flex items-center gap-3">
@@ -559,7 +559,7 @@ export default function ExecutorFreeDemo() {
                               setSelectedNewStudentIds([...selectedNewStudentIds, student.id]);
                             }
                           }}
-                          className="rounded border-slate-700 bg-slate-900 text-indigo-500 focus:ring-indigo-500 h-4 w-4"
+                          className="rounded border-slate-700 bg-slate-900 text-emerald-500 focus:ring-emerald-500 h-4 w-4"
                         />
                         <div>
                           <p className="text-xs font-bold text-white">{student.full_name}</p>
@@ -581,7 +581,7 @@ export default function ExecutorFreeDemo() {
               <button
                 onClick={handleAddStudentsToActiveSession}
                 disabled={actionLoading || selectedNewStudentIds.length === 0}
-                className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2 text-xs font-bold text-white hover:bg-indigo-500 disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2 text-xs font-bold text-white hover:bg-emerald-500 disabled:opacity-50"
               >
                 {actionLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : `Add Selected (${selectedNewStudentIds.length})`}
               </button>

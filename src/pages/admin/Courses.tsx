@@ -353,9 +353,9 @@ export default function AdminCourses() {
             >
               {/* Card Header */}
               <div>
-                <div className="bg-gradient-to-r from-indigo-950 to-slate-900 p-6 text-white">
+                <div className="bg-gradient-to-r from-emerald-950 to-slate-900 p-6 text-white">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="rounded-full bg-indigo-500/20 px-2.5 py-0.5 text-[10px] font-semibold text-indigo-300 uppercase tracking-wider">
+                    <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-300 uppercase tracking-wider">
                       {categoryLabel(c.category)}
                     </span>
                     <StatusBadge status={c.status.toLowerCase()} />

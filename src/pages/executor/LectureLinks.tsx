@@ -64,7 +64,7 @@ export default function ExecutorLectureLinks() {
             const course = store.getCourse(lec.course_id);
             const isCopied = copiedId === lec.id;
             const isMeetCopied = copiedMeetId === lec.id;
-            const meetUrl = lec.meeting_link || "https://meet.google.com/eduflow-live-session";
+            const meetUrl = lec.meeting_link || "https://meet.google.com/nexora-live-session";
 
             return (
               <div

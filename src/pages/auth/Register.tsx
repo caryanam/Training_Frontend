@@ -3,7 +3,23 @@ import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDataStore } from "@/lib/store";
 import { api } from "@/lib/api";
-import { GraduationCap, Code, Eye, EyeOff, Loader2, CheckCircle2, Phone, MapPin, BookOpen, GraduationCap as Education, AlertCircle } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  Loader2,
+  CheckCircle2,
+  Phone as PhoneIcon,
+  AlertCircle,
+  Sparkles,
+  User,
+  Mail,
+  Lock,
+  ArrowRight,
+  BookOpen,
+  Laptop,
+  GraduationCap,
+  MapPin,
+} from "lucide-react";
 
 // Password strength validation
 function getPasswordErrors(pw: string): string[] {
@@ -24,11 +40,11 @@ export default function Register() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [education, setEducation] = useState("");
+  const [city, setCity] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [interestedCourse, setInterestedCourse] = useState("");
-  const [education, setEducation] = useState("");
-  const [city, setCity] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
@@ -41,9 +57,11 @@ export default function Register() {
 
   useEffect(() => {
     api.getAllCourses().then((res) => {
-      if (res.success && res.data) {
+      if (res && res.success && res.data && res.data.length > 0) {
         setSpringCourses(res.data);
       }
+    }).catch(() => {
+      // Fallback silently to local store courses
     });
   }, []);
 
@@ -54,42 +72,22 @@ export default function Register() {
   const validateFields = (): boolean => {
     const errors: Record<string, string> = {};
 
-    // BUG-001: Full Name must be at least 2 characters
     if (fullName.trim().length < 2) {
       errors.fullName = "Full name must be at least 2 characters.";
     }
 
-    // BUG-002: Phone must be a valid 10-digit number
     const cleanPhone = phone.replace(/[\s\-\+]/g, "");
     const phoneDigits = cleanPhone.replace(/^(\+91|91)/, "");
     if (phoneDigits.length !== 10 || !/^\d{10}$/.test(phoneDigits)) {
       errors.phone = "Enter a valid 10-digit mobile number.";
     }
 
-    // BUG-003: Strong password policy
     if (!isStrongPassword(password)) {
-      errors.password = "Password does not meet strength requirements.";
+      errors.password = "Password must be at least 8 chars with uppercase, lowercase, digit & symbol.";
     }
 
-    // Confirm password match
     if (password !== confirmPassword) {
       errors.confirmPassword = "Passwords do not match.";
-    }
-
-    // BUG-013: Education must be at least 2 characters if provided
-    if (education.trim().length > 0 && education.trim().length < 2) {
-      errors.education = "Education must be at least 2 characters.";
-    }
-    if (education.trim().length > 0 && /^\d+$/.test(education.trim())) {
-      errors.education = "Education cannot be only digits.";
-    }
-
-    // BUG-014: City must be at least 2 characters, no digits only
-    if (city.trim().length > 0 && city.trim().length < 2) {
-      errors.city = "City must be at least 2 characters.";
-    }
-    if (city.trim().length > 0 && /\d/.test(city.trim())) {
-      errors.city = "City name should not contain digits.";
     }
 
     setFieldErrors(errors);
@@ -104,17 +102,16 @@ export default function Register() {
 
     setLoading(true);
 
-    // Students register; other roles are admin-created
     const { error: signUpError } = await signUp(
-      email,
+      email.trim(),
       password,
-      fullName,
+      fullName.trim(),
       "student",
-      { phone, interestedCourse, education, city }
+      { phone: phone.trim(), interestedCourse, education: education.trim(), city: city.trim() }
     );
 
     if (signUpError) {
-      setError(signUpError.message);
+      setError(signUpError.message || "Registration failed. Please check your details.");
       setLoading(false);
       return;
     }
@@ -123,38 +120,34 @@ export default function Register() {
     setLoading(false);
   };
 
-  const passwordErrors = getPasswordErrors(password);
-
   if (success) {
     return (
-      <div className="flex min-h-screen items-center justify-center p-6 bg-background">
-        <div className="w-full max-w-[480px] text-center">
-          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-950">
-            <CheckCircle2 className="h-8 w-8 text-green-600" />
+      <div className="flex min-h-screen items-center justify-center p-6 bg-[#f0f9f4] dark:bg-slate-950 font-sans">
+        <div className="w-full max-w-[480px] text-center bg-white dark:bg-slate-900 rounded-[2rem] border-2 border-[#014122]/15 p-8 shadow-2xl animate-in fade-in zoom-in-95 duration-500">
+          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-[#e6f7ef] text-[#014122]">
+            <CheckCircle2 className="h-8 w-8 text-[#014122]" />
           </div>
-          <h2 className="text-2xl font-bold text-foreground mb-2">
-            Registration Received! 🎉
+          <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-2">
+            Registration Successful! 🎉
           </h2>
-          <p className="text-muted-foreground mb-4">
+          <p className="text-xs text-slate-600 dark:text-slate-300 mb-5 font-medium">
             Your student account has been created successfully.
           </p>
-          <div className="rounded-xl border border-indigo-500/20 bg-indigo-500/5 p-5 text-left space-y-3 mb-6">
-            <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
-              <BookOpen className="h-4 w-4 text-indigo-500" /> What happens next?
+          <div className="rounded-2xl border border-[#014122]/20 bg-[#f4f9f6] p-4 text-left space-y-2.5 mb-6">
+            <h3 className="text-xs font-extrabold text-[#014122] flex items-center gap-2">
+              <BookOpen className="h-4 w-4 text-[#014122]" /> What happens next?
             </h3>
-            <ol className="text-xs text-muted-foreground space-y-2 list-decimal list-inside">
+            <ol className="text-xs text-slate-700 space-y-1.5 list-decimal list-inside font-medium">
               <li>Our admissions team has received your registration.</li>
               <li>An <strong>Executor</strong> will be assigned to you shortly.</li>
-              <li>You'll receive a <strong>free demo session</strong> of your interested course.</li>
-              <li>After the demo, you can proceed with course enrollment and payment.</li>
-              <li>Once enrolled, a <strong>Faculty</strong> will be assigned and you'll get full lecture access.</li>
+              <li>You will receive access to your student learning portal.</li>
             </ol>
           </div>
           <Link
             to="/login"
-            className="inline-flex h-11 items-center justify-center rounded-lg bg-primary px-8 font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+            className="inline-flex h-11 items-center justify-center rounded-xl bg-[#014122] hover:bg-[#026637] px-8 font-extrabold text-white text-sm shadow-md transition-all cursor-pointer"
           >
-            Sign in to your account
+            Sign In to Your Account
           </Link>
         </div>
       </div>
@@ -162,304 +155,365 @@ export default function Register() {
   }
 
   return (
-    <div className="flex min-h-screen">
-      {/* Left panel — branding */}
-      <div className="hidden lg:flex lg:w-1/2 items-center justify-center bg-gradient-to-br from-indigo-950 via-slate-900 to-indigo-900 p-12">
-        <div className="max-w-md text-white">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-500/20 ring-1 ring-indigo-400/30 backdrop-blur-md">
-              <Code className="h-6 w-6 text-indigo-400" />
+    <div className="flex h-screen w-screen overflow-hidden bg-slate-950 font-sans">
+      
+      {/* LEFT PANEL — Dark Forest Green LMS Branding (Matching Reference Image) */}
+      <div className="hidden lg:flex lg:w-1/2 flex-col justify-between bg-[#012b18] p-8 xl:p-10 text-white relative overflow-hidden border-r border-[#024d2b]/30 h-full">
+        
+        {/* Subtle Background Pattern */}
+        <div className="absolute top-6 right-8 h-44 w-44 bg-[radial-gradient(#026637_1.5px,transparent_1.5px)] [background-size:16px_16px] opacity-35 pointer-events-none" />
+        
+        <div className="relative z-10 space-y-4 xl:space-y-5">
+          {/* Top Brand Logo */}
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#026637] text-white shadow-lg shadow-[#026637]/30 ring-1 ring-white/20">
+              <Sparkles className="h-5 w-5 text-[#a3e6ba]" />
             </div>
-            <span className="text-2xl font-bold tracking-tight">CodeX Technology</span>
+            <div>
+              <span className="text-2xl font-black tracking-tight text-white block leading-tight">Nexora</span>
+              <span className="text-[10px] font-bold text-[#a3e6ba] tracking-wider uppercase">Enterprise Learning Suite</span>
+            </div>
           </div>
-          <h1 className="text-4xl font-bold mb-4 leading-tight">
-            Start your learning journey
-          </h1>
-          <p className="text-indigo-200/80 text-lg leading-relaxed mb-8">
-            Register as a student to begin your path. Our team will guide you through a free demo, course selection, and enrollment.
+
+          {/* All-in-One LMS Tag Badge */}
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-full bg-[#024125]/80 border border-[#026637]/60 px-3.5 py-1 text-xs font-extrabold text-[#a3e6ba] shadow-sm">
+              <Sparkles className="h-3.5 w-3.5" />
+              <span>All-in-One Learning Management Platform</span>
+            </div>
+          </div>
+
+          {/* Display Headline */}
+          <div className="relative space-y-0.5">
+            <h1 className="text-3xl xl:text-4xl font-black tracking-tight leading-[1.15] text-white">
+              Complete Course &<br />
+              Lecture Management<br />
+              <span className="text-[#10b981]">Platform</span>
+            </h1>
+
+            {/* Curly Arrow Vector Illustration Accent */}
+            <svg
+              className="absolute -right-2 top-1/2 h-14 w-14 text-[#10b981] opacity-80 pointer-events-none hidden xl:block"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              strokeWidth="2"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+            </svg>
+          </div>
+
+          {/* Subtitle */}
+          <p className="text-xs text-slate-300 leading-relaxed max-w-lg font-medium">
+            Tailored role-based portals for Students, Faculty, Executors, and Admins with calendar validity, secure lecture access, and payment verification.
           </p>
-          <div className="space-y-3 text-sm text-indigo-200/70">
-            <div className="flex items-center gap-3">
-              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-500/20 text-xs font-bold text-indigo-300">1</span>
-              <span>Register & create your profile</span>
+
+          {/* 4 Portal Cards (2x2 Grid matching reference image) */}
+          <div className="grid grid-cols-2 gap-2.5 max-w-xl pt-0.5">
+            <div className="rounded-xl border border-[#026637]/40 bg-[#013820]/70 p-2.5 flex items-center gap-2 backdrop-blur-md shadow-xs">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#026637] text-white text-sm font-black shadow-sm">
+                🎓
+              </div>
+              <div>
+                <div className="text-[11px] font-extrabold text-white">Student Portal</div>
+                <div className="text-[9px] text-slate-300 font-medium leading-tight">Course progress & validity</div>
+              </div>
             </div>
-            <div className="flex items-center gap-3">
-              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-500/20 text-xs font-bold text-indigo-300">2</span>
-              <span>Get assigned an executor for free demo</span>
+
+            <div className="rounded-xl border border-[#026637]/40 bg-[#013820]/70 p-2.5 flex items-center gap-2 backdrop-blur-md shadow-xs">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#026637] text-white text-sm font-black shadow-sm">
+                👨‍🏫
+              </div>
+              <div>
+                <div className="text-[11px] font-extrabold text-white">Faculty Portal</div>
+                <div className="text-[9px] text-slate-300 font-medium leading-tight">Live lectures & downloads</div>
+              </div>
             </div>
-            <div className="flex items-center gap-3">
-              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-500/20 text-xs font-bold text-indigo-300">3</span>
-              <span>Attend demo, choose course & enroll</span>
+
+            <div className="rounded-xl border border-[#026637]/40 bg-[#013820]/70 p-2.5 flex items-center gap-2 backdrop-blur-md shadow-xs">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#026637] text-white text-sm font-black shadow-sm">
+                💼
+              </div>
+              <div>
+                <div className="text-[11px] font-extrabold text-white">Executor Portal</div>
+                <div className="text-[9px] text-slate-300 font-medium leading-tight">Lead onboarding pipeline</div>
+              </div>
             </div>
-            <div className="flex items-center gap-3">
-              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-500/20 text-xs font-bold text-indigo-300">4</span>
-              <span>Access lectures with assigned faculty</span>
+
+            <div className="rounded-xl border border-[#026637]/40 bg-[#013820]/70 p-2.5 flex items-center gap-2 backdrop-blur-md shadow-xs">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#026637] text-white text-sm font-black shadow-sm">
+                🛡️
+              </div>
+              <div>
+                <div className="text-[11px] font-extrabold text-white">Admin Command</div>
+                <div className="text-[9px] text-slate-300 font-medium leading-tight">Analytics & access control</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom 3D Laptop Dashboard Mockup Illustration */}
+          <div className="relative pt-0.5 flex justify-center items-center">
+            <div className="relative overflow-hidden max-w-xs xl:max-w-sm w-full flex justify-center items-center group">
+              <img
+                src="/lms_laptop_exact.png"
+                alt="Nexora LMS Laptop Mockup"
+                className="w-full h-auto max-h-28 xl:max-h-36 object-contain object-center transition-transform duration-700 group-hover:scale-105 drop-shadow-xl"
+              />
             </div>
           </div>
         </div>
+
+        {/* Bottom Footer Bar */}
+        <div className="relative z-10 pt-2 flex items-center justify-between text-xs text-slate-400 border-t border-[#026637]/40 mt-2">
+          <span className="flex items-center gap-1.5 font-semibold text-slate-300 text-[10px]">
+            <CheckCircle2 className="h-3 w-3 text-[#10b981]" /> Nexora Enterprise Platform
+          </span>
+          <span className="flex items-center gap-1.5 font-semibold text-slate-300 text-[10px]">
+            <Laptop className="h-3 w-3 text-[#10b981]" /> Built with Spring Boot REST API + React
+          </span>
+        </div>
+
       </div>
 
-      {/* Right panel — register form */}
-      <div className="flex w-full lg:w-1/2 items-center justify-center p-6 sm:p-12 overflow-y-auto">
-        <div className="w-full max-w-[460px]">
-          <div className="flex items-center gap-2 mb-8 lg:hidden">
-            <Code className="h-8 w-8 text-primary" />
-            <span className="text-xl font-bold text-foreground">CodeX</span>
-          </div>
+      {/* RIGHT PANEL — Animated Light Ice/Mint Background Container */}
+      <div className="relative flex w-full lg:w-1/2 flex-col justify-center items-center p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-[#f0f9f4] via-[#e2f0f5] to-[#f8fafc] dark:from-[#021d10] dark:via-slate-950 dark:to-slate-900 overflow-y-auto h-full">
+        
+        {/* Ambient Floating Animated Glow Orbs in Background */}
+        <div className="pointer-events-none absolute -top-32 -right-32 h-80 w-80 rounded-full bg-[#026637]/20 dark:bg-emerald-900/30 blur-3xl animate-pulse" />
+        <div className="pointer-events-none absolute -bottom-32 -left-32 h-80 w-80 rounded-full bg-[#014122]/15 dark:bg-[#014122]/40 blur-3xl animate-pulse" style={{ animationDelay: "2.5s" }} />
 
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-foreground mb-1">
-              Create your account
+        {/* Main Form Card Container */}
+        <div className="relative z-10 w-full max-w-[540px] rounded-[2rem] bg-white/95 dark:bg-slate-900/95 border-2 border-[#014122]/15 dark:border-slate-800 p-5 sm:p-7 shadow-2xl backdrop-blur-xl space-y-3 animate-in fade-in zoom-in-95 duration-700">
+          
+          {/* Header Title */}
+          <div className="text-center space-y-1">
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+              Register as Student
             </h2>
-            <p className="text-sm text-muted-foreground">
-              Register as a student to get started with your free demo
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+              Complete your profile details to register for live courses
             </p>
           </div>
 
+          {/* Error Alert Box */}
           {error && (
-            <div className="mb-6 rounded-lg border border-destructive/20 bg-destructive/5 p-4 text-sm text-destructive">
-              {error}
+            <div className="rounded-2xl border border-rose-200 bg-rose-50/90 dark:bg-rose-950/30 p-2.5 text-xs font-bold text-rose-600 dark:text-rose-400 flex items-center gap-2 shadow-xs">
+              <AlertCircle className="h-4 w-4 text-rose-600 shrink-0" />
+              <span>{error}</span>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Full Name — BUG-001: min 2 chars */}
-            <div>
-              <label htmlFor="fullName" className="block text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1.5">
-                Full name <span className="text-destructive">*</span>
-              </label>
-              <input
-                id="fullName"
-                type="text"
-                value={fullName}
-                onChange={(e) => { setFullName(e.target.value); setFieldErrors((p) => ({ ...p, fullName: "" })); }}
-                placeholder="Enter your full name"
-                required
-                minLength={2}
-                className={`flex h-11 w-full rounded-lg border ${fieldErrors.fullName ? "border-destructive" : "border-input"} bg-background px-4 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors`}
-              />
-              {fieldErrors.fullName && (
-                <p className="mt-1 text-xs text-destructive flex items-center gap-1"><AlertCircle className="h-3 w-3" />{fieldErrors.fullName}</p>
-              )}
-            </div>
-
-            {/* Email */}
-            <div>
-              <label htmlFor="email" className="block text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1.5">
-                Email address <span className="text-destructive">*</span>
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                required
-                className="flex h-11 w-full rounded-lg border border-input bg-background px-4 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
-              />
-            </div>
-
-            {/* Phone — BUG-002: must be 10-digit */}
-            <div>
-              <label htmlFor="phone" className="block text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1.5">
-                Phone Number <span className="text-destructive">*</span>
-              </label>
-              <div className="relative">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <input
-                  id="phone"
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => { setPhone(e.target.value); setFieldErrors((p) => ({ ...p, phone: "" })); }}
-                  placeholder="+91 98765 43210"
-                  required
-                  pattern="[\+]?[0-9\s\-]{10,15}"
-                  title="Enter a valid 10-digit mobile number"
-                  className={`flex h-11 w-full rounded-lg border ${fieldErrors.phone ? "border-destructive" : "border-input"} bg-background pl-10 pr-4 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors`}
-                />
-              </div>
-              {fieldErrors.phone && (
-                <p className="mt-1 text-xs text-destructive flex items-center gap-1"><AlertCircle className="h-3 w-3" />{fieldErrors.phone}</p>
-              )}
-            </div>
-
-            {/* Password + Confirm — BUG-003 & BUG-004 */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label htmlFor="password" className="block text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1.5">
-                  Password <span className="text-destructive">*</span>
+          {/* Registration Form — All Backend Fields */}
+          <form onSubmit={handleSubmit} className="space-y-2.5">
+            
+            {/* Row 1: Full Name & Email */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div className="space-y-1">
+                <label htmlFor="fullName" className="block text-[10px] font-black uppercase tracking-wider text-[#014122] dark:text-emerald-400">
+                  FULL NAME <span className="text-rose-600">*</span>
                 </label>
                 <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                  <input
+                    id="fullName"
+                    type="text"
+                    value={fullName}
+                    onChange={(e) => { setFullName(e.target.value); setFieldErrors((p) => ({ ...p, fullName: "" })); }}
+                    placeholder="Rahul Sharma"
+                    required
+                    className="w-full h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 pl-8 pr-3 text-xs font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 focus:bg-white focus:border-[#014122] outline-none transition-all"
+                  />
+                </div>
+                {fieldErrors.fullName && <p className="text-[9px] text-rose-600 font-bold">{fieldErrors.fullName}</p>}
+              </div>
+
+              <div className="space-y-1">
+                <label htmlFor="email" className="block text-[10px] font-black uppercase tracking-wider text-[#014122] dark:text-emerald-400">
+                  EMAIL ADDRESS <span className="text-rose-600">*</span>
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                  <input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="rahul@gmail.com"
+                    required
+                    className="w-full h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 pl-8 pr-3 text-xs font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 focus:bg-white focus:border-[#014122] outline-none transition-all"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Row 2: Phone Number & Qualification/Education */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div className="space-y-1">
+                <label htmlFor="phone" className="block text-[10px] font-black uppercase tracking-wider text-[#014122] dark:text-emerald-400">
+                  MOBILE NUMBER <span className="text-rose-600">*</span>
+                </label>
+                <div className="relative">
+                  <PhoneIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                  <input
+                    id="phone"
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => { setPhone(e.target.value); setFieldErrors((p) => ({ ...p, phone: "" })); }}
+                    placeholder="9876543210"
+                    required
+                    className="w-full h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 pl-8 pr-3 text-xs font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 focus:bg-white focus:border-[#014122] outline-none transition-all"
+                  />
+                </div>
+                {fieldErrors.phone && <p className="text-[9px] text-rose-600 font-bold">{fieldErrors.phone}</p>}
+              </div>
+
+              <div className="space-y-1">
+                <label htmlFor="education" className="block text-[10px] font-black uppercase tracking-wider text-[#014122] dark:text-emerald-400">
+                  QUALIFICATION / DEGREE
+                </label>
+                <div className="relative">
+                  <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                  <input
+                    id="education"
+                    type="text"
+                    value={education}
+                    onChange={(e) => setEducation(e.target.value)}
+                    placeholder="B.Tech / B.Sc / MCA"
+                    className="w-full h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 pl-8 pr-3 text-xs font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 focus:bg-white focus:border-[#014122] outline-none transition-all"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Row 3: City & Interested Course */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div className="space-y-1">
+                <label htmlFor="city" className="block text-[10px] font-black uppercase tracking-wider text-[#014122] dark:text-emerald-400">
+                  CITY / LOCATION
+                </label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                  <input
+                    id="city"
+                    type="text"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    placeholder="Pune / Mumbai"
+                    className="w-full h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 pl-8 pr-3 text-xs font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 focus:bg-white focus:border-[#014122] outline-none transition-all"
+                  />
+                </div>
+              </div>
+
+              {courses.length > 0 && (
+                <div className="space-y-1">
+                  <label htmlFor="course" className="block text-[10px] font-black uppercase tracking-wider text-[#014122] dark:text-emerald-400">
+                    INTERESTED COURSE
+                  </label>
+                  <select
+                    id="course"
+                    value={interestedCourse}
+                    onChange={(e) => setInterestedCourse(e.target.value)}
+                    className="w-full h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 px-2.5 text-xs font-semibold text-slate-900 dark:text-white outline-none transition-all cursor-pointer"
+                  >
+                    <option value="">-- Select Course --</option>
+                    {courses.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+
+            {/* Row 4: Password & Confirm Password */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div className="space-y-1">
+                <label htmlFor="password" className="block text-[10px] font-black uppercase tracking-wider text-[#014122] dark:text-emerald-400">
+                  PASSWORD <span className="text-rose-600">*</span>
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
                   <input
                     id="password"
                     type={showPassword ? "text" : "password"}
                     value={password}
-                    onChange={(e) => { setPassword(e.target.value); setFieldErrors((p) => ({ ...p, password: "" })); }}
-                    placeholder="Min 8 characters"
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Pass@123"
                     required
-                    minLength={8}
-                    className={`flex h-11 w-full rounded-lg border ${fieldErrors.password ? "border-destructive" : "border-input"} bg-background px-4 pr-11 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors`}
+                    className="w-full h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 pl-8 pr-7 text-xs font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 focus:bg-white focus:border-[#014122] outline-none transition-all"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
                   >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showPassword ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
                   </button>
                 </div>
               </div>
-              {/* BUG-004: Eye icon on Confirm Password */}
-              <div>
-                <label htmlFor="confirmPassword" className="block text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1.5">
-                  Confirm <span className="text-destructive">*</span>
+
+              <div className="space-y-1">
+                <label htmlFor="confirmPassword" className="block text-[10px] font-black uppercase tracking-wider text-[#014122] dark:text-emerald-400">
+                  CONFIRM PASSWORD <span className="text-rose-600">*</span>
                 </label>
                 <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
                   <input
                     id="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
                     value={confirmPassword}
-                    onChange={(e) => { setConfirmPassword(e.target.value); setFieldErrors((p) => ({ ...p, confirmPassword: "" })); }}
-                    placeholder="Re-enter password"
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Pass@123"
                     required
-                    className={`flex h-11 w-full rounded-lg border ${fieldErrors.confirmPassword ? "border-destructive" : "border-input"} bg-background px-4 pr-11 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors`}
+                    className="w-full h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 pl-8 pr-7 text-xs font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 focus:bg-white focus:border-[#014122] outline-none transition-all"
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
                   >
-                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showConfirmPassword ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
                   </button>
                 </div>
               </div>
             </div>
 
-            {/* BUG-003: Password strength indicator */}
-            {password.length > 0 && (
-              <div className={`rounded-lg border p-3 text-xs space-y-1.5 ${passwordErrors.length === 0 ? "border-emerald-500/30 bg-emerald-500/5" : "border-amber-500/30 bg-amber-500/5"}`}>
-                <div className={`font-semibold flex items-center gap-1.5 ${passwordErrors.length === 0 ? "text-emerald-700 dark:text-emerald-300" : "text-amber-700 dark:text-amber-300"}`}>
-                  {passwordErrors.length === 0 ? <CheckCircle2 className="h-3.5 w-3.5" /> : <AlertCircle className="h-3.5 w-3.5" />}
-                  {passwordErrors.length === 0 ? "Strong password ✓" : "Password requirements:"}
-                </div>
-                {passwordErrors.length > 0 && (
-                  <ul className="space-y-0.5 text-muted-foreground ml-5">
-                    {passwordErrors.map((err) => (
-                      <li key={err} className="list-disc">{err}</li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            )}
-
-            {fieldErrors.confirmPassword && (
-              <p className="text-xs text-destructive flex items-center gap-1"><AlertCircle className="h-3 w-3" />{fieldErrors.confirmPassword}</p>
-            )}
-
-            {/* Optional Fields */}
-            <div className="pt-2 border-t border-border/60">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">Optional Information</p>
-
-              <div className="space-y-3">
-                <div>
-                  <label htmlFor="interestedCourse" className="block text-xs font-medium text-muted-foreground mb-1.5">
-                    Interested Course
-                  </label>
-                  <div className="relative">
-                    <BookOpen className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                    <select
-                      id="interestedCourse"
-                      value={interestedCourse}
-                      onChange={(e) => setInterestedCourse(e.target.value)}
-                      className="flex h-11 w-full rounded-lg border border-input bg-background pl-10 pr-4 text-sm ring-offset-background text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors cursor-pointer appearance-none"
-                    >
-                      <option value="">-- Select a Course --</option>
-                      {courses.map((c) => (
-                        <option key={c.id} value={c.name}>{c.name}</option>
-                      ))}
-                      {!courses.some((c) => c.name === "Full Stack Web Development") && <option value="Full Stack Web Development">Full Stack Web Development</option>}
-                      {!courses.some((c) => c.name === "Java Full Stack Development") && <option value="Java Full Stack Development">Java Full Stack Development</option>}
-                      {!courses.some((c) => c.name === "Python & AI / Data Science") && <option value="Python & AI / Data Science">Python & AI / Data Science</option>}
-                      {!courses.some((c) => c.name === "DevOps & Cloud Engineering") && <option value="DevOps & Cloud Engineering">DevOps & Cloud Engineering</option>}
-                      {!courses.some((c) => c.name === "Cyber Security & Ethical Hacking") && <option value="Cyber Security & Ethical Hacking">Cyber Security & Ethical Hacking</option>}
-                      {!courses.some((c) => c.name === "React & Node.js Masterclass") && <option value="React & Node.js Masterclass">React & Node.js Masterclass</option>}
-                    </select>
-                  </div>
-                  <p className="mt-1 text-[11px] text-muted-foreground">Select a course you are interested in</p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label htmlFor="education" className="block text-xs font-medium text-muted-foreground mb-1.5">
-                      Education
-                    </label>
-                    <div className="relative">
-                      <Education className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                      <input
-                        id="education"
-                        type="text"
-                        value={education}
-                        onChange={(e) => { setEducation(e.target.value); setFieldErrors((p) => ({ ...p, education: "" })); }}
-                        placeholder="e.g. B.Tech CS"
-                        minLength={2}
-                        className={`flex h-11 w-full rounded-lg border ${fieldErrors.education ? "border-destructive" : "border-input"} bg-background pl-10 pr-4 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors`}
-                      />
-                    </div>
-                    {fieldErrors.education && (
-                      <p className="mt-1 text-xs text-destructive flex items-center gap-1"><AlertCircle className="h-3 w-3" />{fieldErrors.education}</p>
-                    )}
-                  </div>
-                  <div>
-                    <label htmlFor="city" className="block text-xs font-medium text-muted-foreground mb-1.5">
-                      City
-                    </label>
-                    <div className="relative">
-                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                      <input
-                        id="city"
-                        type="text"
-                        value={city}
-                        onChange={(e) => { setCity(e.target.value); setFieldErrors((p) => ({ ...p, city: "" })); }}
-                        placeholder="e.g. Bangalore"
-                        minLength={2}
-                        className={`flex h-11 w-full rounded-lg border ${fieldErrors.city ? "border-destructive" : "border-input"} bg-background pl-10 pr-4 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors`}
-                      />
-                    </div>
-                    {fieldErrors.city && (
-                      <p className="mt-1 text-xs text-destructive flex items-center gap-1"><AlertCircle className="h-3 w-3" />{fieldErrors.city}</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
+            {/* Submit Button */}
             <button
               type="submit"
               disabled={loading}
-              className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors mt-4"
+              className="w-full h-10 rounded-xl bg-[#014122] hover:bg-[#026637] text-white font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 disabled:opacity-50 cursor-pointer pt-0.5 mt-1"
             >
               {loading ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Creating account...
+                  <span>Registering...</span>
                 </>
               ) : (
-                "Create Student Account"
+                <>
+                  <span>Register as Student</span>
+                  <div className="flex h-4.5 w-4.5 items-center justify-center rounded-full bg-white/20">
+                    <ArrowRight className="h-3 w-3 text-white" />
+                  </div>
+                </>
               )}
             </button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-muted-foreground">
+          {/* Footer Navigation Link */}
+          <div className="pt-0.5 text-center text-xs font-medium text-slate-600 dark:text-slate-400">
             Already have an account?{" "}
             <Link
               to="/login"
-              className="font-medium text-primary hover:text-primary/80 transition-colors"
+              className="font-black text-[#014122] dark:text-emerald-400 hover:underline transition-colors"
             >
-              Sign in
+              Sign In
             </Link>
-          </p>
+          </div>
+
         </div>
+
       </div>
+
     </div>
   );
 }

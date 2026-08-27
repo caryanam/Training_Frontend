@@ -32,18 +32,7 @@ export function TopNav({ onMobileMenuToggle }: TopNavProps) {
   };
 
   const getRoleGlowBadge = () => {
-    switch (role) {
-      case "student":
-        return "from-blue-600 to-indigo-600 text-white shadow-blue-500/20";
-      case "faculty":
-        return "from-purple-600 to-indigo-600 text-white shadow-purple-500/20";
-      case "executor":
-        return "from-amber-600 to-orange-600 text-white shadow-amber-500/20";
-      case "admin":
-        return "from-rose-600 to-pink-600 text-white shadow-rose-500/20";
-      default:
-        return "from-primary to-indigo-600 text-white";
-    }
+    return "bg-[#014122] text-[#e6f4ec] dark:bg-[#e6f4ec] dark:text-[#014122] shadow-[#014122]/20";
   };
 
   return (

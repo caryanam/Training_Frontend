@@ -170,8 +170,8 @@ export default function AdminStudentLeads() {
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
         {[
           { label: "Total", value: totalLeads, color: "text-slate-400" },
-          { label: "New", value: newLeads, color: "text-blue-500" },
-          { label: "Assigned", value: assignedLeads, color: "text-indigo-500" },
+          { label: "New", value: newLeads, color: "text-emerald-500" },
+          { label: "Assigned", value: assignedLeads, color: "text-emerald-500" },
           { label: "Demo", value: demoScheduled, color: "text-violet-500" },
           { label: "Interested", value: interested, color: "text-green-500" },
           { label: "Payment", value: paymentPending, color: "text-yellow-500" },

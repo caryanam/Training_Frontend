@@ -51,12 +51,12 @@ export default function StudentDownloads() {
         subtitle="Manage secure offline files, notes, and handouts provided with your enrolled courses."
       />
 
-      <div className="rounded-xl border border-indigo-500/20 bg-indigo-500/5 p-4 flex items-center justify-between text-xs text-indigo-900 dark:text-indigo-200">
+      <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 flex items-center justify-between text-xs text-emerald-900 dark:text-emerald-200">
         <div className="flex items-center gap-2">
-          <ShieldCheck className="h-4 w-4 text-indigo-600 shrink-0" />
+          <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
           <span>All downloadable files use temporary signed storage URLs linked to your active course validity.</span>
         </div>
-        <span className="font-semibold text-indigo-600 shrink-0 hidden sm:inline">Protected Storage</span>
+        <span className="font-semibold text-emerald-600 shrink-0 hidden sm:inline">Protected Storage</span>
       </div>
 
       {downloadableLectures.length === 0 ? (

@@ -72,7 +72,7 @@ export default function StudentProfile() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Left Col: Profile Overview Card */}
         <div className="lg:col-span-1 rounded-2xl border border-border bg-card p-6 shadow-xs flex flex-col items-center text-center">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-tr from-primary to-indigo-600 text-2xl font-extrabold text-white mb-4 ring-4 ring-primary/10 shadow-md">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-tr from-primary to-emerald-600 text-2xl font-extrabold text-white mb-4 ring-4 ring-primary/10 shadow-md">
             {fullName.trim() ? fullName.trim()[0].toUpperCase() : "S"}
           </div>
 

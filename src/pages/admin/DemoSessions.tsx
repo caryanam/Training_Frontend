@@ -69,11 +69,11 @@ export default function AdminDemoSessions() {
             demoCode: `demo-${d.id}`,
             courseName: course?.name || "Full Stack Web Development",
             executorName: executor?.profile?.full_name || "Assigned Executor",
-            executorEmail: executor?.profile?.email || "executor@eduflow.com",
+            executorEmail: executor?.profile?.email || "executor@nexora.com",
             demoDate: d.demo_date,
             startTime: d.demo_time || "11:00",
             endTime: "12:00",
-            meetLink: d.meeting_link || "https://meet.google.com/eduflow-demo",
+            meetLink: d.meeting_link || "https://meet.google.com/nexora-demo",
             status: (d.status || "SCHEDULED").toUpperCase(),
             totalParticipants: 1,
             notes: d.notes || "",
@@ -83,7 +83,7 @@ export default function AdminDemoSessions() {
                 leadId: d.lead_id,
                 studentId: d.student_id,
                 studentName: leadProfile?.full_name || "Enrolled Student",
-                studentEmail: leadProfile?.email || "student@eduflow.com",
+                studentEmail: leadProfile?.email || "student@nexora.com",
                 studentPhone: leadProfile?.phone || "+91 98765 43210",
                 attendanceStatus: "REGISTERED",
               },
@@ -103,7 +103,7 @@ export default function AdminDemoSessions() {
         demoDate: d.demo_date,
         startTime: d.demo_time || "11:00",
         endTime: "12:00",
-        meetLink: d.meeting_link || "https://meet.google.com/eduflow-demo",
+        meetLink: d.meeting_link || "https://meet.google.com/nexora-demo",
         status: (d.status || "SCHEDULED").toUpperCase(),
         totalParticipants: 1,
         notes: d.notes || "",
@@ -155,7 +155,7 @@ export default function AdminDemoSessions() {
         <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4 shadow-sm">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-slate-400">Total Demos</span>
-            <Video className="h-4 w-4 text-indigo-400" />
+            <Video className="h-4 w-4 text-emerald-400" />
           </div>
           <p className="mt-2 text-2xl font-black text-white">{totalDemos}</p>
         </div>
@@ -163,9 +163,9 @@ export default function AdminDemoSessions() {
         <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4 shadow-sm">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-slate-400">Scheduled</span>
-            <Calendar className="h-4 w-4 text-blue-400" />
+            <Calendar className="h-4 w-4 text-emerald-400" />
           </div>
-          <p className="mt-2 text-2xl font-black text-blue-400">{scheduledDemos}</p>
+          <p className="mt-2 text-2xl font-black text-emerald-400">{scheduledDemos}</p>
         </div>
 
         <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4 shadow-sm">
@@ -196,7 +196,7 @@ export default function AdminDemoSessions() {
                 onClick={() => setActiveFilter(tab.key)}
                 className={`rounded-xl px-3.5 py-1.5 text-xs font-bold whitespace-nowrap transition-all ${
                   active
-                    ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20"
+                    ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20"
                     : "bg-slate-900 text-slate-400 hover:bg-slate-800 hover:text-slate-200 border border-slate-800"
                 }`}
               >
@@ -213,7 +213,7 @@ export default function AdminDemoSessions() {
             placeholder="Search by course, code, or executor..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-xl border border-slate-800 bg-slate-900/90 pl-10 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+            className="w-full rounded-xl border border-slate-800 bg-slate-900/90 pl-10 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
           />
         </div>
       </div>
@@ -221,7 +221,7 @@ export default function AdminDemoSessions() {
       {/* Demos Grid */}
       {loading ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+          <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
         </div>
       ) : filteredDemos.length === 0 ? (
         <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-12 text-center text-slate-400">
@@ -251,13 +251,13 @@ export default function AdminDemoSessions() {
                     ? "border-red-500/20 opacity-75"
                     : isCompleted
                     ? "border-emerald-500/30"
-                    : "border-indigo-500/20 hover:border-indigo-500/40"
+                    : "border-emerald-500/20 hover:border-emerald-500/40"
                 }`}
               >
                 {/* Header */}
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 px-3 py-0.5 text-[11px] font-bold text-indigo-300 mb-2">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-3 py-0.5 text-[11px] font-bold text-emerald-300 mb-2">
                       <ShieldCheck className="h-3.5 w-3.5" /> Admin Oversee
                     </span>
                     <h3 className="text-lg font-bold text-white">
@@ -284,7 +284,7 @@ export default function AdminDemoSessions() {
                           ? "bg-rose-500/20 border-rose-500/40 text-rose-300"
                           : currentStatus === "RESCHEDULED"
                           ? "bg-amber-500/20 border-amber-500/40 text-amber-300"
-                          : "bg-blue-500/20 border-blue-500/40 text-blue-300"
+                          : "bg-emerald-500/20 border-emerald-500/40 text-emerald-300"
                       }`}
                     >
                       {currentStatus.replace("_", " ")}
@@ -295,12 +295,12 @@ export default function AdminDemoSessions() {
                 {/* Details */}
                 <div className="grid grid-cols-2 gap-3 text-xs bg-slate-950/60 p-3.5 rounded-xl border border-slate-800">
                   <div className="flex items-center gap-2 text-slate-300">
-                    <Calendar className="h-4 w-4 text-indigo-400 shrink-0" />
+                    <Calendar className="h-4 w-4 text-emerald-400 shrink-0" />
                     <span>Date: <strong className="text-white">{formatDate(demo.demoDate)}</strong></span>
                   </div>
 
                   <div className="flex items-center gap-2 text-slate-300">
-                    <Clock className="h-4 w-4 text-indigo-400 shrink-0" />
+                    <Clock className="h-4 w-4 text-emerald-400 shrink-0" />
                     <span>Time: <strong className="text-white">{demo.startTime} - {demo.endTime || "12:00"}</strong></span>
                   </div>
 
@@ -315,7 +315,7 @@ export default function AdminDemoSessions() {
                         setActiveSession(demo);
                         setParticipantsModalOpen(true);
                       }}
-                      className="text-xs font-bold text-indigo-400 hover:text-indigo-300 underline"
+                      className="text-xs font-bold text-emerald-400 hover:text-emerald-300 underline"
                     >
                       View Students →
                     </button>
@@ -337,7 +337,7 @@ export default function AdminDemoSessions() {
                     }}
                     className="inline-flex items-center gap-1.5 rounded-xl bg-slate-800 px-3.5 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-700 transition-colors"
                   >
-                    <Users className="h-3.5 w-3.5 text-indigo-400" /> View Students ({participantCount})
+                    <Users className="h-3.5 w-3.5 text-emerald-400" /> View Students ({participantCount})
                   </button>
 
                   <div className="flex items-center gap-2">
@@ -364,10 +364,10 @@ export default function AdminDemoSessions() {
       {/* Participants View Modal */}
       {participantsModalOpen && activeSession && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="relative w-full max-w-xl overflow-hidden rounded-2xl border border-indigo-500/20 bg-slate-900 shadow-2xl text-slate-100 max-h-[85vh] flex flex-col">
+          <div className="relative w-full max-w-xl overflow-hidden rounded-2xl border border-emerald-500/20 bg-slate-900 shadow-2xl text-slate-100 max-h-[85vh] flex flex-col">
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-950/50">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-400">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400">
                   <Users className="h-5 w-5" />
                 </div>
                 <div>
@@ -394,7 +394,7 @@ export default function AdminDemoSessions() {
                   placeholder="Search student..."
                   value={participantSearch}
                   onChange={(e) => setParticipantSearch(e.target.value)}
-                  className="w-full rounded-xl border border-slate-800 bg-slate-950/60 pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                  className="w-full rounded-xl border border-slate-800 bg-slate-950/60 pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
                 />
               </div>
 

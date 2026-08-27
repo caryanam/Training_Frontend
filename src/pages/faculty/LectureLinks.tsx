@@ -37,7 +37,7 @@ export default function FacultyLectureLinks() {
   const [selectedCourseId, setSelectedCourseId] = useState("101");
   const [customTitle, setCustomTitle] = useState("Live Interactive Session & Q&A");
   const [targetAudience, setTargetAudience] = useState<"both" | "student" | "executor">("both");
-  const [meetUrl, setMeetUrl] = useState("https://meet.google.com/eduflow-live-session");
+  const [meetUrl, setMeetUrl] = useState("https://meet.google.com/nexora-live-session");
   const [instructions, setInstructions] = useState(
     "Please join 5 minutes before scheduled start time. Keep your microphones muted and cameras ready for the live Q&A."
   );
@@ -298,7 +298,7 @@ export default function FacultyLectureLinks() {
                   }`}
                 >
                   <div className="font-bold text-foreground flex items-center gap-1.5">
-                    <Users className="h-4 w-4 text-blue-600" /> Students Only
+                    <Users className="h-4 w-4 text-emerald-600" /> Students Only
                   </div>
                   <div className="text-[11px] text-muted-foreground mt-1">
                     Enrolled candidates with active course validity

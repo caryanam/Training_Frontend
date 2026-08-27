@@ -176,11 +176,11 @@ export const PAYMENT_STATUS_COLORS: Record<string, string> = {
   pending: "bg-yellow-100 text-yellow-800",
   success: "bg-green-100 text-green-800",
   failed: "bg-red-100 text-red-800",
-  refunded: "bg-blue-100 text-blue-800",
+  refunded: "bg-emerald-100 text-emerald-800",
 };
 
 export const LECTURE_STATUS_COLORS: Record<string, string> = {
-  scheduled: "bg-blue-100 text-blue-800",
+  scheduled: "bg-emerald-100 text-emerald-800",
   live: "bg-green-100 text-green-800",
   completed: "bg-gray-100 text-gray-800",
   cancelled: "bg-red-100 text-red-800",
@@ -194,8 +194,8 @@ export const USER_STATUS_COLORS: Record<string, string> = {
 };
 
 export const FOLLOWUP_STATUS_COLORS: Record<string, string> = {
-  new: "bg-blue-100 text-blue-800",
-  contacted: "bg-indigo-100 text-indigo-800",
+  new: "bg-emerald-100 text-emerald-800",
+  contacted: "bg-emerald-100 text-emerald-800",
   interested: "bg-green-100 text-green-800",
   payment_pending: "bg-yellow-100 text-yellow-800",
   enrolled: "bg-emerald-100 text-emerald-800",
@@ -238,9 +238,9 @@ export const LEAD_STATUS_LABELS: Record<string, string> = {
 };
 
 export const LEAD_STATUS_COLORS: Record<string, string> = {
-  new: "bg-blue-100 text-blue-800",
-  assigned: "bg-indigo-100 text-indigo-800",
-  contacted: "bg-cyan-100 text-cyan-800",
+  new: "bg-emerald-100 text-emerald-800",
+  assigned: "bg-emerald-100 text-emerald-800",
+  contacted: "bg-emerald-100 text-emerald-800",
   demo_scheduled: "bg-violet-100 text-violet-800",
   demo_completed: "bg-purple-100 text-purple-800",
   interested: "bg-green-100 text-green-800",
@@ -272,7 +272,7 @@ export const DEMO_STATUS_LABELS: Record<string, string> = {
 };
 
 export const DEMO_STATUS_COLORS: Record<string, string> = {
-  scheduled: "bg-blue-100 text-blue-800",
+  scheduled: "bg-emerald-100 text-emerald-800",
   completed: "bg-green-100 text-green-800",
   cancelled: "bg-red-100 text-red-800",
   no_show: "bg-gray-100 text-gray-500",

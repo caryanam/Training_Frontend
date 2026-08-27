@@ -145,7 +145,7 @@ export default function ExecutorFollowups() {
                       </div>
                     )}
                     <div className="flex items-center gap-2 text-foreground font-medium">
-                      <BookOpen className="h-3.5 w-3.5 text-indigo-500 shrink-0" /> {lead.interested_course || "Course not selected"}
+                      <BookOpen className="h-3.5 w-3.5 text-emerald-500 shrink-0" /> {lead.interested_course || "Course not selected"}
                     </div>
                   </div>
                 </div>
@@ -161,7 +161,7 @@ export default function ExecutorFollowups() {
                         setSelectedLeadForFollowup(lead);
                         setFollowupModalOpen(true);
                       }}
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-500/10 px-3 py-1.5 text-xs font-bold text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all"
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500/10 px-3 py-1.5 text-xs font-bold text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all"
                     >
                       <FileText className="h-3.5 w-3.5" /> Follow-up
                     </button>

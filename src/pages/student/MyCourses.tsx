@@ -223,11 +223,11 @@ export default function MyCourses() {
               >
                 <div>
                   {/* Course Header Banner */}
-                  <div className="relative bg-gradient-to-r from-indigo-950 to-slate-900 p-6 text-white">
-                    <span className="inline-block rounded-full bg-indigo-500/20 px-2.5 py-0.5 text-[11px] font-semibold text-indigo-300 ring-1 ring-indigo-400/30 mb-2">
+                  <div className="relative bg-gradient-to-r from-emerald-950 to-slate-900 p-6 text-white">
+                    <span className="inline-block rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-300 ring-1 ring-emerald-400/30 mb-2">
                       {course.category || "Software Engineering"}
                     </span>
-                    <h3 className="text-lg font-bold tracking-tight text-white line-clamp-1 group-hover:text-indigo-200 transition-colors">
+                    <h3 className="text-lg font-bold tracking-tight text-white line-clamp-1 group-hover:text-emerald-200 transition-colors">
                       {course.name}
                     </h3>
                   </div>
@@ -251,10 +251,10 @@ export default function MyCourses() {
 
                     <div className="flex items-center justify-between text-xs text-muted-foreground bg-muted/30 p-2.5 rounded-xl border border-border/50">
                       <div className="flex items-center gap-1.5">
-                        <User className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
+                        <User className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
                         <span className="truncate">Faculty: <strong className="text-foreground">{course.facultyName || "Dr. Rajesh Sharma"}</strong></span>
                       </div>
-                      <span className="font-mono text-[10px] text-indigo-600 dark:text-indigo-400 font-bold shrink-0">{course.facultyId || "FAC-2001"}</span>
+                      <span className="font-mono text-[10px] text-emerald-600 dark:text-emerald-400 font-bold shrink-0">{course.facultyId || "FAC-2001"}</span>
                     </div>
 
                     {/* Enrollment Status or Pricing */}

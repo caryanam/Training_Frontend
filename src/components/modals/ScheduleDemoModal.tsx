@@ -343,11 +343,11 @@ export function ScheduleDemoModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-2xl overflow-hidden rounded-2xl border border-indigo-500/20 bg-slate-900 shadow-2xl text-slate-100 max-h-[90vh] flex flex-col">
+      <div className="relative w-full max-w-2xl overflow-hidden rounded-2xl border border-emerald-500/20 bg-slate-900 shadow-2xl text-slate-100 max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-950/50 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
               <Video className="h-5 w-5" />
             </div>
             <div>
@@ -395,7 +395,7 @@ export function ScheduleDemoModal({
               <select
                 value={courseName}
                 onChange={(e) => setCourseName(e.target.value)}
-                className="w-full rounded-xl border border-slate-700 bg-slate-950/60 pl-10 pr-4 py-2.5 text-xs text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="w-full rounded-xl border border-slate-700 bg-slate-950/60 pl-10 pr-4 py-2.5 text-xs text-white focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
               >
                 {COURSES_LIST.map((c) => (
                   <option key={c} value={c} className="bg-slate-900 text-white">
@@ -419,7 +419,7 @@ export function ScheduleDemoModal({
                   min={todayStr}
                   value={demoDate}
                   onChange={(e) => setDemoDate(e.target.value)}
-                  className="w-full rounded-xl border border-slate-700 bg-slate-950/60 pl-10 pr-3 py-2.5 text-xs text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="w-full rounded-xl border border-slate-700 bg-slate-950/60 pl-10 pr-3 py-2.5 text-xs text-white focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                   required
                 />
               </div>
@@ -435,7 +435,7 @@ export function ScheduleDemoModal({
                   type="time"
                   value={startTime}
                   onChange={(e) => setStartTime(e.target.value)}
-                  className="w-full rounded-xl border border-slate-700 bg-slate-950/60 pl-10 pr-3 py-2.5 text-xs text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="w-full rounded-xl border border-slate-700 bg-slate-950/60 pl-10 pr-3 py-2.5 text-xs text-white focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                   required
                 />
               </div>
@@ -451,7 +451,7 @@ export function ScheduleDemoModal({
                   type="time"
                   value={endTime}
                   onChange={(e) => setEndTime(e.target.value)}
-                  className="w-full rounded-xl border border-slate-700 bg-slate-950/60 pl-10 pr-3 py-2.5 text-xs text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="w-full rounded-xl border border-slate-700 bg-slate-950/60 pl-10 pr-3 py-2.5 text-xs text-white focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                   required
                 />
               </div>
@@ -470,7 +470,7 @@ export function ScheduleDemoModal({
                 placeholder="https://meet.google.com/abc-defg-hij"
                 value={meetLink}
                 onChange={(e) => setMeetLink(e.target.value)}
-                className="w-full rounded-xl border border-slate-700 bg-slate-950/60 pl-10 pr-4 py-2.5 text-xs text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="w-full rounded-xl border border-slate-700 bg-slate-950/60 pl-10 pr-4 py-2.5 text-xs text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 required
               />
             </div>
@@ -484,9 +484,9 @@ export function ScheduleDemoModal({
             <div className="space-y-3 rounded-xl border border-slate-800 bg-slate-950/40 p-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4 text-indigo-400" />
+                  <Users className="h-4 w-4 text-emerald-400" />
                   <span className="text-xs font-bold text-white">Select Students</span>
-                  <span className="rounded-full bg-indigo-500/20 px-2.5 py-0.5 text-[11px] font-bold text-indigo-300 border border-indigo-500/30">
+                  <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[11px] font-bold text-emerald-300 border border-emerald-500/30">
                     {selectedStudentIds.length} student(s) selected
                   </span>
                 </div>
@@ -495,7 +495,7 @@ export function ScheduleDemoModal({
                   <button
                     type="button"
                     onClick={handleSelectAll}
-                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-400 hover:text-indigo-300 hover:underline"
+                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-400 hover:text-emerald-300 hover:underline"
                   >
                     <CheckSquare className="h-3.5 w-3.5" /> Select All
                   </button>
@@ -518,7 +518,7 @@ export function ScheduleDemoModal({
                   placeholder="Search students by name, email, or phone..."
                   value={searchStudentQuery}
                   onChange={(e) => setSearchStudentQuery(e.target.value)}
-                  className="w-full rounded-lg border border-slate-800 bg-slate-900 pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                  className="w-full rounded-lg border border-slate-800 bg-slate-900 pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
                 />
               </div>
 
@@ -536,7 +536,7 @@ export function ScheduleDemoModal({
                         key={student.id}
                         className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors ${
                           isChecked
-                            ? "bg-indigo-950/40 border border-indigo-500/30"
+                            ? "bg-emerald-950/40 border border-emerald-500/30"
                             : "hover:bg-slate-800/50"
                         }`}
                       >
@@ -545,7 +545,7 @@ export function ScheduleDemoModal({
                             type="checkbox"
                             checked={isChecked}
                             onChange={() => toggleSelectStudent(student.id)}
-                            className="rounded border-slate-700 bg-slate-900 text-indigo-500 focus:ring-indigo-500 h-4 w-4"
+                            className="rounded border-slate-700 bg-slate-900 text-emerald-500 focus:ring-emerald-500 h-4 w-4"
                           />
                           <div>
                             <p className="text-xs font-bold text-white">{student.full_name}</p>
@@ -576,7 +576,7 @@ export function ScheduleDemoModal({
               placeholder="e.g. Full Stack Web Development group demo instructions"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full rounded-xl border border-slate-700 bg-slate-950/60 p-3 text-xs text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="w-full rounded-xl border border-slate-700 bg-slate-950/60 p-3 text-xs text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
             />
           </div>
 
@@ -592,7 +592,7 @@ export function ScheduleDemoModal({
             <button
               type="submit"
               disabled={loading}
-              className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-2.5 text-xs font-bold text-white hover:bg-indigo-500 disabled:opacity-50 transition-all shadow-lg shadow-indigo-600/20"
+              className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-2.5 text-xs font-bold text-white hover:bg-emerald-500 disabled:opacity-50 transition-all shadow-lg shadow-emerald-600/20"
             >
               {loading ? (
                 <>

@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Code, Loader2, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { Code, Loader2, ArrowLeft, CheckCircle2, Sparkles } from "lucide-react";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -31,8 +31,10 @@ export default function ForgotPassword() {
     <div className="flex min-h-screen items-center justify-center p-6">
       <div className="w-full max-w-[420px]">
         <div className="flex items-center gap-2 mb-8">
-          <Code className="h-8 w-8 text-primary" />
-          <span className="text-xl font-bold text-foreground">CodeX</span>
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#014122] text-[#e6f4ec]">
+            <Sparkles className="h-5 w-5" />
+          </div>
+          <span className="text-xl font-black text-foreground">Nexora</span>
         </div>
 
         {success ? (

@@ -203,13 +203,19 @@ export default function ExecutorOnboarding() {
 
       const studentProfileId = regRes.data?.profileId || `student-${Date.now()}`;
 
-      // 2. Add enrollment to reactive local store without payment flow requirement
+      // 2. Add enrollment to reactive local store with student details
       store.processSuccessfulEnrollment({
         studentProfileId,
         courseId: selectedCourse?.id || courses[0]?.id,
         planId: selectedPlan?.id || plans[0]?.id,
         amount: 0,
         paymentMethod: "Direct Executor Onboarding (No Payment)",
+        studentInfo: {
+          fullName: fullName.trim(),
+          email: email.trim().toLowerCase(),
+          phone: phone.trim() || "9876543210",
+          leadId: selectedLeadId,
+        },
       });
 
       setSuccessMsg(`Student "${fullName}" successfully onboarded & enrolled! Direct access active.`);
@@ -316,8 +322,8 @@ export default function ExecutorOnboarding() {
             </div>
 
             {assignedLeads.length > 0 && (
-              <div className="rounded-xl border border-indigo-500/20 bg-indigo-500/5 p-3.5 space-y-1.5">
-                <label className="block font-bold text-indigo-600 dark:text-indigo-400">
+              <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3.5 space-y-1.5">
+                <label className="block font-bold text-emerald-600 dark:text-emerald-400">
                   Select From Assigned Leads (Optional):
                 </label>
                 <select
@@ -546,7 +552,7 @@ export default function ExecutorOnboarding() {
         {/* STEP 7: Lecture Access */}
         {currentStep === 7 && (
           <div className="space-y-4 text-center py-4">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-indigo-100 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400">
               <Video className="h-8 w-8" />
             </div>
             <h3 className="text-base font-bold text-foreground">Step 7: Lecture Access Provisioning</h3>

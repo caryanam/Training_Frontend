@@ -1,5 +1,5 @@
 /**
- * EduFlow LMS — Spring Boot API Integration Service Layer
+ * Nexora LMS — Spring Boot API Integration Service Layer
  * Connects frontend React components to Java Spring Boot REST Backend (http://localhost:8080)
  * with automatic fallback to reactive store in Demo/Mock Mode.
  */
@@ -7,9 +7,9 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8081";
 
 // Token storage helper
-export const getAuthToken = (): string | null => localStorage.getItem("eduflow_jwt_token");
-export const setAuthToken = (token: string) => localStorage.setItem("eduflow_jwt_token", token);
-export const removeAuthToken = () => localStorage.removeItem("eduflow_jwt_token");
+export const getAuthToken = (): string | null => localStorage.getItem("nexora_jwt_token");
+export const setAuthToken = (token: string) => localStorage.setItem("nexora_jwt_token", token);
+export const removeAuthToken = () => localStorage.removeItem("nexora_jwt_token");
 
 // Generic HTTP Request Handler with Authorization Header
 async function apiRequest<T>(
@@ -495,8 +495,12 @@ export const api = {
     }>("/api/v1/admin/dashboard/stats", { method: "GET" }),
 
   // --- 5. COURSES & PLANS ---
-  getAllCourses: () =>
-    apiRequest<
+  getAllCourses: async () => {
+    const token = getAuthToken();
+    if (!token) {
+      return { success: false, data: [] };
+    }
+    return apiRequest<
       Array<{
         id: number;
         courseCode: string;
@@ -518,7 +522,8 @@ export const api = {
           currency: string;
         }>;
       }>
-    >("/api/v1/courses", { method: "GET" }),
+    >("/api/v1/courses", { method: "GET" });
+  },
 
   getCourseById: (id: number) =>
     apiRequest<{
@@ -657,5 +662,32 @@ export const api = {
   getAllFollowupReports: () =>
     apiRequest<any[]>('/api/v1/followups', {
       method: "GET",
+    }),
+
+  // --- 8. NOTIFICATIONS & ANNOUNCEMENTS API ---
+  getNotifications: () =>
+    apiRequest<
+      Array<{
+        id: number | string;
+        title: string;
+        message: string;
+        type: string;
+        isRead?: boolean;
+        is_read?: boolean;
+        createdAt?: string;
+        created_at?: string;
+      }>
+    >("/api/v1/notifications", { method: "GET" }),
+
+  markNotificationRead: (id: number | string) =>
+    apiRequest<void>(`/api/v1/notifications/${id}/read`, { method: "PUT" }),
+
+  markAllNotificationsRead: () =>
+    apiRequest<void>("/api/v1/notifications/read-all", { method: "PUT" }),
+
+  createNotice: (payload: { title: string; message: string; type?: string; targetRole?: string }) =>
+    apiRequest<{ id: number | string; title: string }>("/api/v1/admin/notices", {
+      method: "POST",
+      body: JSON.stringify(payload),
     }),
 };

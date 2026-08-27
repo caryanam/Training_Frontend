@@ -192,11 +192,11 @@ export default function LectureAccess() {
 
       {/* Main Video / Stream Player */}
       <div className="overflow-hidden rounded-2xl border border-border bg-slate-950 shadow-xl">
-        <div className="relative aspect-video w-full bg-gradient-to-tr from-slate-950 via-indigo-950 to-slate-900 flex flex-col items-center justify-center text-white p-6">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-500/10 via-transparent to-transparent" />
+        <div className="relative aspect-video w-full bg-gradient-to-tr from-slate-950 via-emerald-950 to-slate-900 flex flex-col items-center justify-center text-white p-6">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-emerald-500/10 via-transparent to-transparent" />
           
           <div className="relative z-10 text-center max-w-lg">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/20 text-indigo-300 ring-4 ring-primary/10">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/20 text-emerald-300 ring-4 ring-primary/10">
               <PlayCircle className="h-10 w-10 text-primary" />
             </div>
 
@@ -214,7 +214,7 @@ export default function LectureAccess() {
                 href={formatExternalUrl(lecture.lecture_url)}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-2.5 text-xs font-semibold text-white hover:bg-indigo-500 shadow-md transition-all"
+                className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-2.5 text-xs font-semibold text-white hover:bg-emerald-500 shadow-md transition-all"
               >
                 <ExternalLink className="h-4 w-4" /> Open Meeting Room
               </a>
@@ -224,20 +224,20 @@ export default function LectureAccess() {
       </div>
 
       {/* Conducting Faculty Mentor Box */}
-      <div className="rounded-2xl border border-indigo-500/20 bg-card p-5 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="rounded-2xl border border-emerald-500/20 bg-card p-5 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-600/10 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400 font-bold border border-indigo-500/20 shrink-0">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-600/10 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400 font-bold border border-emerald-500/20 shrink-0">
             <Video className="h-5 w-5" />
           </div>
           <div>
             <div className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Conducting Faculty Instructor</div>
             <div className="text-sm font-bold text-foreground">{(course as any)?.facultyName || "Dr. Rajesh Sharma"}</div>
-            <div className="text-xs text-muted-foreground">Faculty ID: <span className="font-mono text-indigo-500 font-semibold">{(course as any)?.facultyId || "FAC-2001"}</span> • {(course as any)?.facultyEmail || "faculty@codextechnology.com"}</div>
+            <div className="text-xs text-muted-foreground">Faculty ID: <span className="font-mono text-emerald-500 font-semibold">{(course as any)?.facultyId || "FAC-2001"}</span> • {(course as any)?.facultyEmail || "faculty@codextechnology.com"}</div>
           </div>
         </div>
         <a
           href={`mailto:${(course as any)?.facultyEmail || "faculty@codextechnology.com"}`}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-3.5 py-2 text-xs font-bold text-indigo-600 dark:text-indigo-300 hover:bg-indigo-600 hover:text-white transition-all shrink-0 cursor-pointer"
+          className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-2 text-xs font-bold text-emerald-600 dark:text-emerald-300 hover:bg-emerald-600 hover:text-white transition-all shrink-0 cursor-pointer"
         >
           Ask Faculty Question
         </a>

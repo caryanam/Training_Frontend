@@ -21,7 +21,7 @@ export function StatsCard({
   variant = "primary",
 }: StatsCardProps) {
   const variantStyles = {
-    primary: "from-indigo-500/10 via-card to-card border-indigo-500/20 text-indigo-600 dark:text-indigo-400 group-hover:border-indigo-500/40 group-hover:shadow-indigo-500/10",
+    primary: "from-emerald-500/10 via-card to-card border-emerald-500/20 text-emerald-600 dark:text-emerald-400 group-hover:border-emerald-500/40 group-hover:shadow-emerald-500/10",
     emerald: "from-emerald-500/10 via-card to-card border-emerald-500/20 text-emerald-600 dark:text-emerald-400 group-hover:border-emerald-500/40 group-hover:shadow-emerald-500/10",
     amber: "from-amber-500/10 via-card to-card border-amber-500/20 text-amber-600 dark:text-amber-400 group-hover:border-amber-500/40 group-hover:shadow-amber-500/10",
     rose: "from-rose-500/10 via-card to-card border-rose-500/20 text-rose-600 dark:text-rose-400 group-hover:border-rose-500/40 group-hover:shadow-rose-500/10",
@@ -29,11 +29,11 @@ export function StatsCard({
   };
 
   const iconBgStyles = {
-    primary: "bg-gradient-to-tr from-indigo-600 to-violet-500 text-white shadow-indigo-500/30",
+    primary: "bg-gradient-to-tr from-emerald-600 to-violet-500 text-white shadow-emerald-500/30",
     emerald: "bg-gradient-to-tr from-emerald-600 to-teal-500 text-white shadow-emerald-500/30",
     amber: "bg-gradient-to-tr from-amber-600 to-orange-500 text-white shadow-amber-500/30",
     rose: "bg-gradient-to-tr from-rose-600 to-pink-500 text-white shadow-rose-500/30",
-    purple: "bg-gradient-to-tr from-purple-600 to-indigo-500 text-white shadow-purple-500/30",
+    purple: "bg-gradient-to-tr from-purple-600 to-emerald-500 text-white shadow-purple-500/30",
   };
 
   return (

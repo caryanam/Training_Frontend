@@ -54,8 +54,8 @@ export function StatusBadge({ status, size = "md", className = "" }: StatusBadge
       case "new":
       default:
         return {
-          bg: "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/30 shadow-blue-500/10",
-          dot: "bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]",
+          bg: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 shadow-emerald-500/10",
+          dot: "bg-emerald-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]",
           label: status.replace("_", " "),
         };
     }

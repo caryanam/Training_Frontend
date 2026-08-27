@@ -32,35 +32,20 @@ export default function StudentDashboard() {
   const [upcomingDemos, setUpcomingDemos] = useState<any[]>([]);
   const [demoHistory, setDemoHistory] = useState<any[]>([]);
   const [showHistory, setShowHistory] = useState(false);
-  const [assignedFaculty, setAssignedFaculty] = useState<any>({
-    name: "Dr. Rajesh Sharma",
-    code: "FAC-2001",
-    email: "rajesh.sharma@codextechnology.com",
-    department: "Software Engineering & Full Stack",
-  });
 
   useEffect(() => {
     if (!profile) return;
     api.getStudentUpcomingGroupDemos().then((res) => {
-      if (res.success && res.data) {
+      if (res && res.success && res.data) {
         setUpcomingDemos(res.data);
       }
-    });
+    }).catch(() => { });
+
     api.getStudentGroupDemoHistory().then((res) => {
-      if (res.success && res.data) {
+      if (res && res.success && res.data) {
         setDemoHistory(res.data);
       }
-    });
-    api.getAllFaculty().then((res) => {
-      if (res.success && res.data && res.data.length > 0) {
-        setAssignedFaculty({
-          name: res.data[0].fullName,
-          code: res.data[0].facultyId || "FAC-2001",
-          email: res.data[0].email || "faculty@codextechnology.com",
-          department: res.data[0].department || "Lead Technical Instructor",
-        });
-      }
-    });
+    }).catch(() => { });
   }, [profile]);
 
   const enrollments = profile ? store.getEnrollmentsForProfile(profile.id) : [];
@@ -80,6 +65,37 @@ export default function StudentDashboard() {
   const lead = profile ? store.getLeadForProfile(profile.id) : undefined;
   const storeDemos = lead ? store.getDemosByLeadId(lead.id) : [];
   const latestDemo = storeDemos[0];
+
+  // Resolve assigned faculty mentor dynamically
+  const facultyList = store.getFacultyWithProfiles();
+  const studentRecord = profile ? store.getStudentsWithProfiles().find((s) => s.profile_id === profile.id || s.id === profile.id) : null;
+  const assignedFacultyObj = studentRecord?.assigned_faculty_id
+    ? facultyList.find((f) => f.id === studentRecord.assigned_faculty_id || f.faculty_id === studentRecord.assigned_faculty_id)
+    : (activeCourse?.faculty_id ? facultyList.find((f) => f.id === activeCourse.faculty_id) : null);
+
+  const assignedFaculty = assignedFacultyObj
+    ? {
+      name: assignedFacultyObj.profile.full_name,
+      code: assignedFacultyObj.faculty_id || "FAC-2001",
+      email: assignedFacultyObj.profile.email,
+      department: (assignedFacultyObj as any).department || "Software Engineering & Full Stack",
+      isAssigned: true,
+    }
+    : activeCourse
+      ? {
+        name: "Dr. Rajesh Sharma",
+        code: "FAC-2001",
+        email: "rajesh.sharma@codextechnology.com",
+        department: "Software Engineering & Full Stack",
+        isAssigned: true,
+      }
+      : {
+        name: "Faculty Mentor Assignment Pending",
+        code: "PENDING",
+        email: "admissions@nexorastudent.in",
+        department: "Assigned by admissions team upon course onboarding",
+        isAssigned: false,
+      };
 
   const activeUpcomingDemo = upcomingDemos.length > 0 ? upcomingDemos[0] : (latestDemo && latestDemo.status === "scheduled" ? {
     courseName: "Full Stack Web Development",
@@ -104,12 +120,12 @@ export default function StudentDashboard() {
     <div className="space-y-6">
       {/* Upcoming Demo Card for Student */}
       {activeUpcomingDemo && (
-        <div className="rounded-2xl border border-indigo-400/40 bg-gradient-to-r from-indigo-950 via-slate-900 to-indigo-900 p-6 shadow-xl text-white">
+        <div className="rounded-2xl border border-emerald-400/40 bg-gradient-to-r from-emerald-950 via-slate-900 to-emerald-900 p-6 shadow-xl text-white">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/30 border border-indigo-300/50 px-3 py-1 text-xs font-extrabold text-indigo-100">
-                  <Video className="h-3.5 w-3.5 text-indigo-200" /> Upcoming Demo
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/30 border border-emerald-300/50 px-3 py-1 text-xs font-extrabold text-emerald-100">
+                  <Video className="h-3.5 w-3.5 text-emerald-200" /> Upcoming Demo
                 </span>
                 <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/30 border border-emerald-300/50 px-2.5 py-0.5 text-xs font-extrabold text-emerald-200 uppercase">
                   {activeUpcomingDemo.status || "Scheduled"}
@@ -126,7 +142,7 @@ export default function StudentDashboard() {
                   <span>Date: <strong className="text-white font-bold">{formatDate(activeUpcomingDemo.demoDate)}</strong></span>
                 </div>
                 <div className="flex items-center gap-1.5 font-medium">
-                  <Clock className="h-4 w-4 text-cyan-300" />
+                  <Clock className="h-4 w-4 text-emerald-300" />
                   <span>Time: <strong className="text-white font-bold">{activeUpcomingDemo.startTime} - {activeUpcomingDemo.endTime || "12:00"}</strong></span>
                 </div>
               </div>
@@ -154,7 +170,7 @@ export default function StudentDashboard() {
 
       {/* Registration Received Banner for Unenrolled Students - BUG-STU-002: High Contrast */}
       {!activeEnrollment && !activeUpcomingDemo && (
-        <div className="rounded-2xl border border-amber-400/50 bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 p-6 sm:p-7 shadow-xl">
+        <div className="rounded-2xl border border-amber-400/50 bg-gradient-to-r from-slate-950 via-slate-900 to-emerald-950 p-6 sm:p-7 shadow-xl">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
             <div className="space-y-2.5">
               <div className="inline-flex items-center gap-2 rounded-full bg-amber-400 px-3 py-1 text-xs font-black text-slate-950 shadow-xs">
@@ -164,7 +180,7 @@ export default function StudentDashboard() {
                 An admissions executor will contact you shortly for your free demo!
               </h2>
               <p className="text-xs sm:text-sm font-medium text-slate-100 max-w-2xl leading-relaxed">
-                Thank you for registering with CodeX Technology. Our admissions officer will get in touch with you to explain the course curriculum and schedule your free interactive live demo session.
+                Thank you for registering with Nexora. Our admissions officer will get in touch with you to explain the course curriculum and schedule your free interactive live demo session.
               </p>
 
               {lead && (
@@ -190,7 +206,7 @@ export default function StudentDashboard() {
       )}
 
       {/* Welcome Banner - BUG-STU-002: High Contrast */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-950 via-indigo-900 to-slate-900 p-6 sm:p-8 text-white shadow-xl border border-indigo-500/30">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-950 via-emerald-900 to-slate-900 p-6 sm:p-8 text-white shadow-xl border border-emerald-500/30">
         <div className="relative z-10 max-w-2xl">
           <div className="inline-flex items-center gap-1.5 rounded-full bg-white/20 border border-white/30 px-3.5 py-1 text-xs font-bold text-white backdrop-blur-md mb-3">
             <Sparkles className="h-3.5 w-3.5 text-amber-300" /> Student Learning Portal
@@ -207,14 +223,14 @@ export default function StudentDashboard() {
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
               to="/student/courses"
-              className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-xs sm:text-sm font-extrabold text-indigo-950 shadow-md hover:bg-slate-100 transition-all"
+              className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-xs sm:text-sm font-extrabold text-emerald-950 shadow-md hover:bg-slate-100 transition-all"
             >
-              <BookOpen className="h-4 w-4 text-indigo-900" /> Browse Courses
+              <BookOpen className="h-4 w-4 text-emerald-900" /> Browse Courses
             </Link>
             {upcomingLecture && (
               <Link
                 to={`/student/lecture/${upcomingLecture.id}`}
-                className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 border border-indigo-300/40 px-5 py-2.5 text-xs sm:text-sm font-bold text-white hover:bg-indigo-500 transition-all shadow-md"
+                className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 border border-emerald-300/40 px-5 py-2.5 text-xs sm:text-sm font-bold text-white hover:bg-emerald-500 transition-all shadow-md"
               >
                 <PlayCircle className="h-4 w-4 text-white" /> Next Lecture
               </Link>
@@ -224,26 +240,28 @@ export default function StudentDashboard() {
       </div>
 
       {/* Assigned Faculty Mentor Card */}
-      <div className="rounded-2xl border border-indigo-500/20 bg-card p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="rounded-2xl border border-emerald-500/20 bg-card p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-600/10 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400 font-bold text-lg border border-indigo-500/20 shrink-0">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-600/10 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400 font-bold text-lg border border-emerald-500/20 shrink-0">
             <Users className="h-6 w-6" />
           </div>
           <div>
             <div className="flex items-center gap-2">
               <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Assigned Faculty Mentor</span>
-              <span className="rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">Active Mentor</span>
+              <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${assignedFaculty.isAssigned ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400" : "bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400"}`}>
+                {assignedFaculty.isAssigned ? "Active Mentor" : "Pending Assignment"}
+              </span>
             </div>
             <h3 className="text-base font-bold text-foreground mt-0.5">{assignedFaculty.name}</h3>
-            <p className="text-xs text-muted-foreground">{assignedFaculty.department} • Faculty Code: <span className="font-mono text-indigo-500 font-semibold">{assignedFaculty.code}</span></p>
+            <p className="text-xs text-muted-foreground">{assignedFaculty.department} • Code: <span className="font-mono text-emerald-500 font-semibold">{assignedFaculty.code}</span></p>
           </div>
         </div>
 
         <a
           href={`mailto:${assignedFaculty.email}`}
-          className="inline-flex items-center gap-2 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-4 py-2 text-xs font-bold text-indigo-600 dark:text-indigo-300 hover:bg-indigo-600 hover:text-white transition-all shrink-0 cursor-pointer"
+          className="inline-flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-xs font-bold text-emerald-600 dark:text-emerald-300 hover:bg-emerald-600 hover:text-white transition-all shrink-0 cursor-pointer"
         >
-          <Mail className="h-4 w-4" /> Email Mentor ({assignedFaculty.email})
+          <Mail className="h-4 w-4" /> {assignedFaculty.isAssigned ? `Email Mentor (${assignedFaculty.email})` : `Contact Admissions`}
         </a>
       </div>
 
@@ -293,9 +311,13 @@ export default function StudentDashboard() {
       {/* Top Metric Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatsCard
-          title="Active Course"
-          value={activeCourse ? (activeCourse.name.length > 18 ? activeCourse.name.substring(0, 18) + "..." : activeCourse.name) : "None"}
-          subtitle={activeCourse ? activeCourse.category || "General" : "Enroll to start"}
+          title={activeCourse ? "Active Course" : "Interested Course"}
+          value={
+            activeCourse
+              ? (activeCourse.name.length > 18 ? activeCourse.name.substring(0, 18) + "..." : activeCourse.name)
+              : (lead?.interested_course ? (lead.interested_course.length > 18 ? lead.interested_course.substring(0, 18) + "..." : lead.interested_course) : "None")
+          }
+          subtitle={activeCourse ? (activeCourse.category || "General") : (lead?.interested_course ? "Awaiting Onboarding" : "Enroll to start")}
           icon={<BookOpen className="h-5 w-5" />}
           variant="primary"
         />

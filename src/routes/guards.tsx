@@ -12,7 +12,7 @@ function getActiveRole(contextRole: Role | null): Role | null {
 
   // Fallback to localStorage if state hasn't re-rendered yet
   try {
-    const savedStr = localStorage.getItem("eduflow_user_profile");
+    const savedStr = localStorage.getItem("nexora_user_profile");
     if (savedStr) {
       const saved = JSON.parse(savedStr);
       if (saved && saved.role) {
@@ -30,9 +30,9 @@ function getActiveRole(contextRole: Role | null): Role | null {
 function hasActiveSession(contextSession: any): boolean {
   if (contextSession) return true;
   return Boolean(
-    localStorage.getItem("eduflow_jwt_token") ||
-    localStorage.getItem("eduflow_mock_auth_profile_id") ||
-    localStorage.getItem("eduflow_user_profile")
+    localStorage.getItem("nexora_jwt_token") ||
+    localStorage.getItem("nexora_mock_auth_profile_id") ||
+    localStorage.getItem("nexora_user_profile")
   );
 }
 

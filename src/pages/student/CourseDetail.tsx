@@ -149,25 +149,25 @@ export default function CourseDetail() {
           <ArrowLeft className="h-4 w-4" /> Back to Courses
         </Link>
 
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-950 via-slate-900 to-indigo-900 p-6 sm:p-10 text-white shadow-xl">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-950 via-slate-900 to-emerald-900 p-6 sm:p-10 text-white shadow-xl">
           <div className="max-w-3xl">
-            <span className="inline-block rounded-full bg-indigo-500/20 px-3 py-1 text-xs font-semibold text-indigo-300 ring-1 ring-indigo-400/30 mb-3">
+            <span className="inline-block rounded-full bg-emerald-500/20 px-3 py-1 text-xs font-semibold text-emerald-300 ring-1 ring-emerald-400/30 mb-3">
               {rawCourse.category || "Professional Track"}
             </span>
             <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight mb-4">
               {rawCourse.name}
             </h1>
-            <p className="text-sm sm:text-base text-indigo-200/80 leading-relaxed max-w-2xl mb-6">
+            <p className="text-sm sm:text-base text-emerald-200/80 leading-relaxed max-w-2xl mb-6">
               {rawCourse.description || "Master industry standards through hands-on architectures and real-world assignments."}
             </p>
 
-            <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-xs sm:text-sm text-indigo-200">
+            <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-xs sm:text-sm text-emerald-200">
               <span className="flex items-center gap-1.5">
-                <BookOpen className="h-4 w-4 text-indigo-400" />
+                <BookOpen className="h-4 w-4 text-emerald-400" />
                 {rawLectures.length} Comprehensive Modules
               </span>
               <span className="flex items-center gap-1.5">
-                <Award className="h-4 w-4 text-indigo-400" />
+                <Award className="h-4 w-4 text-emerald-400" />
                 Certification Included
               </span>
               {isEnrolled && (
@@ -185,20 +185,20 @@ export default function CourseDetail() {
         {/* Left 2 Cols: Curriculum Breakdown */}
         <div className="lg:col-span-2 space-y-6">
           {/* Faculty Mentor Profile Card */}
-          <div className="rounded-2xl border border-indigo-500/20 bg-card p-5 shadow-xs flex items-center justify-between gap-4">
+          <div className="rounded-2xl border border-emerald-500/20 bg-card p-5 shadow-xs flex items-center justify-between gap-4">
             <div className="flex items-center gap-3.5">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-600/10 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400 font-bold text-base border border-indigo-500/20 shrink-0">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-600/10 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400 font-bold text-base border border-emerald-500/20 shrink-0">
                 <User className="h-6 w-6" />
               </div>
               <div>
                 <div className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Course Lead Faculty & Mentor</div>
                 <div className="text-base font-bold text-foreground">{(rawCourse as any).facultyName || "Dr. Rajesh Sharma"}</div>
-                <div className="text-xs text-muted-foreground">Faculty Code: <span className="font-mono text-indigo-500 font-bold">{(rawCourse as any).facultyId || "FAC-2001"}</span></div>
+                <div className="text-xs text-muted-foreground">Faculty Code: <span className="font-mono text-emerald-500 font-bold">{(rawCourse as any).facultyId || "FAC-2001"}</span></div>
               </div>
             </div>
             <a
               href={`mailto:${(rawCourse as any).facultyEmail || "faculty@codextechnology.com"}`}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-3.5 py-2 text-xs font-bold text-indigo-600 dark:text-indigo-300 hover:bg-indigo-600 hover:text-white transition-all shrink-0 cursor-pointer"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-2 text-xs font-bold text-emerald-600 dark:text-emerald-300 hover:bg-emerald-600 hover:text-white transition-all shrink-0 cursor-pointer"
             >
               Contact Faculty
             </a>
@@ -333,7 +333,7 @@ export default function CourseDetail() {
                 Backend verified instant activation
               </div>
               <div className="flex items-center gap-1.5">
-                <Sparkles className="h-3.5 w-3.5 text-indigo-600" />
+                <Sparkles className="h-3.5 w-3.5 text-emerald-600" />
                 Calendar-based duration guarantee
               </div>
             </div>

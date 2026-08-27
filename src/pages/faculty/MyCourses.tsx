@@ -118,14 +118,14 @@ export default function FacultyCourses() {
               className="flex flex-col justify-between overflow-hidden rounded-2xl border border-border bg-card shadow-xs hover:shadow-md transition-all group"
             >
               <div>
-                <div className="bg-gradient-to-r from-indigo-950 to-slate-900 p-6 text-white">
+                <div className="bg-gradient-to-r from-emerald-950 to-slate-900 p-6 text-white">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="inline-block rounded-full bg-indigo-500/20 px-2.5 py-0.5 text-[11px] font-semibold text-indigo-300 ring-1 ring-indigo-400/30">
+                    <span className="inline-block rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-300 ring-1 ring-emerald-400/30">
                       {course.category?.replace(/_/g, " ") || "Engineering"}
                     </span>
-                    <span className="font-mono text-[10px] font-bold text-indigo-300">{course.courseCode || `COURSE-${course.id}`}</span>
+                    <span className="font-mono text-[10px] font-bold text-emerald-300">{course.courseCode || `COURSE-${course.id}`}</span>
                   </div>
-                  <h3 className="text-lg font-bold text-white line-clamp-1 group-hover:text-indigo-200 transition-colors">{course.title}</h3>
+                  <h3 className="text-lg font-bold text-white line-clamp-1 group-hover:text-emerald-200 transition-colors">{course.title}</h3>
                 </div>
 
                 <div className="p-5 space-y-4 text-xs">
@@ -135,13 +135,13 @@ export default function FacultyCourses() {
 
                   <div className="rounded-xl bg-muted/40 p-3 border border-border/50 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <UserCheck className="h-4 w-4 text-indigo-500 shrink-0" />
+                      <UserCheck className="h-4 w-4 text-emerald-500 shrink-0" />
                       <div>
                         <div className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Assigned Faculty</div>
                         <div className="font-bold text-foreground">{course.facultyName || "Unassigned"}</div>
                       </div>
                     </div>
-                    <span className="font-mono text-[10px] text-indigo-600 dark:text-indigo-400 font-bold">{course.facultyId || "—"}</span>
+                    <span className="font-mono text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">{course.facultyId || "—"}</span>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2 border-t border-b border-border py-3 text-muted-foreground">

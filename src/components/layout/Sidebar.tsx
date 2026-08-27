@@ -83,10 +83,10 @@ const NAV_CONFIG: Record<Role, NavItem[]> = {
 };
 
 const ROLE_BADGE_STYLES: Record<Role, { label: string; style: string }> = {
-  student: { label: "Student Portal", style: "bg-blue-500/10 text-blue-500 border-blue-500/30 shadow-blue-500/10" },
-  faculty: { label: "Faculty Portal", style: "bg-purple-500/10 text-purple-500 border-purple-500/30 shadow-purple-500/10" },
-  executor: { label: "Executor Portal", style: "bg-amber-500/10 text-amber-500 border-amber-500/30 shadow-amber-500/10" },
-  admin: { label: "Admin Console", style: "bg-rose-500/10 text-rose-500 border-rose-500/30 shadow-rose-500/10" },
+  student: { label: "Student Portal", style: "bg-[#014122]/10 text-[#014122] dark:bg-[#e6f4ec]/15 dark:text-[#e6f4ec] border-[#014122]/20 dark:border-[#e6f4ec]/30 shadow-[#014122]/10" },
+  faculty: { label: "Faculty Portal", style: "bg-[#014122]/10 text-[#014122] dark:bg-[#e6f4ec]/15 dark:text-[#e6f4ec] border-[#014122]/20 dark:border-[#e6f4ec]/30 shadow-[#014122]/10" },
+  executor: { label: "Executor Portal", style: "bg-[#014122]/10 text-[#014122] dark:bg-[#e6f4ec]/15 dark:text-[#e6f4ec] border-[#014122]/20 dark:border-[#e6f4ec]/30 shadow-[#014122]/10" },
+  admin: { label: "Admin Console", style: "bg-[#014122]/10 text-[#014122] dark:bg-[#e6f4ec]/15 dark:text-[#e6f4ec] border-[#014122]/20 dark:border-[#e6f4ec]/30 shadow-[#014122]/10" },
 };
 
 interface SidebarProps {
@@ -103,18 +103,18 @@ export function Sidebar({ onNavigate }: SidebarProps) {
 
   return (
     <aside className="flex h-screen w-64 flex-col border-r border-border/80 bg-sidebar/95 backdrop-blur-xl shadow-lg select-none">
-      {/* Brand Header with 3D glowing icon */}
+      {/* Brand Header with 3D glowing Nexora icon */}
       <div className="flex h-16 items-center justify-between border-b border-border/80 px-5">
         <Link to="/" className="flex items-center gap-3 group" onClick={onNavigate}>
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-indigo-600 via-primary to-purple-500 text-white shadow-md shadow-primary/30 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6">
-            <Code className="h-6 w-6" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#014122] via-[#036e3b] to-[#e6f4ec] text-white dark:text-[#014122] shadow-md shadow-[#014122]/30 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6">
+            <Sparkles className="h-5 w-5" />
           </div>
           <div className="flex flex-col">
-            <span className="text-base font-black tracking-tight text-foreground group-hover:text-primary transition-colors">
-              Code<span className="text-primary">X</span>
+            <span className="text-lg font-black tracking-tight text-foreground group-hover:text-primary transition-colors">
+              Nexora
             </span>
             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest -mt-1">
-              Technology
+              Learning Suite
             </span>
           </div>
         </Link>
@@ -149,7 +149,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
               className={cn(
                 "group relative flex items-center justify-between rounded-xl px-3.5 py-2.5 text-xs font-bold transition-all duration-200",
                 isActive
-                  ? "bg-gradient-to-r from-primary to-indigo-600 text-primary-foreground shadow-md shadow-primary/25 translate-x-1"
+                  ? "bg-[#014122] text-[#e6f4ec] dark:bg-[#e6f4ec] dark:text-[#014122] shadow-md shadow-[#014122]/25 translate-x-1"
                   : "text-muted-foreground hover:bg-accent/60 hover:text-foreground hover:translate-x-0.5"
               )}
             >

@@ -30,7 +30,7 @@ export default function ExecutorCourseIntroduction() {
 
   const handleShare = () => {
     navigator.clipboard.writeText(
-      `Check out ${selectedCourse?.name} at EduFlow! Comprehensive syllabus with live lectures and certificate.`
+      `Check out ${selectedCourse?.name} at Nexora! Comprehensive syllabus with live lectures and certificate.`
     );
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -89,34 +89,34 @@ export default function ExecutorCourseIntroduction() {
       {selectedCourse && (
         <div className="space-y-8">
           {/* Hero Presentation Card */}
-          <div className="rounded-3xl bg-gradient-to-r from-indigo-950 via-slate-900 to-indigo-900 p-6 sm:p-10 text-white shadow-xl">
+          <div className="rounded-3xl bg-gradient-to-r from-emerald-950 via-slate-900 to-emerald-900 p-6 sm:p-10 text-white shadow-xl">
             <div className="max-w-3xl">
-              <span className="inline-block rounded-full bg-indigo-500/20 px-3 py-1 text-xs font-semibold text-indigo-300 ring-1 ring-indigo-400/30 mb-3">
+              <span className="inline-block rounded-full bg-emerald-500/20 px-3 py-1 text-xs font-semibold text-emerald-300 ring-1 ring-emerald-400/30 mb-3">
                 {selectedCourse.category || "Professional Track"}
               </span>
               <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight mb-4">
                 {selectedCourse.name}
               </h2>
-              <p className="text-sm sm:text-base text-indigo-200/80 leading-relaxed mb-6">
+              <p className="text-sm sm:text-base text-emerald-200/80 leading-relaxed mb-6">
                 {selectedCourse.description ||
                   "Complete enterprise curriculum with live mentor coding, project repositories, and placement preparation."}
               </p>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
                 <div className="rounded-xl bg-white/5 p-3 ring-1 ring-white/10">
-                  <div className="text-indigo-400 font-bold">Duration</div>
+                  <div className="text-emerald-400 font-bold">Duration</div>
                   <div className="text-white mt-0.5">1 - 12 Months</div>
                 </div>
                 <div className="rounded-xl bg-white/5 p-3 ring-1 ring-white/10">
-                  <div className="text-indigo-400 font-bold">Total Sessions</div>
+                  <div className="text-emerald-400 font-bold">Total Sessions</div>
                   <div className="text-white mt-0.5">{lectures.length} Live Modules</div>
                 </div>
                 <div className="rounded-xl bg-white/5 p-3 ring-1 ring-white/10">
-                  <div className="text-indigo-400 font-bold">Certification</div>
+                  <div className="text-emerald-400 font-bold">Certification</div>
                   <div className="text-white mt-0.5">Industry Recognized</div>
                 </div>
                 <div className="rounded-xl bg-white/5 p-3 ring-1 ring-white/10">
-                  <div className="text-indigo-400 font-bold">Support</div>
+                  <div className="text-emerald-400 font-bold">Support</div>
                   <div className="text-white mt-0.5">Dedicated Executor</div>
                 </div>
               </div>

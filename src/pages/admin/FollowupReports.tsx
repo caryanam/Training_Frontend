@@ -104,7 +104,7 @@ export default function AdminFollowupReports() {
                 {report.expectedJoiningDate && (
                   <div className="space-y-1">
                     <div className="font-semibold flex items-center gap-1.5 text-muted-foreground">
-                      <Calendar className="h-3.5 w-3.5 text-indigo-500" /> Expected Joining Date
+                      <Calendar className="h-3.5 w-3.5 text-emerald-500" /> Expected Joining Date
                     </div>
                     <p className="text-foreground pl-5 font-medium">{formatDate(report.expectedJoiningDate)}</p>
                   </div>
@@ -113,7 +113,7 @@ export default function AdminFollowupReports() {
                 {report.projectCapability && (
                   <div className="space-y-1">
                     <div className="font-semibold flex items-center gap-1.5 text-muted-foreground">
-                      <Briefcase className="h-3.5 w-3.5 text-blue-500" /> Project Capability
+                      <Briefcase className="h-3.5 w-3.5 text-emerald-500" /> Project Capability
                     </div>
                     <p className="text-foreground pl-5 font-medium">{report.projectCapability}</p>
                   </div>

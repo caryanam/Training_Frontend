@@ -125,7 +125,7 @@ export default function StudentSupport() {
 
             <div className="flex items-center gap-3 text-muted-foreground">
               <Mail className="h-4 w-4 text-primary" />
-              <span>support@codextechnology.com</span>
+              <span>support@nexora.com</span>
             </div>
             <div className="flex items-center gap-3 text-muted-foreground">
               <Phone className="h-4 w-4 text-primary" />
