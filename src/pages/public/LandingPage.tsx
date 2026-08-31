@@ -92,15 +92,17 @@ export default function LandingPage() {
       <header className="sticky top-0 z-50 border-b border-border/70 bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#014122] via-primary to-purple-500 text-white shadow-lg shadow-primary/30 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
-              <GraduationCap className="h-6 w-6" />
-            </div>
+            <img
+              src="/nexora_logo.png"
+              alt="Nexora Logo"
+              className="h-10 w-10 rounded-xl object-contain shadow-md shadow-primary/20 transition-transform duration-300 group-hover:scale-110"
+            />
             <div className="flex flex-col">
               <span className="text-lg font-black tracking-tight text-foreground group-hover:text-primary transition-colors">
-                Edu<span className="text-primary">Flow</span>
+                Nexora
               </span>
               <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest -mt-1">
-                LMS Platform
+                Training
               </span>
             </div>
           </Link>
@@ -855,9 +857,11 @@ export default function LandingPage() {
       <footer className="relative z-10 border-t border-border/80 bg-background py-12 text-center text-xs text-muted-foreground">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6">
           <div className="flex items-center justify-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md">
-              <Code className="h-5 w-5" />
-            </div>
+            <img
+              src="/nexora_logo.png"
+              alt="Nexora Logo"
+              className="h-9 w-9 rounded-xl object-contain shadow-md"
+            />
             <span className="text-base font-black text-foreground">Nexora</span>
           </div>
 
@@ -866,7 +870,7 @@ export default function LandingPage() {
           </p>
 
           <div className="pt-4 border-t border-border/60 text-[11px] text-muted-foreground">
-            © {new Date().getFullYear()} Nexora. All rights reserved. Multilingual Support Active (English, हिंदी, मराठी).
+            © {new Date().getFullYear()} CaryanamIndia Pvt. Ltd. All rights reserved (English, हिंदी, मराठी).
           </div>
         </div>
       </footer>

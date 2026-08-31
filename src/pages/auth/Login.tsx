@@ -69,9 +69,11 @@ export default function Login() {
         <div className="relative z-10 space-y-5 xl:space-y-6">
           {/* Top Brand Logo */}
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#026637] text-white shadow-lg shadow-[#026637]/30 ring-1 ring-white/20">
-              <Sparkles className="h-5 w-5 text-[#a3e6ba]" />
-            </div>
+            <img
+              src="/nexora_logo.png"
+              alt="Nexora Logo"
+              className="h-11 w-11 rounded-2xl object-contain shadow-lg shadow-[#026637]/30 ring-1 ring-white/20 bg-white/10 p-0.5"
+            />
             <div>
               <span className="text-2xl font-black tracking-tight text-white block leading-tight">Nexora</span>
               <span className="text-[10px] font-bold text-[#a3e6ba] tracking-wider uppercase">Enterprise Learning Suite</span>

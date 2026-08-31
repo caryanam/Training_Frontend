@@ -106,9 +106,11 @@ export function Sidebar({ onNavigate }: SidebarProps) {
       {/* Brand Header with 3D glowing Nexora icon */}
       <div className="flex h-16 items-center justify-between border-b border-border/80 px-5">
         <Link to="/" className="flex items-center gap-3 group" onClick={onNavigate}>
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#014122] via-[#036e3b] to-[#e6f4ec] text-white dark:text-[#014122] shadow-md shadow-[#014122]/30 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6">
-            <Sparkles className="h-5 w-5" />
-          </div>
+          <img
+            src="/nexora_logo.png"
+            alt="Nexora Logo"
+            className="h-10 w-10 rounded-xl object-contain shadow-md shadow-[#014122]/30 transition-transform duration-300 group-hover:scale-110"
+          />
           <div className="flex flex-col">
             <span className="text-lg font-black tracking-tight text-foreground group-hover:text-primary transition-colors">
               Nexora

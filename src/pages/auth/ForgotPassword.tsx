@@ -31,9 +31,11 @@ export default function ForgotPassword() {
     <div className="flex min-h-screen items-center justify-center p-6">
       <div className="w-full max-w-[420px]">
         <div className="flex items-center gap-2 mb-8">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#014122] text-[#e6f4ec]">
-            <Sparkles className="h-5 w-5" />
-          </div>
+          <img
+            src="/nexora_logo.png"
+            alt="Nexora Logo"
+            className="h-9 w-9 rounded-xl object-contain shadow-md"
+          />
           <span className="text-xl font-black text-foreground">Nexora</span>
         </div>
 
