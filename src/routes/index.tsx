@@ -22,7 +22,6 @@ import StudentDownloads from "@/pages/student/Downloads";
 import StudentPayments from "@/pages/student/Payments";
 import StudentNotifications from "@/pages/student/Notifications";
 import StudentProfile from "@/pages/student/Profile";
-import StudentSupport from "@/pages/student/Support";
 
 // Faculty Pages
 import FacultyDashboard from "@/pages/faculty/Dashboard";
@@ -57,39 +56,31 @@ import AdminFaculty from "@/pages/admin/Faculty";
 import AdminCourses from "@/pages/admin/Courses";
 import AdminLectures from "@/pages/admin/Lectures";
 import AdminPayments from "@/pages/admin/Payments";
-import AdminReports from "@/pages/admin/Reports";
 import AdminDemoSessions from "@/pages/admin/DemoSessions";
 import { RouteErrorBoundary } from "@/components/shared/RouteErrorBoundary";
 import LandingPage from "@/pages/public/LandingPage";
 
 
 export const router = createBrowserRouter([
-  // Public Landing Page
   {
     path: "/",
-    element: <LandingPage />,
-    errorElement: <RouteErrorBoundary />,
-  },
-  // Public routes (auth pages)
-  {
-    element: <PublicOnlyRoute />,
     errorElement: <RouteErrorBoundary />,
     children: [
+      // Public Routes
+      { path: "/", element: <LandingPage /> },
+      { path: "/landing", element: <LandingPage /> },
       { path: "/login", element: <Login /> },
       { path: "/register", element: <Register /> },
       { path: "/forgot-password", element: <ForgotPassword /> },
       { path: "/reset-password", element: <ResetPassword /> },
-    ],
-  },
 
-  // Protected application routes inside DashboardLayout
-  {
-    element: <ProtectedRoute />,
-    errorElement: <RouteErrorBoundary />,
-    children: [
+      // Protected Dashboard Layout Tree
       {
-        element: <DashboardLayout />,
+        element: <ProtectedRoute />,
         children: [
+          {
+            element: <DashboardLayout />,
+            children: [
           // Student Route Tree
           {
             element: <RoleRoute allowedRoles={["student", "admin"]} />,
@@ -103,7 +94,6 @@ export const router = createBrowserRouter([
               { path: "/student/payments", element: <StudentPayments /> },
               { path: "/student/notifications", element: <StudentNotifications /> },
               { path: "/student/profile", element: <StudentProfile /> },
-              { path: "/student/support", element: <StudentSupport /> },
             ],
           },
 
@@ -154,7 +144,6 @@ export const router = createBrowserRouter([
               { path: "/admin/courses", element: <AdminCourses /> },
               { path: "/admin/lectures", element: <AdminLectures /> },
               { path: "/admin/payments", element: <AdminPayments /> },
-              { path: "/admin/reports", element: <AdminReports /> },
             ],
           },
 
@@ -163,6 +152,8 @@ export const router = createBrowserRouter([
         ],
       },
     ],
+  },
+  ],
   },
 
   // 404

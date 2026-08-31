@@ -10,7 +10,7 @@ import type {
   Payment,
   Followup,
   Notification,
-  
+
   StudentLead,
   DemoSession,
   LeadActivity,

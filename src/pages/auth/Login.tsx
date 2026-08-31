@@ -326,8 +326,37 @@ export default function Login() {
             </button>
           </form>
 
+          {/* Quick Credential Fill Helpers */}
+          <div className="pt-2 border-t border-slate-100 dark:border-slate-800 text-center space-y-1.5">
+            <span className="text-[10px] uppercase font-black tracking-wider text-slate-400">Quick Demo Accounts</span>
+            <div className="flex items-center justify-center gap-1.5 flex-wrap">
+              <button
+                type="button"
+                onClick={() => {
+                  setEmail("admin@gmail.com");
+                  setPassword("admin@123");
+                  setError("");
+                }}
+                className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 px-2 py-1 text-[10px] font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+              >
+                Admin (admin@gmail.com)
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setEmail("reshma@gmail.com");
+                  setPassword("Password@123");
+                  setError("");
+                }}
+                className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 px-2 py-1 text-[10px] font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+              >
+                Executor (reshma@gmail.com)
+              </button>
+            </div>
+          </div>
+
           {/* Footer Register Link */}
-          <div className="pt-2 text-center text-xs font-medium text-slate-600 dark:text-slate-400">
+          <div className="pt-1 text-center text-xs font-medium text-slate-600 dark:text-slate-400">
             Don't have an account?{" "}
             <Link
               to="/register"
@@ -336,7 +365,6 @@ export default function Login() {
               Register as Student
             </Link>
           </div>
-
         </div>
 
       </div>

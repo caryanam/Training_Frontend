@@ -109,11 +109,10 @@ export default function AdminReports() {
             key={tab.id}
             type="button"
             onClick={() => setActiveReport(tab.id)}
-            className={`rounded-xl px-3.5 py-2 text-xs font-semibold transition-all ${
-              activeReport === tab.id
+            className={`rounded-xl px-3.5 py-2 text-xs font-semibold transition-all ${activeReport === tab.id
                 ? "bg-primary text-primary-foreground shadow-xs"
                 : "border border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground"
-            }`}
+              }`}
           >
             {tab.label}
           </button>

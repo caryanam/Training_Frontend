@@ -155,7 +155,7 @@ export const dataStore = {
       updated_at: new Date().toISOString(),
     };
     coursesState = [newCourse, ...coursesState];
-    
+
     persistAll();
     return newCourse;
   },
@@ -164,13 +164,13 @@ export const dataStore = {
       c.id === id ? { ...c, ...updates, updated_at: new Date().toISOString() } : c
     );
     const updated = coursesState.find((c) => c.id === id);
-    
+
     persistAll();
     return updated;
   },
   deleteCourse(id: string) {
     coursesState = coursesState.filter((c) => c.id !== id);
-    
+
     persistAll();
   },
 
@@ -211,7 +211,7 @@ export const dataStore = {
       updated_at: new Date().toISOString(),
     };
     lecturesState = [newLecture, ...lecturesState];
-    
+
     // Send notifications to enrolled students
     const enrolled = enrollmentsState.filter(
       (e) => e.course_id === newLecture.course_id && e.status === "active"
@@ -235,13 +235,13 @@ export const dataStore = {
     lecturesState = lecturesState.map((l) =>
       l.id === id ? { ...l, ...updates, updated_at: new Date().toISOString() } : l
     );
-    
+
     persistAll();
     return lecturesState.find((l) => l.id === id);
   },
   deleteLecture(id: string) {
     lecturesState = lecturesState.filter((l) => l.id !== id);
-    
+
     persistAll();
   },
 
@@ -374,7 +374,7 @@ export const dataStore = {
       metadata: { courseId: params.courseId, expiryDate },
     });
 
-    
+
 
     persistAll();
     return { enrollment: newEnrollment, payment: newPayment };
@@ -417,7 +417,7 @@ export const dataStore = {
     );
 
     // Audit log
-    
+
 
     // Notify student
     const student = MOCK_STUDENTS.find((s) => s.id === enrollment.student_id);
@@ -532,6 +532,33 @@ export const dataStore = {
     const validIds = new Set([studentId, student?.id, student?.profile_id].filter(Boolean));
     return paymentsState.filter((p) => validIds.has(p.student_id));
   },
+  createPayment(payment: Partial<Payment> & { amount: number; student_id: string; course_id: string; plan_id: string }): Payment {
+    const newP: Payment = {
+      id: payment.id || `pay-${Date.now()}`,
+      transaction_id: payment.transaction_id || `TXN-${Date.now()}`,
+      student_id: payment.student_id,
+      course_id: payment.course_id,
+      plan_id: payment.plan_id,
+      amount: payment.amount,
+      currency: payment.currency || "INR",
+      payment_method: payment.payment_method || "dummy_payment",
+      status: payment.status || "success",
+      payment_provider: payment.payment_provider || "mock",
+      provider_order_id: payment.provider_order_id ?? null,
+      provider_payment_id: payment.provider_payment_id ?? null,
+      provider_signature: payment.provider_signature ?? null,
+      payment_date: payment.payment_date || new Date().toISOString(),
+      course_start_date: payment.course_start_date ?? null,
+      course_expiry_date: payment.course_expiry_date ?? null,
+      verified_by: payment.verified_by ?? null,
+      verified_at: payment.verified_at ?? null,
+      created_at: payment.created_at || new Date().toISOString(),
+      updated_at: payment.updated_at || new Date().toISOString(),
+    };
+    paymentsState = [newP, ...paymentsState];
+    persistAll();
+    return newP;
+  },
 
   // --- FOLLOWUPS (Executor) ---
   getFollowups(): Followup[] {
@@ -595,8 +622,8 @@ export const dataStore = {
   },
 
   // --- AUDIT LOGS (Append-Only) ---
-  
-  
+
+
 
   // --- USERS & PROFILES ---
   getStudentsWithProfiles(): StudentWithProfile[] {
@@ -749,7 +776,7 @@ export const dataStore = {
       metadata: { leadId: newLead.id },
     });
 
-    
+
 
     persistAll();
     return newLead;
@@ -842,7 +869,7 @@ export const dataStore = {
       });
     }
 
-    
+
 
     persistAll();
     return studentLeadsState.find((l) => l.id === leadId);
@@ -915,7 +942,7 @@ export const dataStore = {
       });
     }
 
-    
+
 
     persistAll();
     return newDemo;
@@ -1058,7 +1085,7 @@ export const dataStore = {
       updated_at: new Date().toISOString(),
     });
 
-    
+
 
     persistAll();
     return { profileId: newId, facultyId };
@@ -1095,7 +1122,7 @@ export const dataStore = {
       updated_at: new Date().toISOString(),
     });
 
-    
+
 
     persistAll();
     return { profileId: newId, executorId };
@@ -1126,7 +1153,7 @@ export const dataStore = {
       };
     }
 
-    
+
 
     persistAll();
     notify();
@@ -1156,7 +1183,7 @@ export const dataStore = {
       };
     }
 
-    
+
 
     persistAll();
     notify();

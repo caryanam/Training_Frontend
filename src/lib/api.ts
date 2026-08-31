@@ -615,7 +615,135 @@ export const api = {
       body: JSON.stringify(payload),
     }),
 
-  // --- 7. LECTURES & 8-STEP VALIDATION ---
+  createDummyPayment: (payload: { studentId: string; courseId: string; planId: string }) =>
+    apiRequest<{
+      paymentId: number;
+      transactionId: string;
+      studentId: string;
+      studentEmail: string;
+      courseId: string;
+      courseName: string;
+      planId: number;
+      amount: number;
+      currency: string;
+      status: string;
+      providerOrderId?: string;
+      message?: string;
+    }>("/api/v1/payments/dummy/create", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+
+  completeDummyPayment: (payload: { paymentId?: string; transactionId?: string; result: "SUCCESS" | "FAILED" | "CANCELLED" }) =>
+    apiRequest<{
+      paymentId: number;
+      transactionId: string;
+      studentId: string;
+      studentEmail: string;
+      courseId: string;
+      courseName: string;
+      planId: number;
+      amount: number;
+      currency: string;
+      status: string;
+      providerOrderId?: string;
+      providerPaymentId?: string;
+      message?: string;
+    }>("/api/v1/payments/dummy/complete", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+
+  getAllPayments: () =>
+    apiRequest<
+      Array<{
+        paymentId: number;
+        transactionId: string;
+        studentId: string;
+        studentEmail: string;
+        courseId: string;
+        courseName: string;
+        planId: number;
+        amount: number;
+        currency: string;
+        status: string;
+        providerOrderId?: string;
+        providerPaymentId?: string;
+        message?: string;
+      }>
+    >("/api/v1/payments", { method: "GET" }),
+
+  getMyPayments: () =>
+    apiRequest<
+      Array<{
+        paymentId: number;
+        transactionId: string;
+        studentId: string;
+        studentEmail: string;
+        courseId: string;
+        courseName: string;
+        planId: number;
+        amount: number;
+        currency: string;
+        status: string;
+        providerOrderId?: string;
+        providerPaymentId?: string;
+        message?: string;
+      }>
+    >("/api/v1/payments/student/me", { method: "GET" }),
+
+  // --- 7. STUDENT ONBOARDING WORKFLOW ---
+  onboardStudent: (payload: {
+    leadId?: string;
+    fullName?: string;
+    email?: string;
+    phone?: string;
+    education?: string;
+    city?: string;
+    courseId: string;
+    planId: string;
+    syllabusExplained?: boolean;
+    scheduleExplained?: boolean;
+    validityExplained?: boolean;
+    facultyId?: string;
+    paymentId?: string;
+    transactionId?: string;
+    directEnrollment?: boolean;
+    notes?: string;
+  }) =>
+    apiRequest<{
+      onboardingCode: string;
+      studentId: string;
+      profileId: string;
+      leadId: string;
+      fullName: string;
+      email: string;
+      phone: string;
+      courseId: string;
+      courseName: string;
+      planId: number;
+      planDuration: string;
+      amount: number;
+      enrollmentId: string;
+      paymentId: number;
+      transactionId: string;
+      facultyId?: string;
+      facultyName?: string;
+      startDate: string;
+      expiryDate: string;
+      paymentStatus: string;
+      enrollmentStatus: string;
+      syllabusExplained?: boolean;
+      scheduleExplained?: boolean;
+      validityExplained?: boolean;
+      onboardedBy?: string;
+      message?: string;
+    }>("/api/v1/onboarding/students", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+
+  // --- 8. LECTURES & 8-STEP VALIDATION ---
   createLecture: (payload: {
     courseId: string;
     facultyId: string;

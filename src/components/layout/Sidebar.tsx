@@ -43,7 +43,6 @@ const NAV_CONFIG: Record<Role, NavItem[]> = {
     { label: "Payments", href: "/student/payments", icon: CreditCard },
     { label: "Notifications", href: "/student/notifications", icon: Bell },
     { label: "Profile", href: "/student/profile", icon: User },
-    { label: "Support", href: "/student/support", icon: HelpCircle },
   ],
   faculty: [
     { label: "Dashboard", href: "/faculty", icon: LayoutDashboard },
@@ -78,7 +77,6 @@ const NAV_CONFIG: Record<Role, NavItem[]> = {
     { label: "Courses", href: "/admin/courses", icon: BookOpen },
     { label: "Lectures", href: "/admin/lectures", icon: Video },
     { label: "Payments", href: "/admin/payments", icon: CreditCard },
-    { label: "Reports", href: "/admin/reports", icon: FileText },
   ],
 };
 

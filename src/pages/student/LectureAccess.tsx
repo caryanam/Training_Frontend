@@ -117,12 +117,6 @@ export default function LectureAccess() {
             >
               <Sparkles className="h-4 w-4" /> Renew Course Plan
             </Link>
-            <Link
-              to="/student/support"
-              className="w-full sm:w-auto inline-flex items-center justify-center rounded-xl border border-border bg-background px-6 py-3 text-sm font-medium text-muted-foreground hover:bg-accent transition-colors"
-            >
-              Contact Support
-            </Link>
           </div>
         </div>
       </div>

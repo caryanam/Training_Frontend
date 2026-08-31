@@ -40,24 +40,42 @@ export default function ExecutorStudents() {
   const followups = store.getFollowups();
   const enrollments = store.getEnrollments();
 
-  let rawAssignedStudents = springLeads !== null && springLeads.length > 0
-    ? springLeads.map((l: any) => ({
-        id: l.studentId || l.leadId,
-        student_id: l.studentId || l.leadId,
-        profile_id: l.profileId || l.leadId,
-        status: (l.status || "active").toLowerCase(),
-        interestedCourse: l.interestedCourse || "Full Stack Web Development",
-        created_at: l.createdAt || new Date().toISOString(),
-        profile: {
-          id: l.profileId || l.leadId,
-          full_name: l.fullName || "Student",
-          email: l.email || "",
-          phone: l.phone || null,
-        },
-      }))
+  const rawAssignedStudents = springLeads !== null && springLeads.length > 0
+    ? springLeads.map((l: any) => {
+        const isEnrolled =
+          l.status?.toLowerCase() === "enrolled" ||
+          l.status?.toLowerCase() === "active" ||
+          l.status?.toLowerCase() === "onboarded" ||
+          l.status?.toLowerCase() === "completed";
+
+        const enrollmentStatus = isEnrolled
+          ? "enrolled"
+          : (l.status?.toLowerCase() === "new" ? "payment_pending" : (l.status?.toLowerCase() || "payment_pending"));
+
+        const expiryDate = l.expiryDate || (isEnrolled && l.lastActivity
+          ? new Date(new Date(l.lastActivity).getTime() + 30 * 86400000).toISOString()
+          : (isEnrolled ? new Date(Date.now() + 30 * 86400000).toISOString() : null));
+
+        return {
+          id: l.studentId || l.leadId,
+          lead_id: l.leadId,
+          student_id: l.studentId || l.leadId,
+          profile_id: l.profileId || l.leadId,
+          status: (l.status || "new").toLowerCase(),
+          enrollment_status: enrollmentStatus,
+          expiry_date: expiryDate,
+          interestedCourse: l.interestedCourse || l.enrolledCourse || "Full Stack Web Development",
+          last_activity: l.lastActivity || l.createdAt,
+          created_at: l.createdAt || new Date().toISOString(),
+          profile: {
+            id: l.profileId || l.leadId,
+            full_name: l.fullName || "Student",
+            email: l.email || "",
+            phone: l.phone || null,
+          },
+        };
+      })
     : (profile ? store.getStudentsForExecutor(profile.id || profile.email) : []);
-
-
 
   const filteredStudents = rawAssignedStudents.filter((s: any) => {
     const matchesSearch =
@@ -66,10 +84,13 @@ export default function ExecutorStudents() {
       s.profile.email.toLowerCase().includes(search.toLowerCase());
 
     const studentEnrollment = enrollments.find((e) => e.student_id === s.id);
+    const effectiveStatus = s.enrollment_status || (studentEnrollment ? studentEnrollment.status : s.status);
+
     const matchesStatus =
       statusFilter === "all" ||
-      (studentEnrollment && studentEnrollment.status === statusFilter) ||
-      (!studentEnrollment && (statusFilter === "pending" || statusFilter === "all"));
+      (statusFilter === "active" && (effectiveStatus === "enrolled" || effectiveStatus === "active")) ||
+      (statusFilter === "pending" && (effectiveStatus === "payment_pending" || effectiveStatus === "pending" || effectiveStatus === "new")) ||
+      (effectiveStatus === statusFilter);
 
     return matchesSearch && matchesStatus;
   });
@@ -82,7 +103,7 @@ export default function ExecutorStudents() {
         actions={
           <Link
             to="/executor/onboarding"
-            className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-semibold text-primary-foreground shadow-xs hover:bg-primary/90 transition-all"
+            className="inline-flex items-center gap-2 rounded-xl bg-[#014122] px-4 py-2.5 text-xs font-semibold text-white shadow-xs hover:bg-[#026637] transition-all"
           >
             <Plus className="h-4 w-4" /> Onboard New Student
           </Link>
@@ -139,10 +160,15 @@ export default function ExecutorStudents() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {filteredStudents.map((s) => {
+                {filteredStudents.map((s: any) => {
                   const enrollment = enrollments.find((e) => e.student_id === s.id);
-                  const course = enrollment ? store.getCourse(enrollment.course_id) : store.getCourses()[0];
+                  const course = enrollment ? store.getCourse(enrollment.course_id) : null;
                   const lastFollowup = followups.find((f) => f.student_id === s.id);
+                  const isEnrolled = s.enrollment_status === "enrolled" || s.status === "enrolled" || s.status === "active";
+                  const displayStatus = isEnrolled ? "enrolled" : (s.enrollment_status || "payment_pending");
+                  const displayValidity = s.expiry_date
+                    ? formatDate(s.expiry_date)
+                    : (enrollment?.expiry_date ? formatDate(enrollment.expiry_date) : "Not Activated");
 
                   return (
                     <tr key={s.id} className="hover:bg-accent/40 transition-colors">
@@ -161,13 +187,13 @@ export default function ExecutorStudents() {
                         </div>
                       </td>
                       <td className="px-5 py-4 font-semibold text-foreground">
-                        {course?.name || "Java Full Stack"}
+                        {course?.name || s.interestedCourse || "Full Stack Web Development"}
                       </td>
                       <td className="px-5 py-4">
-                        <StatusBadge status={enrollment ? enrollment.status : "payment_pending"} />
+                        <StatusBadge status={displayStatus} />
                       </td>
-                      <td className="px-5 py-4 text-muted-foreground">
-                        {enrollment?.expiry_date ? formatDate(enrollment.expiry_date) : "Not Activated"}
+                      <td className="px-5 py-4 text-muted-foreground font-mono">
+                        {displayValidity}
                       </td>
                       <td className="px-5 py-4 text-muted-foreground">
                         {lastFollowup ? (
@@ -175,23 +201,34 @@ export default function ExecutorStudents() {
                             <span className="font-medium text-foreground capitalize">{lastFollowup.followup_type}</span>
                             <div className="text-[11px]">{formatDate(lastFollowup.followup_date)}</div>
                           </div>
+                        ) : s.last_activity ? (
+                          <div>
+                            <span className="font-medium text-foreground">Activity Logged</span>
+                            <div className="text-[11px]">{formatDate(s.last_activity)}</div>
+                          </div>
                         ) : (
                           <span className="text-[11px] text-amber-600 font-medium">Pending Follow-up</span>
                         )}
                       </td>
                       <td className="px-5 py-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
+                          {!isEnrolled ? (
+                            <Link
+                              to={`/executor/onboarding?leadId=${s.lead_id || s.id}`}
+                              className="rounded-lg bg-[#014122] text-white px-2.5 py-1 text-xs font-bold hover:bg-[#026637] transition-colors"
+                            >
+                              Onboard
+                            </Link>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20">
+                              <CheckCircle2 className="h-3 w-3" /> Enrolled
+                            </span>
+                          )}
                           <Link
                             to="/executor/followups"
                             className="rounded-lg border border-border px-2.5 py-1 text-xs font-semibold text-muted-foreground hover:text-primary hover:border-primary transition-colors"
                           >
                             Follow-up
-                          </Link>
-                          <Link
-                            to="/executor/courses"
-                            className="rounded-lg bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary hover:bg-primary hover:text-white transition-colors"
-                          >
-                            Share Info
                           </Link>
                         </div>
                       </td>

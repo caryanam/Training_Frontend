@@ -103,7 +103,7 @@ export interface Database {
         Update: Partial<Permission>;
         Relationships: [];
       };
-      
+
       student_leads: {
         Row: StudentLead;
         Insert: Partial<StudentLead> & { student_id: string; profile_id: string };
@@ -337,13 +337,13 @@ export interface Followup {
   followup_type: "call" | "email" | "whatsapp" | "in-person";
   notes: string | null;
   status:
-    | "new"
-    | "contacted"
-    | "interested"
-    | "payment_pending"
-    | "enrolled"
-    | "not_interested"
-    | "follow_up_required";
+  | "new"
+  | "contacted"
+  | "interested"
+  | "payment_pending"
+  | "enrolled"
+  | "not_interested"
+  | "follow_up_required";
   created_by: string | null;
   created_at: string;
   updated_at: string;

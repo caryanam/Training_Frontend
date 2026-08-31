@@ -16,45 +16,15 @@ import {
 export default function StudentNotifications() {
   const { profile } = useAuth();
   const store = useDataStore();
-  const [apiNotifications, setApiNotifications] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    api.getNotifications()
-      .then((res) => {
-        if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
-          setApiNotifications(res.data);
-        }
-      })
-      .catch(() => {
-        // Silently fallback to store notifications
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, []);
-
   const storeNotifs = profile ? store.getNotificationsForUser(profile.id) : store.getNotificationsForUser("all");
-  const fallbackNotifs = storeNotifs.length > 0 ? storeNotifs : store.getNotificationsForUser("all");
-  const notifications = apiNotifications.length > 0 ? apiNotifications : fallbackNotifs;
+  const notifications = storeNotifs.length > 0 ? storeNotifs : store.getNotificationsForUser("all");
 
-  const handleMarkAllRead = async () => {
+  const handleMarkAllRead = () => {
     if (profile) store.markAllNotificationsRead(profile.id);
-    setApiNotifications((prev) => prev.map((n) => ({ ...n, isRead: true, is_read: true })));
-    await api.markAllNotificationsRead().catch(() => {});
   };
 
-  const handleMarkRead = async (id: number | string) => {
+  const handleMarkRead = (id: number | string) => {
     store.markNotificationRead(id.toString());
-    setApiNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, isRead: true, is_read: true } : n))
-    );
-
-    // Only invoke backend API for numeric database IDs (avoid 500 error on string mock IDs like notif-101)
-    const isNumericId = typeof id === "number" || (!id.toString().startsWith("notif-") && !isNaN(Number(id)));
-    if (isNumericId) {
-      await api.markNotificationRead(id).catch(() => {});
-    }
   };
 
   const getNotifIcon = (type: string) => {
@@ -88,11 +58,7 @@ export default function StudentNotifications() {
         }
       />
 
-      {loading ? (
-        <div className="flex items-center justify-center p-12 text-muted-foreground gap-2 text-sm font-semibold">
-          <Loader2 className="h-5 w-5 animate-spin text-[#014122]" /> Loading notifications...
-        </div>
-      ) : notifications.length === 0 ? (
+      {notifications.length === 0 ? (
         <EmptyState
           title="No notifications yet"
           description="You're all caught up! New lecture links and course updates will appear here."
@@ -100,8 +66,8 @@ export default function StudentNotifications() {
       ) : (
         <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-xs divide-y divide-border">
           {notifications.map((notif) => {
-            const isRead = notif.isRead ?? notif.is_read;
-            const createdAt = notif.createdAt ?? notif.created_at;
+            const isRead = notif.is_read;
+            const createdAt = notif.created_at;
             return (
               <div
                 key={notif.id}
