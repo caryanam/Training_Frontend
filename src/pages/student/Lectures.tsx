@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDataStore } from "@/lib/store";
 import { api } from "@/lib/api";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatExternalUrl } from "@/lib/utils";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -19,6 +19,7 @@ import {
   Code2,
   Lock,
   Layers,
+  Info,
 } from "lucide-react";
 
 export default function StudentLectures() {
@@ -29,6 +30,7 @@ export default function StudentLectures() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [secureLectures, setSecureLectures] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
     if (!profile) return;
@@ -46,7 +48,8 @@ export default function StudentLectures() {
             lecture_date: l.lectureDate,
             start_time: l.startTime,
             end_time: l.endTime,
-            lecture_url: l.lectureUrl,
+            meeting_link: l.meetingLink || l.lectureUrl,
+            lecture_url: l.lectureUrl || l.meetingLink,
             recording_url: l.recordingUrl,
             is_downloadable: l.isDownloadable,
             status: "scheduled",
@@ -63,6 +66,17 @@ export default function StudentLectures() {
       .finally(() => setLoading(false));
   }, [profile]);
 
+  const handleWatchLecture = (lec: any) => {
+    const meetingUrl = lec.meeting_link || lec.lecture_url || lec.meetingLink || lec.lectureUrl;
+    if (!meetingUrl || meetingUrl.trim() === "" || meetingUrl === "#") {
+      setNotice(`Google Meet link is not yet assigned for "${lec.title}". Please check back prior to class start time.`);
+      setTimeout(() => setNotice(null), 5000);
+      return;
+    }
+    const cleanUrl = formatExternalUrl(meetingUrl);
+    window.open(cleanUrl, "_blank", "noopener,noreferrer");
+  };
+
   const filteredLectures = secureLectures.filter((lec) => {
     const matchesSearch =
       lec.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -75,8 +89,24 @@ export default function StudentLectures() {
     <div className="space-y-6">
       <PageHeader
         title="Course Lectures & Project Hub"
-        subtitle="Live sessions, project repositories, and on-demand recordings for your enrolled courses."
+        subtitle="Live sessions, project deliverables, and on-demand recordings for your enrolled courses."
       />
+
+      {notice && (
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-xs font-semibold text-amber-700 dark:text-amber-300 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Info className="h-4 w-4 shrink-0" />
+            <span>{notice}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setNotice(null)}
+            className="text-amber-800 dark:text-amber-200 hover:underline text-[11px]"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {/* Search & Filter Toolbar */}
       <div className="flex flex-col sm:row gap-3 items-center justify-between">
@@ -150,37 +180,30 @@ export default function StudentLectures() {
                   </h3>
 
                   <p className="text-xs text-muted-foreground line-clamp-2 mb-4">
-                    {lec.description || "Interactive core session with code repository and hands-on project deliverables."}
+                    {lec.description || "Interactive core session with curriculum materials and live mentorship."}
                   </p>
 
-                  {/* Project Links Section (Requirement 2) */}
-                  <div className="rounded-xl bg-muted/40 p-3 mb-3 border border-border/60 text-xs space-y-1.5">
-                    <div className="flex items-center justify-between font-semibold text-foreground text-[11px]">
-                      <span className="flex items-center gap-1.5">
-                        <Code2 className="h-3.5 w-3.5 text-primary" /> Project Repository & Live Demo
-                      </span>
-                      <span className="text-[10px] text-emerald-600 font-bold">Enrolled Access</span>
+                  {/* Recording / Project Resource (Only shown if actually present) */}
+                  {lec.recording_url && (
+                    <div className="rounded-xl bg-muted/40 p-3 mb-3 border border-border/60 text-xs space-y-1.5">
+                      <div className="flex items-center justify-between font-semibold text-foreground text-[11px]">
+                        <span className="flex items-center gap-1.5">
+                          <Code2 className="h-3.5 w-3.5 text-primary" /> Session Recording & Deliverable
+                        </span>
+                        <span className="text-[10px] text-emerald-600 font-bold">Enrolled Access</span>
+                      </div>
+                      <div className="flex items-center gap-2 pt-1">
+                        <a
+                          href={formatExternalUrl(lec.recording_url)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-600 hover:underline"
+                        >
+                          Access Recording <ExternalLink className="h-3 w-3" />
+                        </a>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 pt-1">
-                      <a
-                        href={lec.lecture_url || "https://github.com/nexora-lms/production-project"}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:underline"
-                      >
-                        GitHub Project <ExternalLink className="h-3 w-3" />
-                      </a>
-                      <span className="text-muted-foreground">•</span>
-                      <a
-                        href={lec.recording_url || "https://live.nexora-project.internal"}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-600 hover:underline"
-                      >
-                        Live Project <ExternalLink className="h-3 w-3" />
-                      </a>
-                    </div>
-                  </div>
+                  )}
 
                   <div className="space-y-1.5 text-xs text-muted-foreground border-t border-border pt-3">
                     <div className="flex items-center justify-between">
@@ -190,19 +213,28 @@ export default function StudentLectures() {
                       </span>
                       <span className="flex items-center gap-1">
                         <Clock className="h-3.5 w-3.5 text-primary" />
-                        {lec.start_time || "18:00"}
+                        {lec.start_time || "18:00"} - {lec.end_time || "19:30"}
                       </span>
                     </div>
                   </div>
                 </div>
 
                 <div className="mt-5 pt-3 border-t border-border flex items-center justify-between gap-2">
-                  <Link
-                    to={`/student/lecture/${lec.id}`}
-                    className="flex-1 flex h-9 items-center justify-center gap-1.5 rounded-lg bg-primary text-xs font-semibold text-primary-foreground shadow-xs hover:bg-primary/90 transition-all"
+                  <button
+                    type="button"
+                    onClick={() => handleWatchLecture(lec)}
+                    className="flex-1 flex h-9 items-center justify-center gap-1.5 rounded-lg bg-primary text-xs font-semibold text-primary-foreground shadow-xs hover:bg-primary/90 transition-all cursor-pointer"
                   >
                     <PlayCircle className="h-4 w-4" />
                     {lec.status === "live" ? "Join Stream" : "Watch Lecture"}
+                  </button>
+
+                  <Link
+                    to={`/student/lecture/${lec.id}`}
+                    className="flex h-9 items-center justify-center gap-1 px-3 rounded-lg border border-border bg-background text-xs font-semibold text-muted-foreground hover:text-primary hover:border-primary transition-colors"
+                    title="View details & handouts"
+                  >
+                    Details
                   </Link>
 
                   {lec.is_downloadable && (

@@ -22,6 +22,28 @@ import {
   Loader2,
 } from "lucide-react";
 
+interface BackendLectureAccess {
+  hasAccess: boolean;
+  reason: string;
+  lectureId?: string;
+  title?: string;
+  description?: string;
+  lectureDate?: string;
+  startTime?: string;
+  endTime?: string;
+  lectureUrl?: string | null;
+  meetingLink?: string | null;
+  recordingUrl?: string | null;
+  isDownloadable?: boolean;
+  courseId?: number;
+  courseCode?: string;
+  courseName?: string;
+  facultyName?: string;
+  facultyCode?: string;
+  facultyEmail?: string;
+  facultyDepartment?: string;
+}
+
 export default function LectureAccess() {
   const { lectureId } = useParams<{ lectureId: string }>();
   const { profile } = useAuth();
@@ -30,7 +52,7 @@ export default function LectureAccess() {
 
   const [downloading, setDownloading] = useState(false);
   const [downloadSuccess, setDownloadSuccess] = useState(false);
-  const [backendAccess, setBackendAccess] = useState<{ hasAccess: boolean; reason: string; lectureUrl?: string | null; recordingUrl?: string | null } | null>(null);
+  const [backendAccess, setBackendAccess] = useState<BackendLectureAccess | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -71,29 +93,42 @@ export default function LectureAccess() {
   const lecture = store.getLecture(lectureId);
   const course = lecture ? store.getCourse(lecture.course_id) : null;
 
-  // Handle Download Action (Requirement 11: private storage simulation + download logging)
+  // Dynamic Data Bindings
+  const lectureTitle = backendAccess?.title || lecture?.title || "Lecture Session";
+  const courseName = backendAccess?.courseName || course?.name || "Enrolled Course Track";
+  const facultyName = backendAccess?.facultyName || (course as any)?.facultyName || "Assigned Faculty";
+  const facultyCode = backendAccess?.facultyCode || (course as any)?.facultyId || "FAC-ASSIGNED";
+  const facultyEmail = backendAccess?.facultyEmail || (course as any)?.facultyEmail || "faculty@nexora.internal";
+  const facultyDept = backendAccess?.facultyDepartment || "Faculty Mentor";
+  const lectureDescription = backendAccess?.description || lecture?.description || "Interactive core curriculum session with live mentorship.";
+  const lectureDate = backendAccess?.lectureDate || lecture?.lecture_date;
+  const startTime = backendAccess?.startTime || lecture?.start_time || "18:00";
+  const endTime = backendAccess?.endTime || lecture?.end_time || "19:30";
+  const activeMeetingUrl = backendAccess?.meetingLink || backendAccess?.lectureUrl || lecture?.meeting_link || lecture?.lecture_url;
+  const isDownloadable = backendAccess?.isDownloadable !== undefined ? backendAccess.isDownloadable : (lecture?.is_downloadable || false);
+
+  // Handle Download Action
   const handleDownload = () => {
-    if (!lecture || !accessResult.hasAccess) return;
+    if (!accessResult.hasAccess) return;
     setDownloading(true);
     setDownloadSuccess(false);
 
     setTimeout(() => {
       setDownloading(false);
       setDownloadSuccess(true);
-      // Log download to database
       const student = store.getStudentsWithProfiles().find((s) => s.profile_id === profile.id);
       if (student) {
         store.createNotification({
           user_id: profile.id,
           title: "Lecture Material Downloaded 📥",
-          message: `Successfully downloaded handout for '${lecture.title}'.`,
+          message: "Successfully downloaded handout for " + lectureTitle + ".",
           type: "lecture",
         });
       }
     }, 1200);
   };
 
-  // 1. LOCKED / EXPIRED STATE (Business Rules 12 & 13)
+  // 1. LOCKED / EXPIRED STATE
   if (!accessResult.hasAccess) {
     return (
       <div className="mx-auto max-w-2xl py-12 px-4">
@@ -126,11 +161,11 @@ export default function LectureAccess() {
           <div className="rounded-xl border border-border bg-muted/40 p-4 max-w-md mx-auto mb-8 text-left text-xs space-y-2">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Lecture Title:</span>
-              <span className="font-semibold text-foreground">{lecture?.title || "Lecture"}</span>
+              <span className="font-semibold text-foreground">{lectureTitle}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Associated Course:</span>
-              <span className="font-semibold text-foreground">{course?.name || "Course"}</span>
+              <span className="font-semibold text-foreground">{courseName}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Access Requirement:</span>
@@ -151,7 +186,7 @@ export default function LectureAccess() {
     );
   }
 
-  // 2. AUTHORIZED ACCESS STATE (Streaming Video & Handouts)
+  // 2. AUTHORIZED ACCESS STATE (Dynamic Streaming Video & Handouts)
   return (
     <div className="space-y-6">
       {/* Navigation & Header */}
@@ -166,10 +201,10 @@ export default function LectureAccess() {
           <div>
             <div className="flex items-center gap-2">
               <StatusBadge status={lecture?.status || "scheduled"} />
-              <span className="text-xs text-muted-foreground">{course?.name}</span>
+              <span className="text-xs text-muted-foreground font-semibold">{courseName}</span>
             </div>
             <h1 className="text-2xl font-bold tracking-tight text-foreground mt-1 sm:text-3xl">
-              {lecture?.title}
+              {lectureTitle}
             </h1>
           </div>
 
@@ -182,7 +217,7 @@ export default function LectureAccess() {
       </div>
 
       {/* Live Google Meet Classroom Banner */}
-      {(lecture?.meeting_link || lecture?.lecture_url) && (
+      {Boolean(activeMeetingUrl) && (
         <div className="rounded-2xl border border-red-500/30 bg-gradient-to-r from-red-500/10 via-card to-card p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
           <div className="flex items-center gap-3.5">
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-600 text-white shadow-md shadow-red-600/20 shrink-0">
@@ -196,13 +231,13 @@ export default function LectureAccess() {
                 </span>
               </div>
               <div className="text-xs text-muted-foreground mt-0.5 font-mono truncate max-w-md">
-                {lecture?.meeting_link || lecture?.lecture_url}
+                {activeMeetingUrl}
               </div>
             </div>
           </div>
 
           <a
-            href={formatExternalUrl(lecture?.meeting_link || lecture?.lecture_url)}
+            href={formatExternalUrl(activeMeetingUrl)}
             target="_blank"
             rel="noopener noreferrer"
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 px-6 py-2.5 text-xs font-bold text-white shadow-md hover:bg-red-700 transition-all shrink-0"
@@ -225,17 +260,17 @@ export default function LectureAccess() {
             <h3 className="text-lg font-bold text-white mb-2">
               {lecture?.status === "live"
                 ? "Live Interactive Stream in Progress"
-                : "Lecture Recording Ready to Stream"}
+                : "Lecture Session Ready"}
             </h3>
             <p className="text-xs text-slate-300 mb-6">
               Authorized student feed with end-to-end access validation.
             </p>
 
-            {lecture?.lecture_url && (
+            {Boolean(activeMeetingUrl) && (
               <a
-                href={formatExternalUrl(lecture.lecture_url)}
+                href={formatExternalUrl(activeMeetingUrl)}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-2.5 text-xs font-semibold text-white hover:bg-emerald-500 shadow-md transition-all"
               >
                 <ExternalLink className="h-4 w-4" /> Open Meeting Room
@@ -245,20 +280,20 @@ export default function LectureAccess() {
         </div>
       </div>
 
-      {/* Conducting Faculty Mentor Box */}
+      {/* Conducting Faculty Mentor Box (Dynamic from DB) */}
       <div className="rounded-2xl border border-emerald-500/20 bg-card p-5 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">
           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-600/10 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400 font-bold border border-emerald-500/20 shrink-0">
             <Video className="h-5 w-5" />
           </div>
           <div>
-            <div className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Conducting Faculty Instructor</div>
-            <div className="text-sm font-bold text-foreground">{(course as any)?.facultyName || "Dr. Rajesh Sharma"}</div>
-            <div className="text-xs text-muted-foreground">Faculty ID: <span className="font-mono text-emerald-500 font-semibold">{(course as any)?.facultyId || "FAC-2001"}</span> • {(course as any)?.facultyEmail || "faculty@codextechnology.com"}</div>
+            <div className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Conducting Faculty Instructor</div>
+            <div className="text-sm font-bold text-foreground">{facultyName}</div>
+            <div className="text-xs text-muted-foreground">Faculty ID: <span className="font-mono text-emerald-500 font-semibold">{facultyCode}</span> • {facultyEmail}</div>
           </div>
         </div>
         <a
-          href={`mailto:${(course as any)?.facultyEmail || "faculty@codextechnology.com"}`}
+          href={"mailto:" + facultyEmail}
           className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-2 text-xs font-bold text-emerald-600 dark:text-emerald-300 hover:bg-emerald-600 hover:text-white transition-all shrink-0 cursor-pointer"
         >
           Ask Faculty Question
@@ -274,8 +309,7 @@ export default function LectureAccess() {
               About this Lecture
             </h2>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              {lecture?.description ||
-                "In this comprehensive session, we cover end-to-end architectures, hands-on production code samples, dependency injection patterns, and enterprise testing."}
+              {lectureDescription}
             </p>
 
             <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 gap-4 border-t border-border pt-4 text-xs">
@@ -283,14 +317,14 @@ export default function LectureAccess() {
                 <span className="text-muted-foreground block mb-0.5">Date:</span>
                 <span className="font-semibold text-foreground flex items-center gap-1">
                   <Calendar className="h-3.5 w-3.5 text-primary" />
-                  {lecture?.lecture_date ? formatDate(lecture.lecture_date) : "TBA"}
+                  {lectureDate ? formatDate(lectureDate) : "Scheduled Today"}
                 </span>
               </div>
               <div>
                 <span className="text-muted-foreground block mb-0.5">Timing:</span>
                 <span className="font-semibold text-foreground flex items-center gap-1">
                   <Clock className="h-3.5 w-3.5 text-primary" />
-                  {lecture?.start_time} - {lecture?.end_time}
+                  {startTime} - {endTime}
                 </span>
               </div>
               <div>
@@ -311,13 +345,13 @@ export default function LectureAccess() {
               Download lecture slides, sample code repositories, and cheat sheets.
             </p>
 
-            {lecture?.is_downloadable ? (
+            {isDownloadable ? (
               <div className="rounded-lg border border-border bg-muted/30 p-3.5 space-y-3">
                 <div className="flex items-center gap-3">
                   <FileText className="h-8 w-8 text-primary shrink-0" />
                   <div className="overflow-hidden">
                     <div className="text-xs font-semibold text-foreground truncate">
-                      {lecture.downloadable_file_path?.split("/").pop() || "lecture-notes.pdf"}
+                      {lecture?.downloadable_file_path?.split("/").pop() || (lectureTitle.toLowerCase().replace(/\s+/g, "-") + "-materials.pdf")}
                     </div>
                     <div className="text-[11px] text-muted-foreground">PDF Document • 4.2 MB</div>
                   </div>
@@ -327,7 +361,7 @@ export default function LectureAccess() {
                   type="button"
                   onClick={handleDownload}
                   disabled={downloading}
-                  className="flex h-9 w-full items-center justify-center gap-2 rounded-lg bg-primary font-medium text-xs text-primary-foreground hover:bg-primary/90 transition-all disabled:opacity-50"
+                  className="flex h-9 w-full items-center justify-center gap-2 rounded-lg bg-primary font-medium text-xs text-primary-foreground hover:bg-primary/90 transition-all disabled:opacity-50 cursor-pointer"
                 >
                   <Download className="h-3.5 w-3.5" />
                   {downloading ? "Preparing Signed URL..." : downloadSuccess ? "Downloaded ✓" : "Download File"}
