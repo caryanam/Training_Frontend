@@ -73,22 +73,20 @@ export default function FacultyCourses() {
               <button
                 type="button"
                 onClick={() => setTab("assigned")}
-                className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
-                  tab === "assigned"
+                className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer ${tab === "assigned"
                     ? "bg-primary text-primary-foreground shadow-xs"
                     : "text-muted-foreground hover:text-foreground"
-                }`}
+                  }`}
               >
                 My Assigned ({assignedCourses.length})
               </button>
               <button
                 type="button"
                 onClick={() => setTab("all")}
-                className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
-                  tab === "all"
+                className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer ${tab === "all"
                     ? "bg-primary text-primary-foreground shadow-xs"
                     : "text-muted-foreground hover:text-foreground"
-                }`}
+                  }`}
               >
                 All Curriculum Tracks ({courses.length})
               </button>

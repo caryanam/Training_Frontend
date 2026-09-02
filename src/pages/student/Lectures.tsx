@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDataStore } from "@/lib/store";
+import { api } from "@/lib/api";
 import { formatDate } from "@/lib/utils";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -14,7 +15,10 @@ import {
   Search,
   Filter,
   Download,
+  ExternalLink,
+  Code2,
   Lock,
+  Layers,
 } from "lucide-react";
 
 export default function StudentLectures() {
@@ -23,14 +27,43 @@ export default function StudentLectures() {
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [secureLectures, setSecureLectures] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const enrollments = profile ? store.getEnrollmentsForProfile(profile.id) : [];
-  const enrolledCourseIds = new Set(enrollments.map((e) => e.course_id));
+  useEffect(() => {
+    if (!profile) return;
+    setLoading(true);
 
-  const allLectures = store.getLectures();
-  const enrolledLectures = allLectures.filter((l) => enrolledCourseIds.has(l.course_id));
+    api.getStudentEnrolledLectures()
+      .then((res) => {
+        if (res.success && res.data && res.data.length > 0) {
+          const mapped = res.data.map((l: any) => ({
+            id: String(l.lectureId || l.id),
+            course_id: String(l.courseId || l.courseCode),
+            course_name: l.courseName || "Enrolled Curriculum Track",
+            title: l.title,
+            description: l.description,
+            lecture_date: l.lectureDate,
+            start_time: l.startTime,
+            end_time: l.endTime,
+            lecture_url: l.lectureUrl,
+            recording_url: l.recordingUrl,
+            is_downloadable: l.isDownloadable,
+            status: "scheduled",
+          }));
+          setSecureLectures(mapped);
+        } else {
+          // If no active enrollment returned by backend, strictly set empty
+          setSecureLectures([]);
+        }
+      })
+      .catch(() => {
+        setSecureLectures([]);
+      })
+      .finally(() => setLoading(false));
+  }, [profile]);
 
-  const filteredLectures = enrolledLectures.filter((lec) => {
+  const filteredLectures = secureLectures.filter((lec) => {
     const matchesSearch =
       lec.title.toLowerCase().includes(search.toLowerCase()) ||
       (lec.description && lec.description.toLowerCase().includes(search.toLowerCase()));
@@ -41,12 +74,12 @@ export default function StudentLectures() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Course Lectures"
-        subtitle="Live sessions, upcoming classes, and on-demand recordings for your enrolled courses."
+        title="Course Lectures & Project Hub"
+        subtitle="Live sessions, project repositories, and on-demand recordings for your enrolled courses."
       />
 
       {/* Search & Filter Toolbar */}
-      <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
+      <div className="flex flex-col sm:row gap-3 items-center justify-between">
         <div className="relative w-full sm:w-80">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
@@ -78,12 +111,12 @@ export default function StudentLectures() {
         <EmptyState
           title="No lectures found"
           description={
-            enrolledLectures.length === 0
-              ? "You are not enrolled in any active courses yet."
+            secureLectures.length === 0
+              ? "You are not enrolled in any active courses yet. Enroll in a course to access live lectures and project links."
               : "No lectures matched your search criteria."
           }
           action={
-            enrolledLectures.length === 0 ? (
+            secureLectures.length === 0 ? (
               <Link
                 to="/student/courses"
                 className="rounded-xl bg-primary px-5 py-2 text-xs font-semibold text-primary-foreground shadow-xs"
@@ -97,6 +130,7 @@ export default function StudentLectures() {
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredLectures.map((lec) => {
             const course = store.getCourse(lec.course_id);
+            const courseTitle = lec.course_name || course?.name || "Enrolled Curriculum Track";
 
             return (
               <div
@@ -106,9 +140,9 @@ export default function StudentLectures() {
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-[11px] font-semibold text-primary truncate max-w-[180px]">
-                      {course?.name || "Course"}
+                      {courseTitle}
                     </span>
-                    <StatusBadge status={lec.status} />
+                    <StatusBadge status={lec.status || "scheduled"} />
                   </div>
 
                   <h3 className="text-sm font-bold text-foreground group-hover:text-primary transition-colors line-clamp-2 mb-2">
@@ -116,8 +150,37 @@ export default function StudentLectures() {
                   </h3>
 
                   <p className="text-xs text-muted-foreground line-clamp-2 mb-4">
-                    {lec.description || "Interactive core session with code repository and exercises."}
+                    {lec.description || "Interactive core session with code repository and hands-on project deliverables."}
                   </p>
+
+                  {/* Project Links Section (Requirement 2) */}
+                  <div className="rounded-xl bg-muted/40 p-3 mb-3 border border-border/60 text-xs space-y-1.5">
+                    <div className="flex items-center justify-between font-semibold text-foreground text-[11px]">
+                      <span className="flex items-center gap-1.5">
+                        <Code2 className="h-3.5 w-3.5 text-primary" /> Project Repository & Live Demo
+                      </span>
+                      <span className="text-[10px] text-emerald-600 font-bold">Enrolled Access</span>
+                    </div>
+                    <div className="flex items-center gap-2 pt-1">
+                      <a
+                        href={lec.lecture_url || "https://github.com/nexora-lms/production-project"}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:underline"
+                      >
+                        GitHub Project <ExternalLink className="h-3 w-3" />
+                      </a>
+                      <span className="text-muted-foreground">•</span>
+                      <a
+                        href={lec.recording_url || "https://live.nexora-project.internal"}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-600 hover:underline"
+                      >
+                        Live Project <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </div>
+                  </div>
 
                   <div className="space-y-1.5 text-xs text-muted-foreground border-t border-border pt-3">
                     <div className="flex items-center justify-between">

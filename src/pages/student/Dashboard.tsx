@@ -32,6 +32,8 @@ export default function StudentDashboard() {
   const [upcomingDemos, setUpcomingDemos] = useState<any[]>([]);
   const [demoHistory, setDemoHistory] = useState<any[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [secureEnrolledCourses, setSecureEnrolledCourses] = useState<any[]>([]);
+  const [secureUpcomingMeetings, setSecureUpcomingMeetings] = useState<any[]>([]);
 
   useEffect(() => {
     if (!profile) return;
@@ -46,19 +48,42 @@ export default function StudentDashboard() {
         setDemoHistory(res.data);
       }
     }).catch(() => { });
+
+    // Fetch secure enrolled courses (Requirement 1 & 8)
+    api.getStudentEnrolledCourses().then((res) => {
+      if (res && res.success && res.data) {
+        setSecureEnrolledCourses(res.data);
+      }
+    }).catch(() => { });
+
+    // Fetch secure upcoming meetings (Requirement 1 & 8)
+    api.getStudentUpcomingMeetings().then((res) => {
+      if (res && res.success && res.data) {
+        setSecureUpcomingMeetings(res.data);
+      }
+    }).catch(() => { });
   }, [profile]);
 
   const enrollments = profile ? store.getEnrollmentsForProfile(profile.id) : [];
   const activeEnrollment = enrollments.find(
     (e) => e.status === "active" || e.status === "expiring_soon"
   );
-  const activeCourse = activeEnrollment
-    ? store.getCourse(activeEnrollment.course_id)
-    : null;
+  
+  // Use backend enrolled course as source of truth if available, otherwise store active enrollment
+  const activeCourse = secureEnrolledCourses.length > 0
+    ? {
+        id: String(secureEnrolledCourses[0].courseId || secureEnrolledCourses[0].courseCode),
+        name: secureEnrolledCourses[0].courseName,
+        category: secureEnrolledCourses[0].category,
+        description: secureEnrolledCourses[0].description,
+        faculty_name: secureEnrolledCourses[0].facultyName,
+        faculty_email: secureEnrolledCourses[0].facultyEmail,
+      }
+    : (activeEnrollment ? store.getCourse(activeEnrollment.course_id) : null);
 
-  const lectures = activeCourse
-    ? store.getLecturesForCourse(activeCourse.id)
-    : [];
+  const isActuallyEnrolled = secureEnrolledCourses.length > 0 || !!activeEnrollment;
+
+  const lectures = isActuallyEnrolled && activeCourse ? store.getLecturesForCourse(activeCourse.id) : [];
   const upcomingLecture = lectures.find((l) => l.status === "scheduled" || l.status === "live");
   const completedLectures = lectures.filter((l) => l.status === "completed").length;
 
@@ -71,31 +96,39 @@ export default function StudentDashboard() {
   const studentRecord = profile ? store.getStudentsWithProfiles().find((s) => s.profile_id === profile.id || s.id === profile.id) : null;
   const assignedFacultyObj = studentRecord?.assigned_faculty_id
     ? facultyList.find((f) => f.id === studentRecord.assigned_faculty_id || f.faculty_id === studentRecord.assigned_faculty_id)
-    : (activeCourse?.faculty_id ? facultyList.find((f) => f.id === activeCourse.faculty_id) : null);
+    : (activeCourse && (activeCourse as any).faculty_id ? facultyList.find((f) => f.id === (activeCourse as any).faculty_id) : null);
 
-  const assignedFaculty = assignedFacultyObj
+  const assignedFaculty = (activeCourse && (activeCourse as any).faculty_name)
     ? {
-      name: assignedFacultyObj.profile.full_name,
-      code: assignedFacultyObj.faculty_id || "FAC-2001",
-      email: assignedFacultyObj.profile.email,
-      department: (assignedFacultyObj as any).department || "Software Engineering & Full Stack",
-      isAssigned: true,
-    }
-    : activeCourse
-      ? {
-        name: "Dr. Rajesh Sharma",
-        code: "FAC-2001",
-        email: "rajesh.sharma@codextechnology.com",
-        department: "Software Engineering & Full Stack",
+        name: (activeCourse as any).faculty_name,
+        code: "FACULTY",
+        email: (activeCourse as any).faculty_email || "faculty@nexorastudent.in",
+        department: "Curriculum Track Lead",
         isAssigned: true,
       }
-      : {
-        name: "Faculty Mentor Assignment Pending",
-        code: "PENDING",
-        email: "admissions@nexorastudent.in",
-        department: "Assigned by admissions team upon course onboarding",
-        isAssigned: false,
-      };
+    : assignedFacultyObj
+      ? {
+        name: assignedFacultyObj.profile.full_name,
+        code: assignedFacultyObj.faculty_id || "FAC-2001",
+        email: assignedFacultyObj.profile.email,
+        department: (assignedFacultyObj as any).department || "Software Engineering & Full Stack",
+        isAssigned: true,
+      }
+      : isActuallyEnrolled
+        ? {
+          name: "Dr. Rajesh Sharma",
+          code: "FAC-2001",
+          email: "rajesh.sharma@codextechnology.com",
+          department: "Software Engineering & Full Stack",
+          isAssigned: true,
+        }
+        : {
+          name: "Faculty Mentor Assignment Pending",
+          code: "PENDING",
+          email: "admissions@nexorastudent.in",
+          department: "Assigned by admissions team upon course onboarding",
+          isAssigned: false,
+        };
 
   const activeUpcomingDemo = upcomingDemos.length > 0 ? upcomingDemos[0] : (latestDemo && latestDemo.status === "scheduled" ? {
     courseName: "Full Stack Web Development",
@@ -107,61 +140,90 @@ export default function StudentDashboard() {
     notes: latestDemo.notes || "Live course introduction & curriculum demo",
   } : null);
 
-  const daysRemaining = activeEnrollment?.expiry_date
-    ? getDaysRemaining(activeEnrollment.expiry_date)
+  // Active upcoming live session (strictly from backend-enrolled meetings or assigned group demo)
+  const activeLiveMeeting = secureUpcomingMeetings.length > 0
+    ? {
+        title: secureUpcomingMeetings[0].title,
+        courseName: secureUpcomingMeetings[0].courseName || activeCourse?.name || "Enrolled Curriculum Session",
+        date: secureUpcomingMeetings[0].meetingDate,
+        startTime: secureUpcomingMeetings[0].startTime || "18:00",
+        endTime: secureUpcomingMeetings[0].endTime || "19:30",
+        meetLink: secureUpcomingMeetings[0].meetingLink,
+        status: secureUpcomingMeetings[0].status || "SCHEDULED",
+        notes: secureUpcomingMeetings[0].description || "Live interactive coding & Q&A session with faculty.",
+        isLecture: true,
+      }
+    : (activeUpcomingDemo ? {
+        title: activeUpcomingDemo.courseName || "Interactive Course Demo",
+        courseName: activeUpcomingDemo.courseName,
+        date: activeUpcomingDemo.demoDate,
+        startTime: activeUpcomingDemo.startTime,
+        endTime: activeUpcomingDemo.endTime || "12:00",
+        meetLink: activeUpcomingDemo.meetLink,
+        status: activeUpcomingDemo.status || "SCHEDULED",
+        notes: activeUpcomingDemo.notes,
+        isLecture: false,
+      } : null);
+
+  const daysRemaining = (secureEnrolledCourses[0]?.expiryDate || activeEnrollment?.expiry_date)
+    ? getDaysRemaining(secureEnrolledCourses[0]?.expiryDate || activeEnrollment!.expiry_date!)
     : 0;
 
   const isExpiringSoon = daysRemaining <= 7 && daysRemaining > 0;
-  const isExpired = activeEnrollment?.expiry_date
-    ? new Date() > new Date(activeEnrollment.expiry_date)
+  const isExpired = (secureEnrolledCourses[0]?.expiryDate || activeEnrollment?.expiry_date)
+    ? new Date() > new Date(secureEnrolledCourses[0]?.expiryDate || activeEnrollment!.expiry_date!)
     : false;
 
   return (
     <div className="space-y-6">
-      {/* Upcoming Demo Card for Student */}
-      {activeUpcomingDemo && (
+      {/* Active Live Session / Google Meet Card for Student */}
+      {activeLiveMeeting && (
         <div className="rounded-2xl border border-emerald-400/40 bg-gradient-to-r from-emerald-950 via-slate-900 to-emerald-900 p-6 shadow-xl text-white">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/30 border border-emerald-300/50 px-3 py-1 text-xs font-extrabold text-emerald-100">
-                  <Video className="h-3.5 w-3.5 text-emerald-200" /> Upcoming Demo
+                  <Video className="h-3.5 w-3.5 text-emerald-200" />
+                  {activeLiveMeeting.isLecture ? "Scheduled Live Lecture" : "Upcoming Demo"}
                 </span>
                 <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/30 border border-emerald-300/50 px-2.5 py-0.5 text-xs font-extrabold text-emerald-200 uppercase">
-                  {activeUpcomingDemo.status || "Scheduled"}
+                  {activeLiveMeeting.status || "Live"}
                 </span>
               </div>
 
               <h2 className="text-xl sm:text-2xl font-black text-white">
-                {activeUpcomingDemo.courseName || "Full Stack Web Development"}
+                {activeLiveMeeting.title}
               </h2>
+              <div className="text-xs font-semibold text-emerald-300">
+                Track: {activeLiveMeeting.courseName}
+              </div>
 
               <div className="flex flex-wrap items-center gap-4 text-xs text-white pt-1">
                 <div className="flex items-center gap-1.5 font-medium">
                   <Calendar className="h-4 w-4 text-amber-300" />
-                  <span>Date: <strong className="text-white font-bold">{formatDate(activeUpcomingDemo.demoDate)}</strong></span>
+                  <span>Date: <strong className="text-white font-bold">{activeLiveMeeting.date ? formatDate(activeLiveMeeting.date) : "Today"}</strong></span>
                 </div>
                 <div className="flex items-center gap-1.5 font-medium">
                   <Clock className="h-4 w-4 text-emerald-300" />
-                  <span>Time: <strong className="text-white font-bold">{activeUpcomingDemo.startTime} - {activeUpcomingDemo.endTime || "12:00"}</strong></span>
+                  <span>Time: <strong className="text-white font-bold">{activeLiveMeeting.startTime} - {activeLiveMeeting.endTime || "19:30"}</strong></span>
                 </div>
               </div>
 
-              {activeUpcomingDemo.notes && (
+              {activeLiveMeeting.notes && (
                 <p className="text-xs text-slate-100 font-medium italic bg-white/10 p-3 rounded-lg border border-white/20 mt-2 max-w-xl">
-                  Notes: "{activeUpcomingDemo.notes}"
+                  Instructions: "{activeLiveMeeting.notes}"
                 </p>
               )}
             </div>
 
-            {activeUpcomingDemo.meetLink && (
+            {activeLiveMeeting.meetLink && (
               <a
-                href={formatExternalUrl(activeUpcomingDemo.meetLink)}
+                href={formatExternalUrl(activeLiveMeeting.meetLink)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="shrink-0 inline-flex items-center justify-center gap-2.5 rounded-xl bg-emerald-400 px-6 py-3.5 text-xs font-black text-slate-950 hover:bg-emerald-300 transition-all shadow-lg hover:shadow-emerald-500/20"
+                className="shrink-0 inline-flex items-center justify-center gap-2.5 rounded-xl bg-emerald-400 px-6 py-3.5 text-xs font-black text-slate-950 hover:bg-emerald-300 transition-all shadow-lg hover:shadow-emerald-500/20 cursor-pointer"
               >
-                <Video className="h-4 w-4 text-slate-950" /> Join Google Meet
+                <Video className="h-4 w-4 text-slate-950" /> Join Google Meet Class
               </a>
             )}
           </div>
@@ -338,8 +400,8 @@ export default function StudentDashboard() {
         />
         <StatsCard
           title="Upcoming Session"
-          value={upcomingLecture ? upcomingLecture.title.substring(0, 14) + "..." : "No live class"}
-          subtitle={upcomingLecture ? `${upcomingLecture.start_time}` : "All done"}
+          value={activeLiveMeeting ? activeLiveMeeting.title.substring(0, 14) + "..." : (upcomingLecture ? upcomingLecture.title.substring(0, 14) + "..." : "No live class")}
+          subtitle={activeLiveMeeting ? `${activeLiveMeeting.startTime}` : (upcomingLecture ? `${upcomingLecture.start_time}` : "All done")}
           icon={<Clock className="h-5 w-5" />}
           variant="amber"
         />
@@ -354,8 +416,8 @@ export default function StudentDashboard() {
               <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Upcoming Session
               </span>
-              {upcomingLecture?.status === "live" ? (
-                <StatusBadge status="live" />
+              {activeLiveMeeting?.status === "live" || activeLiveMeeting?.status === "SCHEDULED" ? (
+                <StatusBadge status={activeLiveMeeting.status?.toLowerCase() || "scheduled"} />
               ) : (
                 <span className="text-xs text-primary font-medium flex items-center gap-1">
                   <Clock className="h-3.5 w-3.5" /> Next Scheduled
@@ -363,26 +425,26 @@ export default function StudentDashboard() {
               )}
             </div>
 
-            {upcomingLecture ? (
+            {activeLiveMeeting ? (
               <div>
                 <h3 className="text-base font-bold text-foreground mb-2">
-                  {upcomingLecture.title}
+                  {activeLiveMeeting.title}
                 </h3>
                 <p className="text-xs text-muted-foreground line-clamp-3 mb-4">
-                  {upcomingLecture.description || "Live interactive coding & Q&A session."}
+                  {activeLiveMeeting.notes || "Live interactive coding & Q&A session."}
                 </p>
 
                 <div className="space-y-2 text-xs text-muted-foreground border-t border-border pt-3">
                   <div className="flex items-center justify-between">
                     <span>Date:</span>
                     <span className="font-semibold text-foreground">
-                      {upcomingLecture.lecture_date ? formatDate(upcomingLecture.lecture_date) : "TBA"}
+                      {activeLiveMeeting.date ? formatDate(activeLiveMeeting.date) : "Today"}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Time:</span>
                     <span className="font-semibold text-foreground">
-                      {upcomingLecture.start_time} - {upcomingLecture.end_time}
+                      {activeLiveMeeting.startTime} - {activeLiveMeeting.endTime || "19:30"}
                     </span>
                   </div>
                 </div>
@@ -394,7 +456,16 @@ export default function StudentDashboard() {
             )}
           </div>
 
-          {upcomingLecture && (
+          {activeLiveMeeting?.meetLink ? (
+            <a
+              href={formatExternalUrl(activeLiveMeeting.meetLink)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-6 flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 font-medium text-xs text-white hover:bg-emerald-500 transition-all shadow-xs cursor-pointer"
+            >
+              <Video className="h-4 w-4" /> Join Google Meet Class
+            </a>
+          ) : upcomingLecture ? (
             <Link
               to={`/student/lecture/${upcomingLecture.id}`}
               className="mt-6 flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-primary font-medium text-xs text-primary-foreground hover:bg-primary/90 transition-all shadow-xs"
@@ -402,7 +473,7 @@ export default function StudentDashboard() {
               <Video className="h-4 w-4" />
               {upcomingLecture.status === "live" ? "Join Live Stream" : "View Lecture Access"}
             </Link>
-          )}
+          ) : null}
         </div>
 
         {/* Recent & Course Curriculum Lectures */}

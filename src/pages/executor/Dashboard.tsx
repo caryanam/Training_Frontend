@@ -18,6 +18,7 @@ import {
   Sparkles,
   ArrowRight,
   BookOpen,
+  CreditCard,
 } from "lucide-react";
 
 import { ScheduleDemoModal } from "@/components/modals/ScheduleDemoModal";
@@ -26,6 +27,7 @@ export default function ExecutorDashboard() {
   const { profile } = useAuth();
   const store = useDataStore();
   const [springLeads, setSpringLeads] = useState<any[] | null>(null);
+  const [executorPayments, setExecutorPayments] = useState<any[]>([]);
 
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
   const [selectedLeadForDemo, setSelectedLeadForDemo] = useState<any | null>(null);
@@ -37,6 +39,12 @@ export default function ExecutorDashboard() {
         setSpringLeads(res.data);
       }
     });
+
+    api.getExecutorAssignedPayments().then((res) => {
+      if (res.success && res.data) {
+        setExecutorPayments(res.data);
+      }
+    }).catch(() => { });
   };
 
   useEffect(() => {
@@ -201,6 +209,65 @@ export default function ExecutorDashboard() {
                           Follow-up
                         </Link>
                       </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Assigned Student Payments Section (Requirement 3 & 11) */}
+      <div className="rounded-2xl border border-border bg-card p-6 shadow-xs space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+              <CreditCard className="h-5 w-5 text-primary" /> Enrolled Students & Payment Status
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              Real-time payment records for students assigned to or enrolled by you.
+            </p>
+          </div>
+          <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
+            {executorPayments.length} Transactions
+          </span>
+        </div>
+
+        {executorPayments.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-border/80 p-8 text-center text-xs text-muted-foreground">
+            No payments recorded yet for your assigned students. Complete student onboarding to activate enrollments.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="border-b border-border bg-muted/40 font-semibold uppercase tracking-wider text-muted-foreground">
+                <tr>
+                  <th className="px-4 py-3">Student Name</th>
+                  <th className="px-4 py-3">Course Track</th>
+                  <th className="px-4 py-3">Plan</th>
+                  <th className="px-4 py-3">Amount</th>
+                  <th className="px-4 py-3">Payment Status</th>
+                  <th className="px-4 py-3">Enrollment</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {executorPayments.map((p) => (
+                  <tr key={p.transactionId} className="hover:bg-accent/40 transition-colors">
+                    <td className="px-4 py-3.5">
+                      <div className="font-semibold text-foreground">{p.studentName}</div>
+                      <div className="text-[11px] text-muted-foreground">{p.studentEmail}</div>
+                    </td>
+                    <td className="px-4 py-3.5 font-medium text-foreground">{p.courseName}</td>
+                    <td className="px-4 py-3.5 text-muted-foreground">{p.planName}</td>
+                    <td className="px-4 py-3.5 font-bold text-foreground">₹{p.amount?.toLocaleString()}</td>
+                    <td className="px-4 py-3.5">
+                      <StatusBadge status={p.paymentStatus?.toLowerCase() || "success"} />
+                    </td>
+                    <td className="px-4 py-3.5">
+                      <span className="inline-flex items-center gap-1 font-mono text-[11px] font-semibold text-emerald-600">
+                        <CheckCircle2 className="h-3.5 w-3.5" /> {p.enrollmentCode || "ACTIVE"}
+                      </span>
                     </td>
                   </tr>
                 ))}

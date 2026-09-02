@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDataStore } from "@/lib/store";
+import { api } from "@/lib/api";
 import { formatDate, formatExternalUrl } from "@/lib/utils";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import {
@@ -18,6 +19,7 @@ import {
   FileText,
   CheckCircle2,
   Share2,
+  Loader2,
 } from "lucide-react";
 
 export default function LectureAccess() {
@@ -28,6 +30,31 @@ export default function LectureAccess() {
 
   const [downloading, setDownloading] = useState(false);
   const [downloadSuccess, setDownloadSuccess] = useState(false);
+  const [backendAccess, setBackendAccess] = useState<{ hasAccess: boolean; reason: string; lectureUrl?: string | null; recordingUrl?: string | null } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!lectureId || !profile) return;
+    setLoading(true);
+    api.getLectureAccess(lectureId)
+      .then((res) => {
+        if (res.success && res.data) {
+          setBackendAccess(res.data);
+        } else {
+          setBackendAccess({
+            hasAccess: false,
+            reason: res.message || "No active enrollment found for this course. Please purchase a plan.",
+          });
+        }
+      })
+      .catch((err: any) => {
+        setBackendAccess({
+          hasAccess: false,
+          reason: err.message || "Access denied. Active course enrollment required.",
+        });
+      })
+      .finally(() => setLoading(false));
+  }, [lectureId, profile]);
 
   if (!lectureId || !profile) {
     return (
@@ -38,9 +65,10 @@ export default function LectureAccess() {
     );
   }
 
-  // Execute 8-Step Backend Validation Rule via DataStore
-  const accessResult = store.verifyLectureAccess(profile.id, lectureId);
-  const lecture = accessResult.lecture || store.getLecture(lectureId);
+  // Fallback to DataStore verification if backend not yet responded
+  const storeAccessResult = store.verifyLectureAccess(profile.id, lectureId);
+  const accessResult = backendAccess !== null ? backendAccess : storeAccessResult;
+  const lecture = store.getLecture(lectureId);
   const course = lecture ? store.getCourse(lecture.course_id) : null;
 
   // Handle Download Action (Requirement 11: private storage simulation + download logging)

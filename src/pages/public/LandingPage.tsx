@@ -243,8 +243,9 @@ export default function LandingPage() {
 
             {/* Body Description */}
             <div className="space-y-0.5 text-sm sm:text-base font-medium text-slate-800 dark:text-slate-200 leading-snug pt-1">
-              <p className="font-bold text-slate-900 dark:text-white">Learn by Doing.</p>
-              <p className="text-slate-700 dark:text-slate-300">Build Real Projects. Gain Real Skills.</p>
+              <p className="font-bold text-slate-900 dark:text-white">Learn Better in a Focused Batch</p>
+              <p className="text-slate-700 dark:text-slate-300">We accept only 20 students per batch to ensure a focused learning environment, meaningful interaction, and individual attention for every student.</p><br />
+              <div className="text-sm sm:text-lg font-black tracking-widest text-[#014122] dark:text-emerald-300 uppercase">Small Batch. Focused Learning. Better Results.</div>
             </div>
 
             {/* Action Buttons */}
@@ -257,12 +258,12 @@ export default function LandingPage() {
                 Explore Programs <ArrowRight className="h-4 w-4" />
               </button>
 
-              <a
+              {/* <a
                 href="tel:+911234567890"
                 className="inline-flex items-center justify-center gap-2.5 rounded-xl border-2 border-[#014122] bg-white px-7 py-3.5 text-xs sm:text-sm font-bold text-[#014122] shadow-sm hover:bg-[#014122] hover:text-white transition-all duration-300 cursor-pointer"
               >
                 📞 Talk to Counselor
-              </a>
+              </a> */}
             </div>
 
           </div>

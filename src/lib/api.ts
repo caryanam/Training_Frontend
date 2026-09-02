@@ -36,9 +36,17 @@ async function apiRequest<T>(
     const result = await response.json();
 
     if (!response.ok) {
+      let errorMsg = result.message || result.error || `HTTP error! Status: ${response.status}`;
+      if (result.data && typeof result.data === "object" && !Array.isArray(result.data)) {
+        const fieldMsgs = Object.values(result.data).filter(Boolean);
+        if (fieldMsgs.length > 0) {
+          errorMsg = fieldMsgs.join(" | ");
+        }
+      }
       return {
         success: false,
-        error: result.message || result.error || `HTTP error! Status: ${response.status}`,
+        error: errorMsg,
+        data: result.data,
       };
     }
 
@@ -496,10 +504,6 @@ export const api = {
 
   // --- 5. COURSES & PLANS ---
   getAllCourses: async () => {
-    const token = getAuthToken();
-    if (!token) {
-      return { success: false, data: [] };
-    }
     return apiRequest<
       Array<{
         id: number;
@@ -818,4 +822,147 @@ export const api = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+
+  // --- 9. PRODUCTION ENROLLMENT-BASED STUDENT & EXECUTOR PORTALS ---
+  getStudentEnrolledCourses: () =>
+    apiRequest<
+      Array<{
+        courseId: number;
+        courseCode: string;
+        courseName: string;
+        category?: string;
+        description?: string;
+        facultyName?: string;
+        facultyEmail?: string;
+        enrollmentStatus: string;
+        startDate?: string;
+        expiryDate?: string;
+        lectureCount: number;
+        enrollmentCode?: string;
+        plans?: Array<{
+          id: number;
+          duration: string;
+          durationLabel: string;
+          price: number;
+          currency: string;
+        }>;
+      }>
+    >("/api/v1/student/courses", { method: "GET" }),
+
+  getStudentEnrolledCourseDetail: (courseId: string | number) =>
+    apiRequest<{
+      courseId: number;
+      courseCode: string;
+      courseName: string;
+      category?: string;
+      description?: string;
+      facultyName?: string;
+      facultyEmail?: string;
+      enrollmentStatus: string;
+      startDate?: string;
+      expiryDate?: string;
+      lectureCount: number;
+      enrollmentCode?: string;
+      plans?: Array<{
+        id: number;
+        duration: string;
+        durationLabel: string;
+        price: number;
+        currency: string;
+      }>;
+    }>(`/api/v1/student/courses/${courseId}`, { method: "GET" }),
+
+  getStudentEnrolledLectures: () =>
+    apiRequest<
+      Array<{
+        lectureId: string;
+        title: string;
+        description?: string;
+        lectureDate?: string;
+        startTime?: string;
+        endTime?: string;
+        lectureUrl?: string;
+        recordingUrl?: string;
+        isDownloadable?: boolean;
+        courseId: number;
+        courseCode?: string;
+        courseName?: string;
+      }>
+    >("/api/v1/student/lectures", { method: "GET" }),
+
+  getStudentUpcomingMeetings: () =>
+    apiRequest<
+      Array<{
+        lectureId: string;
+        title: string;
+        description?: string;
+        meetingDate?: string;
+        startTime?: string;
+        endTime?: string;
+        meetingLink?: string;
+        courseId: number;
+        courseCode?: string;
+        courseName?: string;
+        status?: string;
+      }>
+    >("/api/v1/student/meetings", { method: "GET" }),
+
+  getStudentPayments: () =>
+    apiRequest<
+      Array<{
+        paymentId: number;
+        transactionId: string;
+        studentId: string;
+        studentEmail: string;
+        courseId: string;
+        courseName: string;
+        planId?: number;
+        amount: number;
+        currency: string;
+        status: string;
+        enrollmentId?: string;
+        startDate?: string;
+        expiryDate?: string;
+        enrollmentStatus?: string;
+      }>
+    >("/api/v1/student/payments", { method: "GET" }),
+
+  getExecutorAssignedStudents: () =>
+    apiRequest<
+      Array<{
+        studentId: number;
+        studentCode: string;
+        studentName: string;
+        email: string;
+        phone?: string;
+        courseId?: number;
+        courseCode?: string;
+        courseName?: string;
+        enrollmentStatus: string;
+        enrolledAt?: string;
+        expiryDate?: string;
+        paymentStatus: string;
+        enrollmentCode?: string;
+      }>
+    >("/api/v1/executor/students", { method: "GET" }),
+
+  getExecutorAssignedPayments: () =>
+    apiRequest<
+      Array<{
+        studentId: number;
+        studentName: string;
+        studentEmail: string;
+        courseId: number;
+        courseCode: string;
+        courseName: string;
+        planName: string;
+        amount: number;
+        currency: string;
+        paymentStatus: string;
+        transactionId: string;
+        paidAt?: string;
+        enrollmentStatus?: string;
+        enrollmentCode?: string;
+      }>
+    >("/api/v1/executor/payments", { method: "GET" }),
 };

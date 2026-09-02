@@ -26,15 +26,10 @@ export default function FacultyLectureLinks() {
   const { profile } = useAuth();
   const store = useDataStore();
 
-  const [courseList, setCourseList] = useState<Array<{ id: string; name: string }>>([
-    { id: "101", name: "Full Stack Web Development" },
-    { id: "102", name: "Java Microservices & Cloud Architecture" },
-    { id: "103", name: "Data Science & AI Engineering" },
-    { id: "104", name: "Cyber Security & Ethical Hacking" },
-  ]);
+  const [courseList, setCourseList] = useState<Array<{ id: string; name: string }>>([]);
   const [lectures, setLectures] = useState(store.getLectures());
   const [selectedLectureId, setSelectedLectureId] = useState(lectures[0]?.id || "new");
-  const [selectedCourseId, setSelectedCourseId] = useState("101");
+  const [selectedCourseId, setSelectedCourseId] = useState("");
   const [customTitle, setCustomTitle] = useState("Live Interactive Session & Q&A");
   const [targetAudience, setTargetAudience] = useState<"both" | "student" | "executor">("both");
   const [meetUrl, setMeetUrl] = useState("https://meet.google.com/nexora-live-session");
@@ -43,33 +38,81 @@ export default function FacultyLectureLinks() {
   );
   const [copied, setCopied] = useState(false);
   const [broadcastSent, setBroadcastSent] = useState(false);
+  const [enrolledStudents, setEnrolledStudents] = useState<any[]>([]);
+
+  const selectedLecture = lectures.find((l) => l.id === selectedLectureId);
+  const activeTargetCourseId = selectedLectureId === "new" ? selectedCourseId : selectedLecture?.course_id || selectedCourseId;
+
+  const loadEnrolledStudents = async (courseId: string) => {
+    try {
+      const res = await api.getLeads("all");
+      const storeStudents = store.getStudentsWithProfiles();
+      const enrollments = store.getEnrollments();
+
+      const list: any[] = [];
+
+      if (res.success && res.data) {
+        res.data.forEach((lead: any) => {
+          list.push({
+            id: lead.leadId || lead.studentId,
+            name: lead.fullName || lead.full_name || "Student",
+            email: lead.email,
+            phone: lead.phone,
+            status: lead.status || "ENROLLED",
+            course: lead.interestedCourse || "Curriculum Track",
+          });
+        });
+      }
+
+      storeStudents.forEach((stu) => {
+        if (!list.some((item) => item.email?.toLowerCase() === stu.profile?.email?.toLowerCase())) {
+          const enrollment = enrollments.find((e) => e.student_id === stu.id);
+          const course = enrollment ? store.getCourse(enrollment.course_id) : null;
+          list.push({
+            id: stu.id,
+            name: stu.profile?.full_name || "Student",
+            email: stu.profile?.email || "",
+            phone: stu.profile?.phone || "",
+            status: enrollment?.status || "ACTIVE",
+            course: course?.name || "Enrolled Course",
+          });
+        }
+      });
+
+      setEnrolledStudents(list);
+    } catch {
+      setEnrolledStudents([]);
+    }
+  };
 
   useEffect(() => {
     const loadCourses = async () => {
+      const combinedMap = new Map<string, { id: string; name: string }>();
+      const storeCourses = store.getCourses();
+      storeCourses.forEach((c) => {
+        combinedMap.set(String(c.id), { id: String(c.id), name: c.name });
+      });
+
       try {
         const res = await api.getAllCourses();
         if (res.success && res.data && res.data.length > 0) {
-          const mapped = res.data.map((c: any) => ({
-            id: String(c.id),
-            name: c.title || c.name,
-          }));
-          setCourseList(mapped);
-          setSelectedCourseId(mapped[0].id);
-        } else {
-          const storeCourses = store.getCourses();
-          if (storeCourses.length > 0) {
-            const mapped = storeCourses.map((c) => ({ id: c.id, name: c.name }));
-            setCourseList(mapped);
-            setSelectedCourseId(mapped[0].id);
-          }
+          res.data.forEach((c: any) => {
+            const id = String(c.id || c.courseCode);
+            combinedMap.set(id, {
+              id: id,
+              name: c.title || c.name,
+            });
+          });
         }
-      } catch {
-        const storeCourses = store.getCourses();
-        if (storeCourses.length > 0) {
-          const mapped = storeCourses.map((c) => ({ id: c.id, name: c.name }));
-          setCourseList(mapped);
-          setSelectedCourseId(mapped[0].id);
-        }
+      } catch (e) {
+        // Handled silently
+      }
+
+      const mapped = Array.from(combinedMap.values());
+      setCourseList(mapped);
+      if (mapped.length > 0) {
+        setSelectedCourseId(mapped[0].id);
+        loadEnrolledStudents(mapped[0].id);
       }
     };
 
@@ -82,7 +125,12 @@ export default function FacultyLectureLinks() {
     }
   }, []);
 
-  const selectedLecture = lectures.find((l) => l.id === selectedLectureId);
+  useEffect(() => {
+    if (activeTargetCourseId) {
+      loadEnrolledStudents(activeTargetCourseId);
+    }
+  }, [activeTargetCourseId]);
+
   const activeCourseName = selectedLecture
     ? store.getCourse(selectedLecture.course_id)?.name || "Course"
     : courseList.find((c) => c.id === selectedCourseId)?.name || "Course";
@@ -98,7 +146,7 @@ export default function FacultyLectureLinks() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleBroadcast = (e: React.FormEvent) => {
+  const handleBroadcast = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!profile) return;
 
@@ -132,29 +180,43 @@ export default function FacultyLectureLinks() {
       });
     }
 
-    // Call API to sync backend lecture if enabled
-    api.createLecture({
-      courseId: targetLecture.course_id,
-      facultyId: profile.id,
-      title: targetLecture.title,
-      description: instructions,
-      lectureDate: new Date().toISOString().split("T")[0],
-      startTime: "18:00",
-      endTime: "19:30",
-      lectureUrl: meetUrl,
-      isDownloadable: true,
-    }).catch(() => {});
+    // Call API to sync backend lecture
+    try {
+      await api.createLecture({
+        courseId: targetLecture.course_id,
+        facultyId: profile.id,
+        title: targetLecture.title,
+        description: instructions,
+        lectureDate: new Date().toISOString().split("T")[0],
+        startTime: "18:00",
+        endTime: "19:30",
+        lectureUrl: meetUrl,
+        isDownloadable: true,
+      });
+    } catch {
+      // Handled gracefully
+    }
 
-    // Broadcast notifications to students
+    // Broadcast notifications to all students
+    store.createNotification({
+      user_id: "all",
+      title: `🔴 Live Google Meet Classroom: ${targetLecture.title}`,
+      message: `Faculty released the live session link for '${activeCourseName}'. Meet Link: ${meetUrl}. ${instructions}`,
+      type: "lecture",
+      metadata: { lectureId: targetLecture.id, meetUrl },
+    });
+
     if (targetAudience === "student" || targetAudience === "both") {
-      store.getStudentsWithProfiles().forEach((stu) => {
-        store.createNotification({
-          user_id: stu.profile_id,
-          title: `🔴 Google Meet Link Released: ${targetLecture!.title}`,
-          message: `Live class link for '${activeCourseName}' is ready. Meet Link: ${meetUrl}. ${instructions}`,
-          type: "lecture",
-          metadata: { lectureId: targetLecture!.id, meetUrl },
-        });
+      enrolledStudents.forEach((stu) => {
+        if (stu.id) {
+          store.createNotification({
+            user_id: stu.id,
+            title: `🔴 Live Google Meet Classroom: ${targetLecture!.title}`,
+            message: `Faculty released the live session link for '${activeCourseName}'. Meet Link: ${meetUrl}. ${instructions}`,
+            type: "lecture",
+            metadata: { lectureId: targetLecture!.id, meetUrl },
+          });
+        }
       });
     }
 
@@ -164,7 +226,7 @@ export default function FacultyLectureLinks() {
         store.createNotification({
           user_id: exe.profile_id,
           title: `📹 Live Google Meet Shared for Admissions: ${targetLecture!.title}`,
-          message: `${profile.full_name || "Faculty"} shared Google Meet link (${meetUrl}) for '${targetLecture!.title}'. You may share this with prospective leads or join as observer.`,
+          message: `${profile.full_name || "Faculty"} shared Google Meet link (${meetUrl}) for '${targetLecture!.title}'.`,
           type: "lecture",
           metadata: { lectureId: targetLecture!.id, meetUrl },
         });

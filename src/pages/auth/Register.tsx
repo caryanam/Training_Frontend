@@ -69,24 +69,43 @@ export default function Register() {
     ? springCourses.map((c: any) => ({ id: c.courseCode || c.courseId || c.id, name: c.title || c.name }))
     : store.getCourses().filter((c) => c.status === "active");
 
+  const validatePhone = (val: string): string => {
+    if (!val.trim()) return "Mobile number is required.";
+    const clean = val.replace(/[\s\-\+]/g, "").replace(/^91(?=\d{10}$)/, "");
+    if (clean.length < 10) return `Mobile number must be 10 digits (${clean.length}/10 entered).`;
+    if (clean.length > 10) return `Mobile number cannot exceed 10 digits (${clean.length} entered).`;
+    if (!/^[6-9]/.test(clean)) return `Mobile number must start with 6, 7, 8, or 9 (starts with '${clean[0]}').`;
+    if (!/^\d{10}$/.test(clean)) return "Mobile number must contain digits only.";
+    return "";
+  };
+
   const validateFields = (): boolean => {
     const errors: Record<string, string> = {};
 
-    if (fullName.trim().length < 2) {
+    if (!fullName.trim() || fullName.trim().length < 2) {
       errors.fullName = "Full name must be at least 2 characters.";
     }
 
-    const cleanPhone = phone.replace(/[\s\-\+]/g, "");
-    const phoneDigits = cleanPhone.replace(/^(\+91|91)/, "");
-    if (phoneDigits.length !== 10 || !/^\d{10}$/.test(phoneDigits)) {
-      errors.phone = "Enter a valid 10-digit mobile number.";
+    if (!email.trim()) {
+      errors.email = "Email address is required.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      errors.email = "Please enter a valid email address (e.g. name@example.com).";
     }
 
-    if (!isStrongPassword(password)) {
+    const phoneError = validatePhone(phone);
+    if (phoneError) {
+      errors.phone = phoneError;
+    }
+
+    if (!password) {
+      errors.password = "Password is required.";
+    } else if (!isStrongPassword(password)) {
       errors.password = "Password must be at least 8 chars with uppercase, lowercase, digit & symbol.";
     }
 
-    if (password !== confirmPassword) {
+    if (!confirmPassword) {
+      errors.confirmPassword = "Confirm password is required.";
+    } else if (password !== confirmPassword) {
       errors.confirmPassword = "Passwords do not match.";
     }
 
@@ -102,7 +121,7 @@ export default function Register() {
 
     setLoading(true);
 
-    const { error: signUpError } = await signUp(
+    const { error: signUpError, fieldErrors: serverFieldErrors } = await signUp(
       email.trim(),
       password,
       fullName.trim(),
@@ -112,6 +131,9 @@ export default function Register() {
 
     if (signUpError) {
       setError(signUpError.message || "Registration failed. Please check your details.");
+      if (serverFieldErrors && typeof serverFieldErrors === "object") {
+        setFieldErrors(serverFieldErrors);
+      }
       setLoading(false);
       return;
     }
@@ -320,13 +342,31 @@ export default function Register() {
                     id="fullName"
                     type="text"
                     value={fullName}
-                    onChange={(e) => { setFullName(e.target.value); setFieldErrors((p) => ({ ...p, fullName: "" })); }}
+                    onChange={(e) => {
+                      setFullName(e.target.value);
+                      if (e.target.value.trim().length >= 2) {
+                        setFieldErrors((p) => ({ ...p, fullName: "" }));
+                      }
+                    }}
+                    onBlur={() => {
+                      if (!fullName.trim() || fullName.trim().length < 2) {
+                        setFieldErrors((p) => ({ ...p, fullName: "Full name must be at least 2 characters." }));
+                      }
+                    }}
                     placeholder="Rahul Sharma"
                     required
-                    className="w-full h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 pl-8 pr-3 text-xs font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 focus:bg-white focus:border-[#014122] outline-none transition-all"
+                    className={`w-full h-9 rounded-xl border ${
+                      fieldErrors.fullName
+                        ? "border-rose-500 bg-rose-50/30 text-rose-900 ring-1 ring-rose-500/30"
+                        : "border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 focus:border-[#014122]"
+                    } pl-8 pr-3 text-xs font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 focus:bg-white outline-none transition-all`}
                   />
                 </div>
-                {fieldErrors.fullName && <p className="text-[9px] text-rose-600 font-bold">{fieldErrors.fullName}</p>}
+                {fieldErrors.fullName && (
+                  <p className="text-[10px] text-rose-600 dark:text-rose-400 font-bold flex items-center gap-1 mt-0.5">
+                    <AlertCircle className="h-3 w-3 shrink-0" /> {fieldErrors.fullName}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-1">
@@ -339,12 +379,31 @@ export default function Register() {
                     id="email"
                     type="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.target.value.trim())) {
+                        setFieldErrors((p) => ({ ...p, email: "" }));
+                      }
+                    }}
+                    onBlur={() => {
+                      if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+                        setFieldErrors((p) => ({ ...p, email: "Please enter a valid email address." }));
+                      }
+                    }}
                     placeholder="rahul@gmail.com"
                     required
-                    className="w-full h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 pl-8 pr-3 text-xs font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 focus:bg-white focus:border-[#014122] outline-none transition-all"
+                    className={`w-full h-9 rounded-xl border ${
+                      fieldErrors.email
+                        ? "border-rose-500 bg-rose-50/30 text-rose-900 ring-1 ring-rose-500/30"
+                        : "border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 focus:border-[#014122]"
+                    } pl-8 pr-3 text-xs font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 focus:bg-white outline-none transition-all`}
                   />
                 </div>
+                {fieldErrors.email && (
+                  <p className="text-[10px] text-rose-600 dark:text-rose-400 font-bold flex items-center gap-1 mt-0.5">
+                    <AlertCircle className="h-3 w-3 shrink-0" /> {fieldErrors.email}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -360,13 +419,30 @@ export default function Register() {
                     id="phone"
                     type="tel"
                     value={phone}
-                    onChange={(e) => { setPhone(e.target.value); setFieldErrors((p) => ({ ...p, phone: "" })); }}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setPhone(val);
+                      const err = validatePhone(val);
+                      setFieldErrors((p) => ({ ...p, phone: err }));
+                    }}
+                    onBlur={() => {
+                      const err = validatePhone(phone);
+                      setFieldErrors((p) => ({ ...p, phone: err }));
+                    }}
                     placeholder="9876543210"
                     required
-                    className="w-full h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 pl-8 pr-3 text-xs font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 focus:bg-white focus:border-[#014122] outline-none transition-all"
+                    className={`w-full h-9 rounded-xl border ${
+                      fieldErrors.phone
+                        ? "border-rose-500 bg-rose-50/30 text-rose-900 ring-1 ring-rose-500/30"
+                        : "border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 focus:border-[#014122]"
+                    } pl-8 pr-3 text-xs font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 focus:bg-white outline-none transition-all`}
                   />
                 </div>
-                {fieldErrors.phone && <p className="text-[9px] text-rose-600 font-bold">{fieldErrors.phone}</p>}
+                {fieldErrors.phone && (
+                  <p className="text-[10px] text-rose-600 dark:text-rose-400 font-bold flex items-center gap-1 mt-0.5">
+                    <AlertCircle className="h-3 w-3 shrink-0" /> {fieldErrors.phone}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-1">
@@ -427,8 +503,8 @@ export default function Register() {
             </div>
 
             {/* Row 4: Password & Confirm Password */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              <div className="space-y-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 items-start">
+              <div className="space-y-1 sm:col-span-1">
                 <label htmlFor="password" className="block text-[10px] font-black uppercase tracking-wider text-[#014122] dark:text-emerald-400">
                   PASSWORD <span className="text-rose-600">*</span>
                 </label>
@@ -438,10 +514,33 @@ export default function Register() {
                     id="password"
                     type={showPassword ? "text" : "password"}
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setPassword(val);
+                      if (isStrongPassword(val)) {
+                        setFieldErrors((p) => ({ ...p, password: "" }));
+                      }
+                      if (confirmPassword && val !== confirmPassword) {
+                        setFieldErrors((p) => ({ ...p, confirmPassword: "Passwords do not match." }));
+                      } else if (confirmPassword && val === confirmPassword) {
+                        setFieldErrors((p) => ({ ...p, confirmPassword: "" }));
+                      }
+                    }}
+                    onBlur={() => {
+                      if (!isStrongPassword(password)) {
+                        setFieldErrors((p) => ({
+                          ...p,
+                          password: "Password must meet all 5 security requirements below.",
+                        }));
+                      }
+                    }}
                     placeholder="Pass@123"
                     required
-                    className="w-full h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 pl-8 pr-7 text-xs font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 focus:bg-white focus:border-[#014122] outline-none transition-all"
+                    className={`w-full h-9 rounded-xl border ${
+                      fieldErrors.password
+                        ? "border-rose-500 bg-rose-50/30 text-rose-900 ring-1 ring-rose-500/30"
+                        : "border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 focus:border-[#014122]"
+                    } pl-8 pr-7 text-xs font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 focus:bg-white outline-none transition-all`}
                   />
                   <button
                     type="button"
@@ -451,6 +550,35 @@ export default function Register() {
                     {showPassword ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
                   </button>
                 </div>
+                {fieldErrors.password && (
+                  <p className="text-[10px] text-rose-600 dark:text-rose-400 font-bold flex items-center gap-1 mt-0.5">
+                    <AlertCircle className="h-3 w-3 shrink-0" /> {fieldErrors.password}
+                  </p>
+                )}
+
+                {/* Real-Time Password Checklist (shows as user types) */}
+                {password.length > 0 && (
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/60 p-2 text-[10px] space-y-1 mt-1.5">
+                    <div className="font-bold text-slate-700 dark:text-slate-300 mb-1">Password Requirements:</div>
+                    <div className="grid grid-cols-2 gap-x-2 gap-y-0.5">
+                      <span className={`flex items-center gap-1 font-semibold ${password.length >= 8 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-500"}`}>
+                        {password.length >= 8 ? "✓" : "○"} 8+ characters
+                      </span>
+                      <span className={`flex items-center gap-1 font-semibold ${/[A-Z]/.test(password) ? "text-emerald-600 dark:text-emerald-400" : "text-rose-500"}`}>
+                        {/[A-Z]/.test(password) ? "✓" : "○"} Uppercase (A–Z)
+                      </span>
+                      <span className={`flex items-center gap-1 font-semibold ${/[a-z]/.test(password) ? "text-emerald-600 dark:text-emerald-400" : "text-rose-500"}`}>
+                        {/[a-z]/.test(password) ? "✓" : "○"} Lowercase (a–z)
+                      </span>
+                      <span className={`flex items-center gap-1 font-semibold ${/[0-9]/.test(password) ? "text-emerald-600 dark:text-emerald-400" : "text-rose-500"}`}>
+                        {/[0-9]/.test(password) ? "✓" : "○"} Number (0–9)
+                      </span>
+                      <span className={`flex items-center gap-1 font-semibold ${/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password) ? "text-emerald-600 dark:text-emerald-400" : "text-rose-500"} col-span-2`}>
+                        {/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password) ? "✓" : "○"} Special symbol (!@#$%...)
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-1">
@@ -463,10 +591,24 @@ export default function Register() {
                     id="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
                     value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    onChange={(e) => {
+                      setConfirmPassword(e.target.value);
+                      if (e.target.value === password) {
+                        setFieldErrors((p) => ({ ...p, confirmPassword: "" }));
+                      }
+                    }}
+                    onBlur={() => {
+                      if (confirmPassword !== password) {
+                        setFieldErrors((p) => ({ ...p, confirmPassword: "Passwords do not match." }));
+                      }
+                    }}
                     placeholder="Pass@123"
                     required
-                    className="w-full h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 pl-8 pr-7 text-xs font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 focus:bg-white focus:border-[#014122] outline-none transition-all"
+                    className={`w-full h-9 rounded-xl border ${
+                      fieldErrors.confirmPassword
+                        ? "border-rose-500 bg-rose-50/30 text-rose-900 ring-1 ring-rose-500/30"
+                        : "border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 focus:border-[#014122]"
+                    } pl-8 pr-7 text-xs font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 focus:bg-white outline-none transition-all`}
                   />
                   <button
                     type="button"
@@ -476,6 +618,11 @@ export default function Register() {
                     {showConfirmPassword ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
                   </button>
                 </div>
+                {fieldErrors.confirmPassword && (
+                  <p className="text-[10px] text-rose-600 dark:text-rose-400 font-bold flex items-center gap-1 mt-0.5">
+                    <AlertCircle className="h-3 w-3 shrink-0" /> {fieldErrors.confirmPassword}
+                  </p>
+                )}
               </div>
             </div>
 

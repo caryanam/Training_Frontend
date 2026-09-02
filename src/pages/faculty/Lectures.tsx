@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDataStore } from "@/lib/store";
+import { api } from "@/lib/api";
 import { formatDate } from "@/lib/utils";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -40,8 +41,49 @@ export default function FacultyLectures() {
   const [isDownloadable, setIsDownloadable] = useState(true);
   const [status, setStatus] = useState<Lecture["status"]>("scheduled");
 
-  const courses = store.getCourses();
+  // Dynamic courses state (fetched from backend API and Admin store)
+  const [dynamicCourses, setDynamicCourses] = useState<Array<{ id: string; name: string; courseCode?: string }>>([]);
+
+  const storeCourses = store.getCourses();
   const lectures = store.getLectures();
+
+  const loadDynamicCourses = async () => {
+    const combinedMap = new Map<string, { id: string; name: string; courseCode?: string }>();
+
+    // 1. Add courses from reactive store (created by Admin)
+    const currentStore = store.getCourses();
+    currentStore.forEach((c) => {
+      combinedMap.set(String(c.id), {
+        id: String(c.id),
+        name: c.name,
+        courseCode: (c as any).courseCode,
+      });
+    });
+
+    // 2. Fetch courses from Spring Boot backend API
+    try {
+      const res = await api.getAllCourses();
+      if (res.success && res.data && res.data.length > 0) {
+        res.data.forEach((c: any) => {
+          const id = String(c.id || c.courseCode);
+          combinedMap.set(id, {
+            id: id,
+            name: c.title || c.name || "Curriculum Track",
+            courseCode: c.courseCode,
+          });
+        });
+      }
+    } catch (err) {
+      console.error("Failed to load courses from API:", err);
+    }
+
+    const list = Array.from(combinedMap.values());
+    setDynamicCourses(list);
+  };
+
+  useEffect(() => {
+    loadDynamicCourses();
+  }, [storeCourses.length]);
 
   const filteredLectures = lectures.filter(
     (l) =>
@@ -52,7 +94,8 @@ export default function FacultyLectures() {
   const openCreateModal = () => {
     setEditingLecture(null);
     setTitle("");
-    setCourseId(courses[0]?.id || "");
+    const defaultId = dynamicCourses[0]?.id || storeCourses[0]?.id || "";
+    setCourseId(defaultId);
     setDescription("");
     setLectureDate(new Date().toISOString().split("T")[0]);
     setStartTime("18:00");
@@ -79,14 +122,20 @@ export default function FacultyLectures() {
     setModalOpen(true);
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!profile) return;
+
+    if (!courseId && dynamicCourses.length > 0) {
+      setCourseId(dynamicCourses[0].id);
+    }
+
+    const activeCourseId = courseId || dynamicCourses[0]?.id || "course-1";
 
     if (editingLecture) {
       store.updateLecture(editingLecture.id, {
         title,
-        course_id: courseId,
+        course_id: activeCourseId,
         description,
         lecture_date: lectureDate,
         start_time: startTime,
@@ -99,7 +148,7 @@ export default function FacultyLectures() {
     } else {
       store.createLecture({
         title,
-        course_id: courseId,
+        course_id: activeCourseId,
         faculty_id: "fac-rec-1",
         description,
         lecture_date: lectureDate,
@@ -112,6 +161,24 @@ export default function FacultyLectures() {
         status,
         created_by: profile.id,
       });
+
+      // Also send to backend endpoint if running
+      try {
+        await api.createLecture({
+          courseId: activeCourseId,
+          facultyId: "fac-rec-1",
+          title,
+          description,
+          lectureDate,
+          startTime,
+          endTime,
+          lectureUrl,
+          recordingUrl,
+          isDownloadable,
+        });
+      } catch (e) {
+        // Handled silently
+      }
     }
 
     setModalOpen(false);
@@ -176,7 +243,9 @@ export default function FacultyLectures() {
               </thead>
               <tbody className="divide-y divide-border">
                 {filteredLectures.map((lec) => {
-                  const course = store.getCourse(lec.course_id);
+                  const resolvedCourse =
+                    dynamicCourses.find((c) => String(c.id) === String(lec.course_id)) ||
+                    store.getCourse(lec.course_id);
 
                   return (
                     <tr key={lec.id} className="hover:bg-accent/40 transition-colors">
@@ -187,7 +256,9 @@ export default function FacultyLectures() {
                         </div>
                       </td>
                       <td className="px-5 py-4 text-muted-foreground font-medium">
-                        {course?.name || "Course"}
+                        <span className="font-semibold text-foreground">
+                          {resolvedCourse?.name || "Curriculum Track"}
+                        </span>
                       </td>
                       <td className="px-5 py-4 text-muted-foreground">
                         <div>{lec.lecture_date ? formatDate(lec.lecture_date) : "TBA"}</div>
@@ -276,13 +347,19 @@ export default function FacultyLectures() {
                   value={courseId}
                   onChange={(e) => setCourseId(e.target.value)}
                   required
-                  className="h-10 w-full rounded-xl border border-input bg-background px-3 text-xs text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="h-10 w-full rounded-xl border border-input bg-background px-3 text-xs text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
                 >
-                  {courses.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
+                  {dynamicCourses.length === 0 ? (
+                    <option value="" disabled>
+                      -- No courses created yet by Admin --
                     </option>
-                  ))}
+                  ) : (
+                    dynamicCourses.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name} {c.courseCode ? `(${c.courseCode})` : ""}
+                      </option>
+                    ))
+                  )}
                 </select>
               </div>
 

@@ -36,7 +36,7 @@ interface AuthContextType {
     fullName: string,
     role?: Role,
     extras?: { phone?: string; interestedCourse?: string; education?: string; city?: string }
-  ) => Promise<{ error: Error | null }>;
+  ) => Promise<{ error: Error | null; fieldErrors?: Record<string, string>; data?: any }>;
   signIn: (
     email: string,
     password: string
@@ -142,10 +142,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       (targetRole === "admin"
         ? "admin@gmail.com"
         : targetRole === "faculty"
-        ? "faculty@codex.com"
-        : targetRole === "executor"
-        ? "dsapkal141@gmail.com"
-        : "student@codextechnology.com");
+          ? "faculty@codex.com"
+          : targetRole === "executor"
+            ? "dsapkal141@gmail.com"
+            : "student@codextechnology.com");
 
     const matchedProfile: Profile = {
       id: customProfile?.id || `prof-${targetRole}-${Date.now()}`,
@@ -187,7 +187,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     fullName: string,
     role: Role = "student",
     extras?: { phone?: string; interestedCourse?: string; education?: string; city?: string }
-  ) => {
+  ): Promise<{ error: Error | null; fieldErrors?: Record<string, string>; data?: any }> => {
     try {
       const springRes = await api.registerStudent({
         fullName,
@@ -200,37 +200,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (springRes.success && springRes.data) {
-        return { error: null };
+        return { error: null, data: springRes.data };
       }
 
-      // If backend returns explicit message or error, handle fallback
       if (springRes.error) {
-        // Check if fallback registration can be performed
-        const createdProfile: Profile = {
-          id: `usr_${Date.now()}`,
-          full_name: fullName,
-          email: email,
-          phone: extras?.phone || null,
-          avatar_url: null,
-          role: "student",
-          status: "active",
-          last_login: new Date().toISOString(),
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
+        return {
+          error: new Error(springRes.error),
+          fieldErrors: (springRes.data && typeof springRes.data === "object" && !Array.isArray(springRes.data))
+            ? (springRes.data as Record<string, string>)
+            : undefined,
         };
-        localStorage.setItem("nexora_user_profile", JSON.stringify(createdProfile));
-        return { error: null };
       }
 
-      return { error: null };
+      return { error: new Error("Registration failed. Please check your details.") };
     } catch (err: any) {
-      return { error: null };
+      return { error: new Error(err.message || "Unable to connect to registration server.") };
     }
   };
 
   const signIn = async (email: string, password: string) => {
     const springRes = await api.login({ email, password });
-    
+
     const token = (springRes as any).token || springRes.data?.token;
     const userData = (springRes as any).user || springRes.data?.user;
 
@@ -251,7 +241,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
-      
+
       const springUser: SessionUser = {
         id: springProfile.id,
         email: springProfile.email,
@@ -359,25 +349,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-export function useAuth() {
+export function useAuth(): AuthContextType {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    return {
-      session: null,
-      user: null,
-      profile: null,
-      role: null,
-      loading: true,
-      isMockMode: false,
-      signUp: async () => ({ error: null }),
-      signIn: async () => ({ error: null }),
-      loginAsRole: async () => { },
-      signOut: async () => { },
-      resetPassword: async () => ({ error: null }),
-      updatePassword: async () => ({ error: null }),
-      updateProfile: async () => ({ error: null }),
-      refreshProfile: async () => { },
-    };
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 }

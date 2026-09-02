@@ -215,9 +215,9 @@ export default function ExecutorOnboarding() {
     if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       errors.email = "Please enter a valid email address.";
     }
-    const cleanPhone = phone.replace(/\D/g, "");
-    if (!cleanPhone || (cleanPhone.length !== 10 && cleanPhone.length !== 12)) {
-      errors.phone = "Phone number must be a valid 10-digit mobile number.";
+    const cleanPhone = phone.replace(/[\s\-\+]/g, "").replace(/^91(?=\d{10}$)/, "");
+    if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
+      errors.phone = "Mobile number must be a valid 10-digit number starting with 6, 7, 8, or 9.";
     }
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;

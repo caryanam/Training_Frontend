@@ -12,34 +12,50 @@ import {
   CheckCircle2,
   Receipt,
   ShieldCheck,
+  Loader2,
 } from "lucide-react";
 
 export default function StudentPayments() {
   const { profile } = useAuth();
   const store = useDataStore();
   const [downloadedTxn, setDownloadedTxn] = useState<string | null>(null);
+  const [payments, setPayments] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const student = profile ? store.getStudentsWithProfiles().find((s) => s.profile_id === profile.id || s.profile?.email === profile.email) : null;
-  const storePayments = student ? store.getPaymentsForStudent(student.id) : (profile ? store.getPaymentsForStudent(profile.id) : []);
+  useEffect(() => {
+    if (!profile) return;
+    setLoading(true);
 
-  // Check if student has payments in store or fallback verified payment for active student
-  const payments: any[] = [...storePayments];
-
-  // If student is logged in and payments array is empty but user is enrolled, add confirmed transaction record
-  if (payments.length === 0 && profile) {
-    payments.push({
-      id: `pay-${profile.id}`,
-      transaction_id: `DUMMY_TXN_20260831_${profile.id.replace(/\D/g, "") || "8976"}`,
-      student_id: profile.id,
-      course_id: "COURSE-1001",
-      plan_id: "1",
-      amount: 7000,
-      currency: "INR",
-      status: "success",
-      payment_method: "Dummy Payment Gateway",
-      created_at: new Date().toISOString(),
-    });
-  }
+    api.getStudentPayments()
+      .then((res) => {
+        if (res.success && res.data) {
+          const mapped = res.data.map((p: any) => ({
+            id: String(p.paymentId || p.transactionId),
+            transaction_id: p.transactionId,
+            student_id: p.studentId,
+            course_id: p.courseId,
+            course_name: p.courseName,
+            plan_id: p.planId ? String(p.planId) : undefined,
+            amount: p.amount,
+            currency: p.currency || "INR",
+            status: (p.status || "success").toLowerCase(),
+            payment_method: "Secured Online Payment",
+            created_at: p.startDate || new Date().toISOString(),
+          }));
+          setPayments(mapped);
+        } else {
+          const student = store.getStudentsWithProfiles().find((s) => s.profile_id === profile.id || s.profile?.email === profile.email);
+          const storePayments = student ? store.getPaymentsForStudent(student.id) : store.getPaymentsForStudent(profile.id);
+          setPayments(storePayments);
+        }
+      })
+      .catch(() => {
+        const student = store.getStudentsWithProfiles().find((s) => s.profile_id === profile.id || s.profile?.email === profile.email);
+        const storePayments = student ? store.getPaymentsForStudent(student.id) : store.getPaymentsForStudent(profile.id);
+        setPayments(storePayments);
+      })
+      .finally(() => setLoading(false));
+  }, [profile]);
 
   const handleDownloadReceipt = (txnId: string) => {
     setDownloadedTxn(txnId);
@@ -50,7 +66,7 @@ export default function StudentPayments() {
     <div className="space-y-6">
       <PageHeader
         title="Payment & Billing History"
-        subtitle="Review your course subscription transactions, payment methods, and invoices."
+        subtitle="Review your verified course subscription transactions and official payment receipts."
       />
 
       {downloadedTxn && (
@@ -60,10 +76,14 @@ export default function StudentPayments() {
         </div>
       )}
 
-      {payments.length === 0 ? (
+      {loading ? (
+        <div className="flex h-32 items-center justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        </div>
+      ) : payments.length === 0 ? (
         <EmptyState
           title="No payment records found"
-          description="You haven't completed any course payments yet."
+          description="You haven't completed any course payments yet. Once you enroll in a course, your verified invoices will appear here."
         />
       ) : (
         <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-xs">
@@ -92,23 +112,23 @@ export default function StudentPayments() {
                       </td>
                       <td className="px-5 py-4">
                         <div className="font-semibold text-foreground">
-                          {course?.name || "Full Stack Java & Spring Boot Masterclass"}
+                          {p.course_name || course?.name || "Curriculum Track"}
                         </div>
                         <div className="text-[11px] text-muted-foreground">
-                          {plan?.name || "1 Month Plan"}
+                          {plan?.name || "Enrolled Plan"}
                         </div>
                       </td>
                       <td className="px-5 py-4 font-bold text-foreground">
                         {formatCurrency(p.amount, p.currency)}
                       </td>
                       <td className="px-5 py-4 text-muted-foreground">
-                        {p.payment_method || "Dummy Payment Gateway"}
+                        {p.payment_method || "Online Payment Gateway"}
                       </td>
                       <td className="px-5 py-4 text-muted-foreground">
-                        {p.payment_date || p.created_at ? formatDateTime(p.payment_date || p.created_at!) : "Just now"}
+                        {p.payment_date || p.created_at ? formatDateTime(p.payment_date || p.created_at!) : "Recorded"}
                       </td>
                       <td className="px-5 py-4">
-                        <StatusBadge status={p.status} />
+                        <StatusBadge status={p.status || "success"} />
                       </td>
                       <td className="px-5 py-4 text-right">
                         <button

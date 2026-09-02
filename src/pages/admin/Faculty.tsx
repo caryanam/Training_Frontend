@@ -76,9 +76,16 @@ export default function AdminFaculty() {
       return;
     }
 
-    // BUG-006: Department min 2 chars
+    // Department min 2 chars
     if (department.trim().length < 2) {
       setError("Department must be at least 2 characters.");
+      return;
+    }
+
+    // Mobile Number validation (10 digits starting with 6, 7, 8, or 9)
+    const cleanPhone = phone.replace(/[\s\-\+]/g, "").replace(/^91(?=\d{10}$)/, "");
+    if (cleanPhone && !/^[6-9]\d{9}$/.test(cleanPhone)) {
+      setError("Mobile number must be a valid 10-digit number starting with 6, 7, 8, or 9.");
       return;
     }
 

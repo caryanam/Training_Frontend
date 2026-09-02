@@ -75,6 +75,13 @@ export default function AdminExecutors() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    const cleanPhone = phone.replace(/[\s\-\+]/g, "").replace(/^91(?=\d{10}$)/, "");
+    if (cleanPhone && !/^[6-9]\d{9}$/.test(cleanPhone)) {
+      setError("Mobile number must be a valid 10-digit number starting with 6, 7, 8, or 9.");
+      return;
+    }
+
     setSubmitLoading(true);
 
     try {
@@ -113,6 +120,13 @@ export default function AdminExecutors() {
     e.preventDefault();
     if (!editingExecutor) return;
     setError("");
+
+    const cleanPhone = phone.replace(/[\s\-\+]/g, "").replace(/^91(?=\d{10}$)/, "");
+    if (cleanPhone && !/^[6-9]\d{9}$/.test(cleanPhone)) {
+      setError("Mobile number must be a valid 10-digit number starting with 6, 7, 8, or 9.");
+      return;
+    }
+
     setSubmitLoading(true);
 
     try {
