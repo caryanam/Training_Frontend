@@ -2,6 +2,7 @@ import { api } from "@/lib/api";
 import { initScreenShareMonitor } from "./screenShareMonitor";
 import { initVisibilityMonitor } from "./visibilityMonitor";
 import { initFullscreenMonitor } from "./fullscreenMonitor";
+import { initKeyboardProtection } from "./keyboardProtection";
 import type { SecurityEventType, SecurityPolicyStatus } from "./types";
 
 export interface SecurityMonitoringOptions {
@@ -18,8 +19,6 @@ export class LectureSecurityManager {
   private onSecurityAlert?: (eventType: SecurityEventType, message: string) => void;
   private cleanups: Array<() => void> = [];
   private isDestroyed = false;
-  private isReporting = false;
-  private eventQueue: Array<{ eventType: SecurityEventType; metadata?: string }> = [];
 
   constructor(options: SecurityMonitoringOptions) {
     this.lectureId = options.lectureId;
@@ -38,30 +37,46 @@ export class LectureSecurityManager {
       this.reportEvent(eventType, metadata);
     };
 
-    // 1. Hook Screen Sharing Monitor (getDisplayMedia)
+    // 1. Hook Prohibited Keyboard Shortcuts (Ctrl+Alt+R, PrintScreen, Win+Shift+S, Ctrl+P)
+    const cleanupKeyboard = initKeyboardProtection(handleEvent);
+    this.cleanups.push(cleanupKeyboard);
+
+    // 2. Hook Screen Sharing Monitor (getDisplayMedia)
     const cleanupScreenShare = initScreenShareMonitor(handleEvent);
     this.cleanups.push(cleanupScreenShare);
 
-    // 2. Hook Visibility & Window Focus Monitor
+    // 3. Hook Visibility & Window Focus Monitor
     const cleanupVisibility = initVisibilityMonitor(handleEvent);
     this.cleanups.push(cleanupVisibility);
 
-    // 3. Hook Fullscreen Monitor
+    // 4. Hook Fullscreen Monitor
     const cleanupFullscreen = initFullscreenMonitor(handleEvent);
     this.cleanups.push(cleanupFullscreen);
 
-    // 4. Initial Policy Status Check
+    // 5. Initial Policy Status Check
     this.checkCurrentPolicy();
   }
 
+  private lastReportTimes: Record<string, number> = {};
+
   /**
-   * Reports a security event to the backend API
+   * Reports a security event to the backend API and invokes local UI alert callbacks
    */
   public async reportEvent(eventType: SecurityEventType, metadata?: string): Promise<void> {
     if (this.isDestroyed) return;
 
-    // High severity events trigger immediate local alert callback
-    if (eventType === "SCREEN_SHARE_STARTED") {
+    // Trigger immediate local alert popup on Student UI (0ms synchronous delay)
+    if (eventType === "SCREEN_RECORDING_ATTEMPT") {
+      this.onSecurityAlert?.(
+        eventType,
+        "Screen recording is not allowed during this lecture. Your recording attempt has been blocked, video content blacked out, and your instructor notified."
+      );
+    } else if (eventType === "SCREENSHOT_ATTEMPT") {
+      this.onSecurityAlert?.(
+        eventType,
+        "Screenshots are not allowed during this lecture. Your screenshot attempt has been blocked and your instructor notified."
+      );
+    } else if (eventType === "SCREEN_SHARE_STARTED") {
       this.onSecurityAlert?.(
         eventType,
         "Screen sharing is not permitted during live lectures. This violation has been recorded."
@@ -72,6 +87,13 @@ export class LectureSecurityManager {
         "Multiple active sessions detected. Only one active session is permitted."
       );
     }
+
+    const now = Date.now();
+    const lastTime = this.lastReportTimes[eventType] || 0;
+    if (now - lastTime < 2000) {
+      return; // Debounce backend HTTP requests only
+    }
+    this.lastReportTimes[eventType] = now;
 
     try {
       const res = await api.reportLectureSecurityEvent(this.lectureId, {
@@ -115,6 +137,5 @@ export class LectureSecurityManager {
       } catch (_) {}
     });
     this.cleanups = [];
-    this.eventQueue = [];
   }
 }

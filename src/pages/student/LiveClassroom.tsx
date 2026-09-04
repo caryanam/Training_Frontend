@@ -229,9 +229,36 @@ function StudentClassroomView({
   useEffect(() => {
     let animFrameId: number;
 
+    const applyDirectBlackout = () => {
+      if (videoCanvasRef.current) {
+        videoCanvasRef.current.style.filter = "brightness(0) blur(40px)";
+        videoCanvasRef.current.style.backgroundColor = "#000";
+        const videos = videoCanvasRef.current.querySelectorAll("video");
+        videos.forEach((v) => {
+          v.style.filter = "brightness(0) blur(50px)";
+          v.style.opacity = "0";
+          v.style.visibility = "hidden";
+        });
+      }
+    };
+
+    const removeDirectBlackout = () => {
+      if (videoCanvasRef.current) {
+        videoCanvasRef.current.style.filter = "";
+        videoCanvasRef.current.style.backgroundColor = "";
+        const videos = videoCanvasRef.current.querySelectorAll("video");
+        videos.forEach((v) => {
+          v.style.filter = "";
+          v.style.opacity = "";
+          v.style.visibility = "";
+        });
+      }
+    };
+
     const triggerPermanentLockout = (reason: string) => {
       setIsLockedOut(true);
       setSecurityWarning(reason);
+      applyDirectBlackout();
       try {
         if (videoCanvasRef.current) {
           videoCanvasRef.current.style.display = "none";
@@ -240,118 +267,125 @@ function StudentClassroomView({
       } catch (_) {}
     };
 
-    const applyHardwareBlanking = (shouldBlank: boolean) => {
-      if (videoCanvasRef.current) {
-        if (shouldBlank) {
-          videoCanvasRef.current.style.filter = "brightness(0) blur(50px)";
-          videoCanvasRef.current.style.opacity = "0";
-        } else if (!isLockedOut) {
-          videoCanvasRef.current.style.filter = "none";
-          videoCanvasRef.current.style.opacity = "1";
+    // 1. Visibility and Focus Sentinel (Instant Blackout on focus loss / overlay)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        applyDirectBlackout();
+        setIsWindowBlurred(true);
+      } else {
+        if (!activeWarning) {
+          removeDirectBlackout();
+          setIsWindowBlurred(false);
         }
       }
     };
 
-    // 1. Continuous 60/120Hz Real-Time Focus Sentinel
-    const monitorFocusLoop = () => {
-      const isFocused = document.hasFocus();
-      const isHidden = document.visibilityState === "hidden";
-      const devToolsOpen =
-        window.outerWidth - window.innerWidth > 160 || window.outerHeight - window.innerHeight > 160;
+    const handleWindowBlur = () => {
+      applyDirectBlackout();
+      setIsWindowBlurred(true);
+    };
 
-      if (!isFocused || isHidden) {
-        applyHardwareBlanking(true);
-        setIsWindowBlurred(true);
-      } else if (devToolsOpen) {
-        triggerPermanentLockout("Developer Tools & Frame Inspection detected. Live stream was revoked.");
-      } else if (!isLockedOut) {
-        applyHardwareBlanking(false);
+    const handleWindowFocus = () => {
+      if (!activeWarning) {
+        removeDirectBlackout();
         setIsWindowBlurred(false);
-      }
-
-      if (!isLockedOut) {
-        animFrameId = requestAnimationFrame(monitorFocusLoop);
       }
     };
 
-    animFrameId = requestAnimationFrame(monitorFocusLoop);
-
     // 2. Strict Screen Capture / PrintScreen / Recording Hotkeys Interceptor
     const handleKeyDown = (e: KeyboardEvent) => {
-      // PrintScreen / Screenshot / Snipping Tool
-      if (
-        e.key === "PrintScreen" ||
-        e.code === "PrintScreen" ||
-        e.key === "Snapshot" ||
-        (e.shiftKey && (e.metaKey || e.key === "Meta" || e.code === "OSLeft" || e.code === "OSRight"))
-      ) {
-        e.preventDefault();
-        e.stopPropagation();
-        triggerPermanentLockout(
-          "Screen Capture / PrintScreen attempt detected. Your live stream was immediately terminated to protect copyrighted course material."
+      const isCtrl = e.ctrlKey;
+      const isAlt = e.altKey;
+      const isShift = e.shiftKey;
+      const key = e.key ? e.key.toLowerCase() : "";
+      const code = e.code ? e.code.toLowerCase() : "";
+      const isWinKey = e.metaKey || code === "osleft" || code === "osright" || key === "meta";
+
+      // Recording Hotkeys: Win+Alt+R, Ctrl+Alt+R, Alt+R, Win+G, Alt+F9, Ctrl+Shift+R
+      const isRecordingHotkey =
+        (isWinKey && isAlt && (key === "r" || code === "keyr")) ||
+        (isCtrl && isAlt && (key === "r" || code === "keyr")) ||
+        (isAlt && (key === "r" || code === "keyr")) ||
+        (isWinKey && (key === "g" || code === "keyg")) ||
+        (isWinKey && isAlt && (key === "g" || code === "keyg")) ||
+        (isAlt && (code === "f9" || key === "f9")) ||
+        (isCtrl && isShift && (key === "r" || code === "keyr"));
+
+      if (isRecordingHotkey) {
+        try {
+          e.preventDefault();
+          e.stopPropagation();
+        } catch (_) {}
+        applyDirectBlackout();
+        setIsWindowBlurred(true);
+        setActiveWarning(
+          "Screen recording is not allowed during this lecture. Your recording attempt has been blocked, video content blacked out, and your instructor notified."
         );
+        api.reportLectureSecurityEvent(lectureId, {
+          lectureId,
+          sessionId: joinData.sessionId,
+          eventType: "SCREEN_RECORDING_ATTEMPT",
+          metadata: `key:${e.key || key};code:${e.code || code};alt:${e.altKey};meta:${e.metaKey}`,
+          timestamp: new Date().toISOString(),
+        }).catch(() => {});
+        return;
       }
 
-      // Windows Game Bar / OBS Capture Hotkeys (Win+G, Win+Alt+R, Ctrl+Alt+S)
-      if (
-        (e.metaKey && (e.key === "g" || e.key === "G" || e.key === "r" || e.key === "R")) ||
-        (e.ctrlKey && e.altKey && (e.key === "s" || e.key === "S" || e.key === "r" || e.key === "R"))
-      ) {
-        e.preventDefault();
-        e.stopPropagation();
-        triggerPermanentLockout(
-          "Screen Recording Software Hotkey detected. Live stream session terminated."
+      // Screenshot Hotkeys: PrintScreen, Win+Shift+S, Ctrl+Shift+S, Ctrl+P, Ctrl+S
+      const isScreenshotHotkey =
+        key === "printscreen" ||
+        code === "printscreen" ||
+        key === "snapshot" ||
+        (isShift && (isWinKey || isCtrl) && (key === "s" || code === "keys")) ||
+        (isCtrl && (key === "p" || code === "keyp")) ||
+        (isCtrl && (key === "s" || code === "keys"));
+
+      if (isScreenshotHotkey) {
+        try {
+          e.preventDefault();
+          e.stopPropagation();
+        } catch (_) {}
+        applyDirectBlackout();
+        setIsWindowBlurred(true);
+        setActiveWarning(
+          "Screenshots are not allowed during this lecture. Your attempt has been blocked and your instructor notified."
         );
+        api.reportLectureSecurityEvent(lectureId, {
+          lectureId,
+          sessionId: joinData.sessionId,
+          eventType: "SCREENSHOT_ATTEMPT",
+          metadata: `key:${e.key || key};code:${e.code || code}`,
+          timestamp: new Date().toISOString(),
+        }).catch(() => {});
+        return;
       }
 
       // DevTools: F12 or Ctrl+Shift+I / J / C
       if (
-        e.key === "F12" ||
-        ((e.ctrlKey || e.metaKey) &&
-          e.shiftKey &&
-          (e.key === "I" || e.key === "i" || e.key === "J" || e.key === "j" || e.key === "C" || e.key === "c"))
+        key === "f12" ||
+        code === "f12" ||
+        ((isCtrl || isWinKey) &&
+          isShift &&
+          (key === "i" || key === "j" || key === "c"))
       ) {
-        e.preventDefault();
-        e.stopPropagation();
+        try {
+          e.preventDefault();
+          e.stopPropagation();
+        } catch (_) {}
         triggerPermanentLockout(
           "Developer Tools & Video Stream Inspection attempt detected. Live stream access revoked."
         );
       }
-
-      // Save/Print: Ctrl+S, Ctrl+P, Ctrl+U
-      if (
-        (e.ctrlKey || e.metaKey) &&
-        (e.key === "s" || e.key === "S" || e.key === "p" || e.key === "P" || e.key === "u" || e.key === "U")
-      ) {
-        e.preventDefault();
-        e.stopPropagation();
-        triggerPermanentLockout(
-          "Page Capture & Print shortcut attempt detected. Live session terminated."
-        );
-      }
     };
 
-    // 3. Continuous Clipboard Neutralizer (Clears clipboard every 300ms)
+    // 3. Continuous Clipboard Neutralizer
     const clipInterval = setInterval(() => {
       try {
         navigator.clipboard?.writeText("⚠️ SCREEN RECORDING & CAPTURE IS PROHIBITED BY COPYRIGHT DRM").catch(() => {});
       } catch (_) {}
     }, 400);
 
-    // 4. Window Blur / Exit Interceptors
-    const handleImmediateBlur = () => {
-      applyHardwareBlanking(true);
-      setIsWindowBlurred(true);
-    };
-
-    const handleImmediateFocus = () => {
-      if (!isLockedOut) {
-        applyHardwareBlanking(false);
-        setIsWindowBlurred(false);
-      }
-    };
-
-    // 5. Browser Display Media Interceptor (Block browser extension recording)
+    // 4. Browser Display Media Interceptor (Block browser extension recording)
     if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
       try {
         navigator.mediaDevices.getDisplayMedia = async () => {
@@ -364,21 +398,20 @@ function StudentClassroomView({
     }
 
     window.addEventListener("keydown", handleKeyDown, { capture: true });
-    document.addEventListener("visibilitychange", handleImmediateBlur);
-    window.addEventListener("blur", handleImmediateBlur);
-    window.addEventListener("focus", handleImmediateFocus);
-    window.addEventListener("pagehide", handleImmediateBlur);
+    window.addEventListener("blur", handleWindowBlur);
+    window.addEventListener("focus", handleWindowFocus);
+    window.addEventListener("mouseleave", handleWindowBlur);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      cancelAnimationFrame(animFrameId);
       clearInterval(clipInterval);
       window.removeEventListener("keydown", handleKeyDown, { capture: true } as any);
-      document.removeEventListener("visibilitychange", handleImmediateBlur);
-      window.removeEventListener("blur", handleImmediateBlur);
-      window.removeEventListener("focus", handleImmediateFocus);
-      window.removeEventListener("pagehide", handleImmediateBlur);
+      window.removeEventListener("blur", handleWindowBlur);
+      window.removeEventListener("focus", handleWindowFocus);
+      window.removeEventListener("mouseleave", handleWindowBlur);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [room, isLockedOut]);
+  }, [room, isLockedOut, lectureId, joinData.sessionId]);
 
   // Track faculty audio & screen streams
   const tracks = useTracks(
@@ -386,17 +419,22 @@ function StudentClassroomView({
       { source: Track.Source.ScreenShare, withPlaceholder: false },
       { source: Track.Source.Camera, withPlaceholder: false },
       { source: Track.Source.Microphone, withPlaceholder: false },
+      { source: Track.Source.Unknown, withPlaceholder: false },
     ],
     { onlySubscribed: false }
   );
 
   const validTracks = tracks.filter(isTrackReference);
-  const remoteVideoTracks = validTracks.filter(
-    (t) => (t.source === Track.Source.ScreenShare || t.source === Track.Source.Camera) && !t.participant.isLocal
+  const remoteScreenTrack = validTracks.find(
+    (t) => (t.source === Track.Source.ScreenShare || t.publication?.source === Track.Source.ScreenShare) && !t.participant.isLocal
   );
-  const remoteScreenTrack = validTracks.find((t) => t.source === Track.Source.ScreenShare && !t.participant.isLocal);
-  const remoteCameraTrack = validTracks.find((t) => t.source === Track.Source.Camera && !t.participant.isLocal);
-  const activeMainTrack = remoteScreenTrack || remoteCameraTrack || remoteVideoTracks[0];
+  const remoteCameraTrack = validTracks.find(
+    (t) => (t.source === Track.Source.Camera || t.publication?.source === Track.Source.Camera) && !t.participant.isLocal
+  );
+  const remoteVideoTracks = validTracks.filter(
+    (t) => !t.participant.isLocal && (t.publication?.kind === "video" || t.source === Track.Source.ScreenShare || t.source === Track.Source.Camera)
+  );
+  const activeMainTrack = remoteScreenTrack || remoteVideoTracks[0] || remoteCameraTrack;
 
   const participantCount = room?.numParticipants || joinData.participantCount || 1;
 
@@ -529,20 +567,37 @@ function StudentClassroomView({
         </div>
       </div>
 
-      {/* Main Screen Stream Canvas */}
+      {/* Main Screen Stream Canvas with DRM Viewport Mask */}
       <div
         ref={videoCanvasRef}
         onContextMenu={(e) => e.preventDefault()}
-        className="relative aspect-video w-full rounded-3xl border border-border bg-slate-950 overflow-hidden shadow-2xl flex items-center justify-center select-none transition-[filter,opacity] duration-75"
+        className="relative aspect-video w-full rounded-3xl border border-border bg-slate-950 overflow-hidden shadow-2xl flex items-center justify-center select-none"
       >
-        {activeMainTrack ? (
-          <ForensicDrmCanvas
-            track={activeMainTrack}
-            studentName={joinData.studentName}
-            studentIdentifier={joinData.studentIdentifier}
-            isWindowBlurred={isWindowBlurred}
-            isLockedOut={isLockedOut}
-          />
+        {/* Pitch-Black Content Shield on Focus Loss / Screen Recording Overlay */}
+        {(isWindowBlurred || Boolean(activeWarning)) ? (
+          <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black p-6 space-y-3 text-center animate-in fade-in duration-100">
+            <div className="h-16 w-16 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-500 flex items-center justify-center">
+              <ShieldAlert className="h-9 w-9 animate-pulse" />
+            </div>
+            <div className="space-y-1 max-w-md">
+              <h4 className="text-base sm:text-lg font-black text-rose-500 tracking-wide uppercase">
+                ⚠️ Screen Recording & Capture Prohibited
+              </h4>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Lecture video is blacked out by DRM protection to prevent unauthorized screen recording or background capture. Return focus to this lecture window to resume playback.
+              </p>
+            </div>
+            <div className="rounded-xl bg-slate-900 border border-white/10 px-4 py-2 font-mono text-[11px] text-slate-400">
+              Student ID: <span className="text-white font-bold">{joinData.studentIdentifier}</span> • Copyright Protected
+            </div>
+          </div>
+        ) : activeMainTrack ? (
+          <div className="relative h-full w-full flex items-center justify-center">
+            <VideoTrack
+              trackRef={activeMainTrack}
+              className="h-full w-full object-contain"
+            />
+          </div>
         ) : (
           <div className="text-center p-8 space-y-3 max-w-md">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-400 ring-4 ring-emerald-500/10 animate-pulse">
@@ -558,7 +613,7 @@ function StudentClassroomView({
         )}
 
         {/* Small Inset Camera Preview if faculty has camera enabled alongside screen share */}
-        {remoteScreenTrack && remoteCameraTrack && (
+        {!isWindowBlurred && !activeWarning && remoteScreenTrack && remoteCameraTrack && (
           <div className="absolute top-4 right-4 h-32 w-48 rounded-2xl border-2 border-emerald-500/40 overflow-hidden shadow-2xl bg-black">
             <VideoTrack trackRef={remoteCameraTrack} className="h-full w-full object-cover" />
             <span className="absolute bottom-1 left-2 text-[10px] font-bold text-white bg-black/60 px-1.5 py-0.5 rounded">
@@ -567,44 +622,35 @@ function StudentClassroomView({
           </div>
         )}
 
-        {/* Anti-Screen Recording / Window Blur Blackout Shield */}
-        {isWindowBlurred && (
-          <div className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-slate-950/95 backdrop-blur-xl p-6 text-center space-y-3 select-none">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-400 border border-rose-500/20">
-              <EyeOff className="h-7 w-7" />
-            </div>
-            <div className="space-y-1">
-              <h4 className="text-base font-bold text-white">Stream Shield Active (Anti-Capture DRM)</h4>
-              <p className="text-xs text-slate-400 max-w-sm">
-                Live video is protected by Intellectual Property DRM. Screen recording, background capture, and multi-window sharing are blocked. Click back into this tab to resume playback.
-              </p>
-            </div>
-          </div>
-        )}
-
         {/* Bottom Status Bar */}
         <div className="absolute bottom-4 left-4 z-20 flex items-center gap-2 rounded-full bg-black/70 backdrop-blur-md px-3.5 py-1.5 text-xs font-bold text-white border border-white/10">
-          <span className={`h-2 w-2 rounded-full ${activeMainTrack ? "bg-emerald-400 animate-pulse" : "bg-amber-400"}`} />
-          <span>Stream: {activeMainTrack ? "Live Broadcast Active" : "Waiting for Screen Share"}</span>
+          <span className={`h-2 w-2 rounded-full ${!isWindowBlurred && !activeWarning && activeMainTrack ? "bg-emerald-400 animate-pulse" : "bg-rose-500"}`} />
+          <span>Stream: {isWindowBlurred || activeWarning ? "Content Masked (DRM)" : activeMainTrack ? "Live Broadcast Active" : "Waiting for Screen Share"}</span>
           <span className="text-white/30">•</span>
-          <span className="text-white/80 font-mono text-[11px]">DRM: Protected</span>
+          <span className="text-white/80 font-mono text-[11px]">DRM: Active</span>
         </div>
       </div>
 
       {/* Screen Sharing / Browser Security Compliance Warning Modal */}
       {activeWarning && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-100">
           <div className="max-w-md w-full rounded-3xl border border-amber-500/40 bg-card p-6 shadow-2xl space-y-4 text-center">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
-              <AlertTriangle className="h-8 w-8" />
+              <AlertTriangle className="h-8 w-8 animate-pulse" />
             </div>
             <div className="space-y-1.5">
-              <h3 className="text-lg font-bold text-foreground">Security Compliance Warning</h3>
-              <p className="text-xs text-muted-foreground leading-relaxed">
+              <h3 className="text-lg font-bold text-foreground">
+                {activeWarning.toLowerCase().includes("recording")
+                  ? "⚠️ Screen Recording Detected"
+                  : activeWarning.toLowerCase().includes("screenshot")
+                  ? "⚠️ Screenshot Attempt Detected"
+                  : "Security Compliance Warning"}
+              </h3>
+              <p className="text-xs text-muted-foreground leading-relaxed font-medium">
                 {activeWarning}
               </p>
             </div>
-            <div className="rounded-2xl bg-muted/50 border border-border p-3 text-left space-y-1 font-mono text-[11px] text-muted-foreground">
+            <div className="rounded-2xl bg-muted/50 border border-border p-3.5 text-left space-y-1 font-mono text-[11px] text-muted-foreground">
               <div className="flex justify-between">
                 <span>Student:</span>
                 <span className="font-bold text-foreground">{joinData.studentName}</span>
@@ -621,171 +667,33 @@ function StudentClassroomView({
               </div>
             </div>
             <p className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
-              ⚠️ Screen sharing and unauthorized capture are strictly prohibited. The faculty instructor has been notified in real time.
+              ⚠️ Screen recording and screenshots are strictly prohibited. The faculty instructor has been notified in real time.
             </p>
             <button
               type="button"
-              onClick={() => setActiveWarning(null)}
+              onClick={() => {
+                setActiveWarning(null);
+                if (document.hasFocus()) {
+                  setIsWindowBlurred(false);
+                  if (videoCanvasRef.current) {
+                    videoCanvasRef.current.style.filter = "";
+                    videoCanvasRef.current.style.backgroundColor = "";
+                    const videos = videoCanvasRef.current.querySelectorAll("video");
+                    videos.forEach((v) => {
+                      v.style.filter = "";
+                      v.style.opacity = "";
+                      v.style.visibility = "";
+                    });
+                  }
+                }
+              }}
               className="w-full rounded-xl bg-primary py-2.5 text-xs font-bold text-primary-foreground hover:bg-primary/90 transition-all cursor-pointer shadow-sm"
             >
-              I Acknowledge & Comply
+              I Understand & Comply
             </button>
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-// In-Canvas Pixel-Level Forensic DRM Renderer Component
-function ForensicDrmCanvas({
-  track,
-  studentName,
-  studentIdentifier,
-  isWindowBlurred,
-  isLockedOut,
-}: {
-  track: any;
-  studentName: string;
-  studentIdentifier: string;
-  isWindowBlurred: boolean;
-  isLockedOut: boolean;
-}) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [idleTime, setIdleTime] = useState(0);
-
-  // Attach MediaStream to hidden video
-  useEffect(() => {
-    const video = videoRef.current;
-    const mediaTrack = track?.publication?.track?.mediaStreamTrack;
-    if (!video || !mediaTrack) return;
-
-    const stream = new MediaStream([mediaTrack]);
-    video.srcObject = stream;
-    video.play().catch(() => {});
-
-    return () => {
-      video.srcObject = null;
-    };
-  }, [track]);
-
-  // Track user activity to prevent passive background screen recording
-  useEffect(() => {
-    const resetIdle = () => setIdleTime(0);
-    window.addEventListener("mousemove", resetIdle);
-    window.addEventListener("keydown", resetIdle);
-    window.addEventListener("click", resetIdle);
-
-    const idleTimer = setInterval(() => {
-      setIdleTime((prev) => prev + 1);
-    }, 1000);
-
-    return () => {
-      window.removeEventListener("mousemove", resetIdle);
-      window.removeEventListener("keydown", resetIdle);
-      window.removeEventListener("click", resetIdle);
-      clearInterval(idleTimer);
-    };
-  }, []);
-
-  // 60FPS In-Canvas Forensic Rendering Loop
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const video = videoRef.current;
-    if (!canvas || !video) return;
-
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    let animId: number;
-
-    const render = () => {
-      if (isLockedOut || isWindowBlurred || !document.hasFocus() || document.hidden || idleTime > 30) {
-        // Draw Anti-Capture Blackout Frame
-        ctx.fillStyle = "#020617";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        ctx.fillStyle = "#ef4444";
-        ctx.font = "bold 22px monospace";
-        ctx.textAlign = "center";
-        ctx.fillText("⚠️ PROTECTED STREAM - SCREEN RECORDING BLOCKED", canvas.width / 2, canvas.height / 2 - 20);
-
-        ctx.fillStyle = "#94a3b8";
-        ctx.font = "13px sans-serif";
-        ctx.fillText(
-          idleTime > 30
-            ? "Live playback paused due to inactivity (Anti-Recorder Active). Move mouse to resume."
-            : "Live video is protected by institutional DRM. Click this window to resume playback.",
-          canvas.width / 2,
-          canvas.height / 2 + 20
-        );
-
-        ctx.fillStyle = "#ef4444";
-        ctx.font = "bold 12px monospace";
-        ctx.fillText(`${studentName} • ${studentIdentifier} • SEC-AUDIT-ACTIVE`, canvas.width / 2, canvas.height / 2 + 50);
-
-        animId = requestAnimationFrame(render);
-        return;
-      }
-
-      if (video.readyState >= 2) {
-        if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
-          canvas.width = video.videoWidth || 1280;
-          canvas.height = video.videoHeight || 720;
-        }
-
-        // 1. Draw raw video frame
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-        // 2. Burn In-Canvas High-Density Forensic Watermark Grid (Permanent across MP4 pixels)
-        const now = new Date();
-        const timeStr = now.toTimeString().split(" ")[0];
-        const watermarkText = `${studentName}  |  ${studentIdentifier}  |  ${timeStr}`;
-
-        ctx.save();
-        ctx.font = "900 16px monospace";
-        ctx.fillStyle = "rgba(255, 255, 255, 0.45)";
-        ctx.shadowColor = "rgba(0, 0, 0, 0.85)";
-        ctx.shadowBlur = 6;
-
-        // Top Left & Top Right
-        ctx.textAlign = "left";
-        ctx.fillText(watermarkText, 30, 40);
-        ctx.textAlign = "right";
-        ctx.fillText(watermarkText, canvas.width - 30, 40);
-
-        // Bottom Left & Bottom Right
-        ctx.textAlign = "left";
-        ctx.fillText(watermarkText, 30, canvas.height - 30);
-        ctx.textAlign = "right";
-        ctx.fillText(watermarkText, canvas.width - 30, canvas.height - 30);
-
-        // Center Dynamic Drifting Stamp
-        const shiftX = (Math.sin(now.getTime() / 2000) * 0.25 + 0.5) * canvas.width;
-        const shiftY = (Math.cos(now.getTime() / 2500) * 0.25 + 0.5) * canvas.height;
-
-        ctx.fillStyle = "rgba(239, 68, 68, 0.6)";
-        ctx.textAlign = "center";
-        ctx.fillText(`🔒 SEC-DRM • ${studentName} • ${studentIdentifier} • ${timeStr}`, shiftX, shiftY);
-
-        ctx.restore();
-      }
-
-      animId = requestAnimationFrame(render);
-    };
-
-    animId = requestAnimationFrame(render);
-    return () => cancelAnimationFrame(animId);
-  }, [isLockedOut, isWindowBlurred, idleTime, studentName, studentIdentifier]);
-
-  return (
-    <div className="relative h-full w-full flex items-center justify-center">
-      <video ref={videoRef} className="hidden" muted playsInline autoPlay />
-      <canvas
-        ref={canvasRef}
-        className="h-full w-full object-contain pointer-events-none select-none"
-      />
     </div>
   );
 }

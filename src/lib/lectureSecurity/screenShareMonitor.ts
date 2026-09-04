@@ -7,8 +7,9 @@ let activeScreenStreams: MediaStream[] = [];
 
 /**
  * Wraps navigator.mediaDevices.getDisplayMedia to monitor student screen sharing.
- * Immediately reports SCREEN_SHARE_STARTED upon stream initiation.
- * Monitors track onended to report SCREEN_SHARE_STOPPED upon cessation.
+ * - Reports SCREEN_SHARE_STARTED upon stream initiation.
+ * - Monitors track onended to report SCREEN_SHARE_STOPPED upon normal user cessation.
+ * - Monitors track onmute to report SCREEN_SHARE_INTERRUPTED upon capture disruption.
  */
 export function initScreenShareMonitor(onEvent: EventCallback): () => void {
   if (typeof navigator === "undefined" || !navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
@@ -40,10 +41,13 @@ export function initScreenShareMonitor(onEvent: EventCallback): () => void {
       // 1. Trigger SCREEN_SHARE_STARTED immediately
       onEvent("SCREEN_SHARE_STARTED", `displaySurface:${displaySurface};tracks:${videoTracks.length}`);
 
-      // 2. Attach onended listener to all video tracks to detect termination
+      // 2. Attach lifecycle listeners to all video tracks
       videoTracks.forEach((track) => {
         const handleEnded = () => {
           track.removeEventListener("ended", handleEnded);
+          track.removeEventListener("mute", handleMute);
+          track.removeEventListener("unmute", handleUnmute);
+
           // Check if any other video tracks are still active
           const hasRemainingActive = stream.getVideoTracks().some((t) => t.readyState === "live");
           if (!hasRemainingActive) {
@@ -51,7 +55,18 @@ export function initScreenShareMonitor(onEvent: EventCallback): () => void {
             activeScreenStreams = activeScreenStreams.filter((s) => s !== stream);
           }
         };
+
+        const handleMute = () => {
+          onEvent("SCREEN_SHARE_INTERRUPTED", `track_muted:displaySurface:${displaySurface}`);
+        };
+
+        const handleUnmute = () => {
+          // Track unmuted/resumed
+        };
+
         track.addEventListener("ended", handleEnded);
+        track.addEventListener("mute", handleMute);
+        track.addEventListener("unmute", handleUnmute);
       });
 
       return stream;

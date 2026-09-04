@@ -350,11 +350,16 @@ function FacultyStudio({
                   ⚠️ Security Alert
                 </span>
                 <span className="text-xs font-bold text-foreground">
-                  Student: {activeAlert.studentName} ({activeAlert.studentIdentifier})
+                  {activeAlert.eventType === "SCREEN_RECORDING_ATTEMPT"
+                    ? `Student ${activeAlert.studentName || activeAlert.studentIdentifier} attempted to record the screen during the lecture.`
+                    : activeAlert.eventType === "SCREENSHOT_ATTEMPT"
+                    ? `Student ${activeAlert.studentName || activeAlert.studentIdentifier} attempted to take a screenshot.`
+                    : `Security violation detected for ${activeAlert.studentName || activeAlert.studentIdentifier}: ${activeAlert.eventType}`}
                 </span>
               </div>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Event: <strong className="text-rose-500 dark:text-rose-400">{activeAlert.eventType}</strong> • Time: {activeAlert.timestamp} • Status:{" "}
+                Event: <strong className="text-rose-500 dark:text-rose-400">{activeAlert.eventType}</strong> • Time: {activeAlert.timestamp}
+                {activeAlert.metadata && <span> • Details: {activeAlert.metadata}</span>} • Status:{" "}
                 <span className="font-bold text-foreground">
                   {activeAlert.sessionTerminated ? "Session Terminated" : `${activeAlert.violationCount}/3 Violations`}
                 </span>
@@ -556,10 +561,20 @@ function FacultyStudio({
                         <div className="font-bold text-foreground">{evt.studentName}</div>
                         <div className="text-[11px] font-mono text-muted-foreground">{evt.studentIdentifier}</div>
                       </td>
-                      <td className="p-3 font-mono font-bold">
-                        <span className="text-foreground">{evt.eventType}</span>
+                      <td className="p-3">
+                        <div className="font-semibold text-foreground">
+                          {evt.eventType === "SCREEN_RECORDING_ATTEMPT" ? (
+                            <span className="text-rose-600 dark:text-rose-400 font-bold">⚠️ Recording Attempt</span>
+                          ) : evt.eventType === "SCREENSHOT_ATTEMPT" ? (
+                            <span className="text-rose-600 dark:text-rose-400 font-bold">📸 Screenshot Attempt</span>
+                          ) : evt.eventType === "SCREEN_SHARE_INTERRUPTED" ? (
+                            <span className="text-amber-600 dark:text-amber-400 font-bold">Screen Share Interrupted</span>
+                          ) : (
+                            <span>{evt.eventType}</span>
+                          )}
+                        </div>
                         {evt.metadata && (
-                          <div className="text-[10px] text-muted-foreground font-sans truncate max-w-[180px]">
+                          <div className="text-[11px] text-muted-foreground font-mono truncate max-w-[220px]" title={evt.metadata}>
                             {evt.metadata}
                           </div>
                         )}
