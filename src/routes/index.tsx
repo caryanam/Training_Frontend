@@ -18,6 +18,7 @@ import StudentMyCourses from "@/pages/student/MyCourses";
 import StudentCourseDetail from "@/pages/student/CourseDetail";
 import StudentLectures from "@/pages/student/Lectures";
 import StudentLectureAccess from "@/pages/student/LectureAccess";
+import StudentLiveClassroom from "@/pages/student/LiveClassroom";
 import StudentDownloads from "@/pages/student/Downloads";
 import StudentPayments from "@/pages/student/Payments";
 import StudentNotifications from "@/pages/student/Notifications";
@@ -27,6 +28,7 @@ import StudentProfile from "@/pages/student/Profile";
 import FacultyDashboard from "@/pages/faculty/Dashboard";
 import FacultyCourses from "@/pages/faculty/MyCourses";
 import FacultyLectures from "@/pages/faculty/Lectures";
+import FacultyLiveClassroom from "@/pages/faculty/LiveClassroom";
 import FacultyStudents from "@/pages/faculty/Students";
 import FacultySchedule from "@/pages/faculty/Schedule";
 import FacultyLectureLinks from "@/pages/faculty/LectureLinks";
@@ -90,6 +92,7 @@ export const router = createBrowserRouter([
               { path: "/student/course/:courseId", element: <StudentCourseDetail /> },
               { path: "/student/lectures", element: <StudentLectures /> },
               { path: "/student/lecture/:lectureId", element: <StudentLectureAccess /> },
+              { path: "/student/lectures/:lectureId/live", element: <StudentLiveClassroom /> },
               { path: "/student/downloads", element: <StudentDownloads /> },
               { path: "/student/payments", element: <StudentPayments /> },
               { path: "/student/notifications", element: <StudentNotifications /> },
@@ -104,6 +107,7 @@ export const router = createBrowserRouter([
               { path: "/faculty", element: <FacultyDashboard /> },
               { path: "/faculty/courses", element: <FacultyCourses /> },
               { path: "/faculty/lectures", element: <FacultyLectures /> },
+              { path: "/faculty/lectures/:lectureId/live", element: <FacultyLiveClassroom /> },
               { path: "/faculty/students", element: <FacultyStudents /> },
               { path: "/faculty/schedule", element: <FacultySchedule /> },
               { path: "/faculty/links", element: <FacultyLectureLinks /> },

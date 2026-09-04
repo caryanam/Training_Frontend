@@ -216,38 +216,34 @@ export default function LectureAccess() {
         </div>
       </div>
 
-      {/* Live Google Meet Classroom Banner */}
-      {Boolean(activeMeetingUrl) && (
-        <div className="rounded-2xl border border-red-500/30 bg-gradient-to-r from-red-500/10 via-card to-card p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
-          <div className="flex items-center gap-3.5">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-600 text-white shadow-md shadow-red-600/20 shrink-0">
-              <Video className="h-6 w-6" />
+      {/* In-Website Live Stream Classroom Entry */}
+      <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 via-card to-card p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+        <div className="flex items-center gap-3.5">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md shadow-primary/20 shrink-0">
+            <Video className="h-6 w-6" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-sm text-foreground">In-Website Live Classroom</span>
+              <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-100 dark:bg-emerald-950/80 dark:text-emerald-300 px-2 py-0.5 rounded-full">
+                <Sparkles className="h-3 w-3" /> SECURE SFU STREAM
+              </span>
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-sm text-foreground">Live Google Meet Classroom</span>
-                <span className="flex items-center gap-1 text-[10px] font-bold text-red-600 bg-red-100 dark:bg-red-950 px-2 py-0.5 rounded-full animate-pulse">
-                  ACTIVE MEET LINK
-                </span>
-              </div>
-              <div className="text-xs text-muted-foreground mt-0.5 font-mono truncate max-w-md">
-                {activeMeetingUrl}
-              </div>
+            <div className="text-xs text-muted-foreground mt-0.5">
+              Live interactive screen sharing and high-fidelity audio direct inside your portal.
             </div>
           </div>
-
-          <a
-            href={formatExternalUrl(activeMeetingUrl)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 px-6 py-2.5 text-xs font-bold text-white shadow-md hover:bg-red-700 transition-all shrink-0"
-          >
-            <ExternalLink className="h-4 w-4" /> Join Google Meet
-          </a>
         </div>
-      )}
 
-      {/* Main Video / Stream Player */}
+        <Link
+          to={`/student/lectures/${lectureId}/live`}
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-xs font-bold text-primary-foreground shadow-md hover:bg-primary/90 transition-all shrink-0"
+        >
+          <PlayCircle className="h-4 w-4" /> Enter Live Classroom
+        </Link>
+      </div>
+
+      {/* Main Video / Stream Player Preview */}
       <div className="overflow-hidden rounded-2xl border border-border bg-slate-950 shadow-xl">
         <div className="relative aspect-video w-full bg-gradient-to-tr from-slate-950 via-emerald-950 to-slate-900 flex flex-col items-center justify-center text-white p-6">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-emerald-500/10 via-transparent to-transparent" />
@@ -258,24 +254,18 @@ export default function LectureAccess() {
             </div>
 
             <h3 className="text-lg font-bold text-white mb-2">
-              {lecture?.status === "live"
-                ? "Live Interactive Stream in Progress"
-                : "Lecture Session Ready"}
+              Interactive Live Session Stream
             </h3>
             <p className="text-xs text-slate-300 mb-6">
-              Authorized student feed with end-to-end access validation.
+              Authorized student feed with end-to-end access validation and anti-sharing watermark overlay.
             </p>
 
-            {Boolean(activeMeetingUrl) && (
-              <a
-                href={formatExternalUrl(activeMeetingUrl)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-2.5 text-xs font-semibold text-white hover:bg-emerald-500 shadow-md transition-all"
-              >
-                <ExternalLink className="h-4 w-4" /> Open Meeting Room
-              </a>
-            )}
+            <Link
+              to={`/student/lectures/${lectureId}/live`}
+              className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-2.5 text-xs font-semibold text-white hover:bg-emerald-500 shadow-md transition-all"
+            >
+              <PlayCircle className="h-4 w-4" /> Join Live Classroom
+            </Link>
           </div>
         </div>
       </div>

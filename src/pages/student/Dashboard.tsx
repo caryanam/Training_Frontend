@@ -143,6 +143,7 @@ export default function StudentDashboard() {
   // Active upcoming live session (strictly from backend-enrolled meetings or assigned group demo)
   const activeLiveMeeting = secureUpcomingMeetings.length > 0
     ? {
+        lectureId: secureUpcomingMeetings[0].lectureId,
         title: secureUpcomingMeetings[0].title,
         courseName: secureUpcomingMeetings[0].courseName || activeCourse?.name || "Enrolled Curriculum Session",
         date: secureUpcomingMeetings[0].meetingDate,
@@ -154,6 +155,7 @@ export default function StudentDashboard() {
         isLecture: true,
       }
     : (activeUpcomingDemo ? {
+        lectureId: undefined,
         title: activeUpcomingDemo.courseName || "Interactive Course Demo",
         courseName: activeUpcomingDemo.courseName,
         date: activeUpcomingDemo.demoDate,
@@ -216,16 +218,23 @@ export default function StudentDashboard() {
               )}
             </div>
 
-            {activeLiveMeeting.meetLink && (
+            {activeLiveMeeting.isLecture ? (
+              <Link
+                to={`/student/lectures/${activeLiveMeeting.lectureId}/live`}
+                className="shrink-0 inline-flex items-center justify-center gap-2.5 rounded-xl bg-emerald-400 px-6 py-3.5 text-xs font-black text-slate-950 hover:bg-emerald-300 transition-all shadow-lg hover:shadow-emerald-500/20 cursor-pointer"
+              >
+                <Video className="h-4 w-4 text-slate-950" /> Join Live Classroom
+              </Link>
+            ) : activeLiveMeeting.meetLink ? (
               <a
                 href={formatExternalUrl(activeLiveMeeting.meetLink)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="shrink-0 inline-flex items-center justify-center gap-2.5 rounded-xl bg-emerald-400 px-6 py-3.5 text-xs font-black text-slate-950 hover:bg-emerald-300 transition-all shadow-lg hover:shadow-emerald-500/20 cursor-pointer"
               >
-                <Video className="h-4 w-4 text-slate-950" /> Join Google Meet Class
+                <Video className="h-4 w-4 text-slate-950" /> Join Demo Session
               </a>
-            )}
+            ) : null}
           </div>
         </div>
       )}
@@ -456,22 +465,21 @@ export default function StudentDashboard() {
             )}
           </div>
 
-          {activeLiveMeeting?.meetLink ? (
-            <a
-              href={formatExternalUrl(activeLiveMeeting.meetLink)}
-              target="_blank"
-              rel="noopener noreferrer"
+          {activeLiveMeeting ? (
+            <Link
+              to={activeLiveMeeting.isLecture ? `/student/lectures/${activeLiveMeeting.lectureId}/live` : (activeLiveMeeting.meetLink || "#")}
+              target={activeLiveMeeting.isLecture ? undefined : "_blank"}
               className="mt-6 flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 font-medium text-xs text-white hover:bg-emerald-500 transition-all shadow-xs cursor-pointer"
             >
-              <Video className="h-4 w-4" /> Join Google Meet Class
-            </a>
+              <Video className="h-4 w-4" /> {activeLiveMeeting.isLecture ? "Enter Live Classroom" : "Join Demo"}
+            </Link>
           ) : upcomingLecture ? (
             <Link
-              to={`/student/lecture/${upcomingLecture.id}`}
+              to={`/student/lectures/${upcomingLecture.id}/live`}
               className="mt-6 flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-primary font-medium text-xs text-primary-foreground hover:bg-primary/90 transition-all shadow-xs"
             >
               <Video className="h-4 w-4" />
-              {upcomingLecture.status === "live" ? "Join Live Stream" : "View Lecture Access"}
+              {upcomingLecture.status === "live" ? "Join Live Stream" : "View Live Classroom"}
             </Link>
           ) : null}
         </div>

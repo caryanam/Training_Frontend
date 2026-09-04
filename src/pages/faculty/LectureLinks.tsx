@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDataStore } from "@/lib/store";
 import { api } from "@/lib/api";
@@ -240,16 +241,52 @@ export default function FacultyLectureLinks() {
   return (
     <div className="space-y-6 text-xs">
       <PageHeader
-        title="Google Meet Link Distribution Hub"
-        subtitle="Broadcast live Google Meet classrooms to Enrolled Students and Admissions Executors with real-time notifications."
+        title="Live Broadcast & Link Distribution Hub"
+        subtitle="Launch in-website interactive live streaming classrooms and broadcast schedule notifications to Enrolled Students and Admissions Executors."
       />
+
+      {/* Quick Launch In-Website Live Studio Card */}
+      <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 via-card to-card p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+        <div className="flex items-center gap-3.5">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md shadow-primary/20 shrink-0">
+            <Radio className="h-6 w-6 animate-pulse" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-sm text-foreground">In-Website Live Streaming Classroom</span>
+              <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-100 dark:bg-emerald-950/80 dark:text-emerald-300 px-2 py-0.5 rounded-full">
+                <Sparkles className="h-3 w-3" /> SFU POWERED
+              </span>
+            </div>
+            <div className="text-xs text-muted-foreground mt-0.5">
+              Deliver ultra-low latency screen share and audio directly inside the platform without third-party meeting links.
+            </div>
+          </div>
+        </div>
+
+        {selectedLecture ? (
+          <Link
+            to={`/faculty/lectures/${selectedLecture.id}/live`}
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-xs font-bold text-primary-foreground shadow-md hover:bg-primary/90 transition-all shrink-0"
+          >
+            <Radio className="h-4 w-4" /> Launch Live Studio ({selectedLecture.title.substring(0, 20)}...)
+          </Link>
+        ) : (
+          <Link
+            to="/faculty/lectures"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-xs font-bold text-primary-foreground shadow-md hover:bg-primary/90 transition-all shrink-0"
+          >
+            <Radio className="h-4 w-4" /> Go to Lectures
+          </Link>
+        )}
+      </div>
 
       {broadcastSent && (
         <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-xs font-semibold text-emerald-800 dark:text-emerald-300 flex items-center justify-between shadow-xs animate-in fade-in">
           <div className="flex items-center gap-2.5">
             <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
             <span>
-              Google Meet link successfully broadcasted to{" "}
+              Session notification successfully broadcasted to{" "}
               {targetAudience === "both"
                 ? "Enrolled Students & Admissions Executors"
                 : targetAudience === "student"
@@ -266,10 +303,10 @@ export default function FacultyLectureLinks() {
         <div className="lg:col-span-2 rounded-2xl border border-border bg-card p-6 sm:p-8 shadow-xs space-y-6">
           <div className="flex items-center justify-between border-b border-border pb-4">
             <h3 className="text-base font-bold text-foreground flex items-center gap-2">
-              <Video className="h-5 w-5 text-red-500" /> Send Google Meet Link to Students & Executors
+              <Video className="h-5 w-5 text-emerald-600" /> Broadcast Live Class Alert to Students & Executors
             </h3>
-            <span className="flex items-center gap-1 text-[11px] font-bold text-red-600 bg-red-50 dark:bg-red-950/40 px-2.5 py-1 rounded-md border border-red-200 dark:border-red-800">
-              <Radio className="h-3 w-3 animate-pulse" /> Live Room
+            <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 rounded-md border border-emerald-200 dark:border-emerald-800">
+              <Radio className="h-3 w-3 animate-pulse" /> Live Dispatch
             </span>
           </div>
 

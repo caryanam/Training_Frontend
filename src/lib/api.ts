@@ -4,6 +4,12 @@
  * with automatic fallback to reactive store in Demo/Mock Mode.
  */
 
+import type {
+  LiveLectureStartResponse,
+  LiveLectureJoinResponse,
+  LiveLectureStatusResponse,
+} from "@/types/database";
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8081";
 
 // Token storage helper
@@ -965,4 +971,110 @@ export const api = {
         enrollmentCode?: string;
       }>
     >("/api/v1/executor/payments", { method: "GET" }),
+
+  // --- 10. IN-WEBSITE LIVE LECTURE STREAMING (LIVEKIT SFU) ---
+  startLiveLecture: (lectureId: string) =>
+    apiRequest<LiveLectureStartResponse>(`/api/v1/lectures/${lectureId}/live/start`, {
+      method: "POST",
+    }),
+
+  joinLiveLecture: (lectureId: string) =>
+    apiRequest<LiveLectureJoinResponse>(`/api/v1/lectures/${lectureId}/live/join`, {
+      method: "POST",
+    }),
+
+  endLiveLecture: (lectureId: string) =>
+    apiRequest<LiveLectureStatusResponse>(`/api/v1/lectures/${lectureId}/live/end`, {
+      method: "POST",
+    }),
+
+  leaveLiveLecture: (lectureId: string) =>
+    apiRequest<void>(`/api/v1/lectures/${lectureId}/live/leave`, {
+      method: "POST",
+    }),
+
+  getLiveLectureStatus: (lectureId: string) =>
+    apiRequest<LiveLectureStatusResponse>(`/api/v1/lectures/${lectureId}/live/status`, {
+      method: "GET",
+    }),
+
+  sendLiveHeartbeat: (lectureId: string) =>
+    apiRequest<void>(`/api/v1/lectures/${lectureId}/live/heartbeat`, {
+      method: "POST",
+    }),
+
+  // --- 11. FACULTY LECTURES API ---
+  getFacultyLectures: () =>
+    apiRequest<
+      Array<{
+        lectureId: string;
+        courseId: string;
+        courseName?: string;
+        title: string;
+        description: string;
+        lectureDate: string;
+        startTime: string;
+        endTime: string;
+        lectureUrl?: string;
+        recordingUrl?: string;
+        isDownloadable?: boolean;
+      }>
+    >("/api/v1/lectures", { method: "GET" }),
+
+  // --- 12. LECTURE SECURITY & VIOLATIONS API ---
+  reportLectureSecurityEvent: (
+    lectureId: string,
+    payload: {
+      lectureId: string;
+      sessionId?: number;
+      eventType: string;
+      metadata?: string;
+      timestamp?: string;
+    }
+  ) =>
+    apiRequest<{
+      violationCount: number;
+      isSuspended: boolean;
+      warningLevel: "NONE" | "WARNING" | "STRONG_WARNING" | "TERMINATED";
+      message: string;
+      actionRequired?: string | null;
+    }>(`/api/v1/lectures/${lectureId}/security/events`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+
+  getLectureSecurityEvents: (lectureId: string) =>
+    apiRequest<
+      Array<{
+        id: number;
+        lectureId: string;
+        lectureTitle: string;
+        studentId: number;
+        studentName: string;
+        studentIdentifier: string;
+        studentEmail: string;
+        eventType: string;
+        severity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+        metadata?: string;
+        timestamp: string;
+        violationCount: number;
+        sessionTerminated: boolean;
+      }>
+    >(`/api/v1/lectures/${lectureId}/security/events`, {
+      method: "GET",
+    }),
+
+  getLectureSecurityPolicy: (lectureId: string) =>
+    apiRequest<{
+      violationCount: number;
+      isSuspended: boolean;
+      warningLevel: "NONE" | "WARNING" | "STRONG_WARNING" | "TERMINATED";
+      message: string;
+      actionRequired?: string | null;
+    }>(`/api/v1/lectures/${lectureId}/security/policy`, {
+      method: "GET",
+    }),
 };
+
+
+

@@ -485,3 +485,50 @@ export interface FollowupReport {
   additionalComments: string | null;
   createdAt: string;
 }
+
+// ============================================================
+// In-Website Live Lecture Streaming Types
+// ============================================================
+
+export interface LiveLectureStartResponse {
+  sessionId: number;
+  lectureId: string;
+  lectureTitle: string;
+  courseName: string;
+  roomName: string;
+  token: string;
+  livekitUrl: string;
+  status: string;
+  startedAt: string;
+}
+
+export interface LiveLectureJoinResponse {
+  sessionId: number;
+  lectureId: string;
+  lectureTitle: string;
+  courseName: string;
+  roomName: string;
+  token: string;
+  livekitUrl: string;
+  facultyName: string;
+  studentIdentifier: string;
+  studentName: string;
+  participantCount: number;
+  status: string;
+  startedAt: string;
+}
+
+export interface LiveLectureStatusResponse {
+  isLive: boolean;
+  sessionId?: number;
+  lectureId?: string;
+  lectureTitle?: string;
+  courseName?: string;
+  roomName?: string;
+  facultyName?: string;
+  participantCount?: number;
+  status?: string;
+  startedAt?: string;
+  endedAt?: string;
+}
+

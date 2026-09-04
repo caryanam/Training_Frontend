@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDataStore } from "@/lib/store";
 import { api } from "@/lib/api";
@@ -20,11 +20,13 @@ import {
   Lock,
   Layers,
   Info,
+  Radio,
 } from "lucide-react";
 
 export default function StudentLectures() {
   const { profile } = useAuth();
   const store = useDataStore();
+  const navigate = useNavigate();
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -48,15 +50,12 @@ export default function StudentLectures() {
             lecture_date: l.lectureDate,
             start_time: l.startTime,
             end_time: l.endTime,
-            meeting_link: l.meetingLink || l.lectureUrl,
-            lecture_url: l.lectureUrl || l.meetingLink,
             recording_url: l.recordingUrl,
             is_downloadable: l.isDownloadable,
             status: "scheduled",
           }));
           setSecureLectures(mapped);
         } else {
-          // If no active enrollment returned by backend, strictly set empty
           setSecureLectures([]);
         }
       })
@@ -67,14 +66,7 @@ export default function StudentLectures() {
   }, [profile]);
 
   const handleWatchLecture = (lec: any) => {
-    const meetingUrl = lec.meeting_link || lec.lecture_url || lec.meetingLink || lec.lectureUrl;
-    if (!meetingUrl || meetingUrl.trim() === "" || meetingUrl === "#") {
-      setNotice(`Google Meet link is not yet assigned for "${lec.title}". Please check back prior to class start time.`);
-      setTimeout(() => setNotice(null), 5000);
-      return;
-    }
-    const cleanUrl = formatExternalUrl(meetingUrl);
-    window.open(cleanUrl, "_blank", "noopener,noreferrer");
+    navigate(`/student/lectures/${lec.id}/live`);
   };
 
   const filteredLectures = secureLectures.filter((lec) => {

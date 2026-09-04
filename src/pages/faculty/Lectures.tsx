@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDataStore } from "@/lib/store";
 import { api } from "@/lib/api";
@@ -19,6 +20,8 @@ import {
   CheckCircle2,
   X,
   FileText,
+  Radio,
+  PlayCircle,
 } from "lucide-react";
 
 export default function FacultyLectures() {
@@ -45,7 +48,38 @@ export default function FacultyLectures() {
   const [dynamicCourses, setDynamicCourses] = useState<Array<{ id: string; name: string; courseCode?: string }>>([]);
 
   const storeCourses = store.getCourses();
-  const lectures = store.getLectures();
+  const [dynamicLectures, setDynamicLectures] = useState<Lecture[]>(store.getLectures());
+
+  const loadDynamicLectures = async () => {
+    try {
+      const res = await api.getFacultyLectures();
+      if (res.success && res.data && res.data.length > 0) {
+        const mapped: Lecture[] = res.data.map((l: any) => ({
+          id: String(l.lectureId || l.id),
+          course_id: String(l.courseId || l.courseCode || "course-1"),
+          faculty_id: String(l.facultyId || "fac-rec-1"),
+          title: l.title,
+          description: l.description || "",
+          lecture_date: l.lectureDate || "",
+          start_time: l.startTime || "18:00",
+          end_time: l.endTime || "19:30",
+          lecture_url: l.lectureUrl || "",
+          recording_url: l.recordingUrl || "",
+          downloadable_file_path: null,
+          is_downloadable: Boolean(l.isDownloadable),
+          status: "scheduled" as const,
+          created_by: "fac-1",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }));
+        setDynamicLectures(mapped);
+        return;
+      }
+    } catch (err) {
+      console.warn("Backend lectures fetch error:", err);
+    }
+    setDynamicLectures(store.getLectures());
+  };
 
   const loadDynamicCourses = async () => {
     const combinedMap = new Map<string, { id: string; name: string; courseCode?: string }>();
@@ -83,9 +117,10 @@ export default function FacultyLectures() {
 
   useEffect(() => {
     loadDynamicCourses();
+    loadDynamicLectures();
   }, [storeCourses.length]);
 
-  const filteredLectures = lectures.filter(
+  const filteredLectures = dynamicLectures.filter(
     (l) =>
       l.title.toLowerCase().includes(search.toLowerCase()) ||
       (l.description && l.description.toLowerCase().includes(search.toLowerCase()))
@@ -182,7 +217,9 @@ export default function FacultyLectures() {
     }
 
     setModalOpen(false);
+    loadDynamicLectures();
   };
+
 
   return (
     <div className="space-y-6">
@@ -278,10 +315,17 @@ export default function FacultyLectures() {
                       </td>
                       <td className="px-5 py-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
+                          <Link
+                            to={`/faculty/lectures/${lec.id}/live`}
+                            className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-2.5 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-emerald-700 transition-all cursor-pointer"
+                            title="Start Live Studio Stream"
+                          >
+                            <Radio className="h-3.5 w-3.5" /> Start Live
+                          </Link>
                           <button
                             type="button"
                             onClick={() => openEditModal(lec)}
-                            className="rounded-lg border border-border p-1.5 text-muted-foreground hover:text-primary hover:border-primary transition-colors"
+                            className="rounded-lg border border-border p-1.5 text-muted-foreground hover:text-primary hover:border-primary transition-colors cursor-pointer"
                             title="Edit Lecture"
                           >
                             <Edit2 className="h-3.5 w-3.5" />
@@ -289,7 +333,7 @@ export default function FacultyLectures() {
                           <button
                             type="button"
                             onClick={() => store.deleteLecture(lec.id)}
-                            className="rounded-lg border border-border p-1.5 text-muted-foreground hover:text-rose-600 hover:border-rose-300 transition-colors"
+                            className="rounded-lg border border-border p-1.5 text-muted-foreground hover:text-rose-600 hover:border-rose-300 transition-colors cursor-pointer"
                             title="Delete Lecture"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
