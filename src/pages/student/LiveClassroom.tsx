@@ -204,7 +204,6 @@ function StudentClassroomView({
     const onConnected = () => {
       console.log("🟢 [Student] LiveKit Room Connected:", {
         roomName: room.name,
-        roomSid: room.sid,
         localIdentity: room.localParticipant?.identity,
         serverUrl: resolvedUrl,
       });

@@ -277,7 +277,6 @@ function FacultyStudio({
     const onConnected = () => {
       console.log("🟢 [Faculty] LiveKit Room Connected:", {
         roomName: room.name,
-        roomSid: room.sid,
         localIdentity: room.localParticipant?.identity,
         serverUrl: resolvedUrl,
       });
