@@ -86,6 +86,10 @@ export class LectureSecurityManager {
         eventType,
         "Multiple active sessions detected. Only one active session is permitted."
       );
+    } else if (eventType === "PROTECTION_ACTIVATED") {
+      // Protection was activated because the lecture window lost focus.
+      // This is NOT confirmed recording detection.
+      // No UI alert is triggered for this — the blackout overlay handles it.
     }
 
     const now = Date.now();

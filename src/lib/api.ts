@@ -10,7 +10,7 @@ import type {
   LiveLectureStatusResponse,
 } from "@/types/database";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8081";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://api.nexorainstitute.in";
 
 // Token storage helper
 export const getAuthToken = (): string | null => localStorage.getItem("nexora_jwt_token");
@@ -1077,4 +1077,4 @@ export const api = {
 };
 
 
-
+

@@ -76,11 +76,13 @@ export function initScreenShareMonitor(onEvent: EventCallback): () => void {
     }
   };
 
-  navigator.mediaDevices.getDisplayMedia = patchedGetDisplayMedia;
+  if (typeof navigator !== "undefined" && navigator.mediaDevices) {
+    navigator.mediaDevices.getDisplayMedia = patchedGetDisplayMedia;
+  }
 
   // Return cleanup function
   return () => {
-    if (originalGetDisplayMedia) {
+    if (originalGetDisplayMedia && typeof navigator !== "undefined" && navigator.mediaDevices) {
       navigator.mediaDevices.getDisplayMedia = originalGetDisplayMedia;
       originalGetDisplayMedia = null;
     }

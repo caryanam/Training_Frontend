@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useTransition } from "react";
+import { useState, useEffect, useRef, useTransition, useMemo } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
@@ -15,7 +15,7 @@ import {
   type TrackReference,
 } from "@livekit/components-react";
 import "@livekit/components-styles";
-import { Track } from "livekit-client";
+import { Track, RoomEvent } from "livekit-client";
 import {
   Monitor,
   MonitorOff,
@@ -37,6 +37,10 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
+
+function getResolvedLivekitUrl(rawUrl?: string): string {
+  return rawUrl || "https://livekit.nexorainstitute.in";
+}
 
 export default function FacultyLiveClassroom() {
   const { lectureId } = useParams<{ lectureId: string }>();
@@ -192,14 +196,16 @@ export default function FacultyLiveClassroom() {
     );
   }
 
+  const resolvedLivekitUrl = getResolvedLivekitUrl(sessionData.livekitUrl);
+
   // Live Stage: Connected LiveKit Room with Faculty Controls
   return (
     <LiveKitRoom
-      serverUrl={sessionData.livekitUrl}
+      serverUrl={resolvedLivekitUrl}
       token={sessionData.token}
       connect={true}
       video={false}
-      audio={true}
+      audio={false}
       className="space-y-4"
     >
       <FacultyStudio
@@ -207,6 +213,7 @@ export default function FacultyLiveClassroom() {
         lectureId={lectureId!}
         onEndLecture={handleEndLecture}
         isEnding={ending}
+        resolvedUrl={resolvedLivekitUrl}
       />
     </LiveKitRoom>
   );
@@ -218,11 +225,13 @@ function FacultyStudio({
   lectureId,
   onEndLecture,
   isEnding,
+  resolvedUrl,
 }: {
   sessionData: LiveLectureStartResponse;
   lectureId: string;
   onEndLecture: () => void;
   isEnding: boolean;
+  resolvedUrl: string;
 }) {
   const room = useRoomContext();
   const { isMicrophoneEnabled, isScreenShareEnabled, isCameraEnabled, localParticipant } = useLocalParticipant();
@@ -231,13 +240,136 @@ function FacultyStudio({
   const [micActive, setMicActive] = useState(localParticipant.isMicrophoneEnabled);
   const [cameraActive, setCameraActive] = useState(localParticipant.isCameraEnabled);
   const [screenActive, setScreenActive] = useState(localParticipant.isScreenShareEnabled);
+
+  useEffect(() => {
+    setMicActive(isMicrophoneEnabled);
+  }, [isMicrophoneEnabled]);
+
+  useEffect(() => {
+    setCameraActive(isCameraEnabled);
+  }, [isCameraEnabled]);
+
+  useEffect(() => {
+    setScreenActive(isScreenShareEnabled);
+  }, [isScreenShareEnabled]);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [securityEvents, setSecurityEvents] = useState<Array<any>>([]);
   const [activeAlert, setActiveAlert] = useState<any | null>(null);
   const [showViolationsLog, setShowViolationsLog] = useState(false);
 
+  // Production-safe media capability checks
+  const hasMediaDevices =
+    typeof navigator !== "undefined" &&
+    !!navigator.mediaDevices;
+
+  const hasUserMedia =
+    hasMediaDevices &&
+    typeof navigator.mediaDevices.getUserMedia === "function";
+
+  const hasDisplayMedia =
+    hasMediaDevices &&
+    typeof navigator.mediaDevices.getDisplayMedia === "function";
+
+  // Comprehensive LiveKit Room lifecycle event logging
+  useEffect(() => {
+    if (!room) return;
+
+    const onConnected = () => {
+      console.log("🟢 [Faculty] LiveKit Room Connected:", {
+        roomName: room.name,
+        roomSid: room.sid,
+        localIdentity: room.localParticipant?.identity,
+        serverUrl: resolvedUrl,
+      });
+    };
+
+    const onDisconnected = (reason?: any) => {
+      console.log("🔴 [Faculty] LiveKit Room Disconnected:", reason);
+    };
+
+    const onParticipantConnected = (participant: any) => {
+      console.log("👤 [Faculty] Participant Connected to room:", {
+        identity: participant.identity,
+        name: participant.name,
+        metadata: participant.metadata,
+      });
+    };
+
+    const onParticipantDisconnected = (participant: any) => {
+      console.log("👤 [Faculty] Participant Disconnected from room:", participant.identity);
+    };
+
+    const onLocalTrackPublished = (publication: any) => {
+      console.log("📤 [Faculty] Local Track Published:", {
+        kind: publication.kind,
+        source: publication.source,
+        trackSid: publication.trackSid,
+        trackName: publication.trackName,
+      });
+    };
+
+    const onLocalTrackUnpublished = (publication: any) => {
+      console.log("📤 [Faculty] Local Track Unpublished:", {
+        kind: publication.kind,
+        source: publication.source,
+      });
+    };
+
+    const onTrackSubscribed = (track: any, publication: any, participant: any) => {
+      console.log("📥 [Faculty] Remote Track Subscribed:", {
+        kind: track.kind,
+        source: publication?.source,
+        from: participant.identity,
+      });
+    };
+
+    const onConnectionStateChanged = (state: any) => {
+      console.log("🔄 [Faculty] LiveKit Connection State Changed:", state);
+    };
+
+    const onMediaDevicesError = (err: any) => {
+      console.error("⚠️ [Faculty] Media Devices Error:", err);
+    };
+
+    room.on(RoomEvent.Connected, onConnected);
+    room.on(RoomEvent.Disconnected, onDisconnected);
+    room.on(RoomEvent.ParticipantConnected, onParticipantConnected);
+    room.on(RoomEvent.ParticipantDisconnected, onParticipantDisconnected);
+    room.on(RoomEvent.LocalTrackPublished, onLocalTrackPublished);
+    room.on(RoomEvent.LocalTrackUnpublished, onLocalTrackUnpublished);
+    room.on(RoomEvent.TrackSubscribed, onTrackSubscribed);
+    room.on(RoomEvent.ConnectionStateChanged, onConnectionStateChanged);
+    room.on(RoomEvent.MediaDevicesError, onMediaDevicesError);
+
+    return () => {
+      room.off(RoomEvent.Connected, onConnected);
+      room.off(RoomEvent.Disconnected, onDisconnected);
+      room.off(RoomEvent.ParticipantConnected, onParticipantConnected);
+      room.off(RoomEvent.ParticipantDisconnected, onParticipantDisconnected);
+      room.off(RoomEvent.LocalTrackPublished, onLocalTrackPublished);
+      room.off(RoomEvent.LocalTrackUnpublished, onLocalTrackUnpublished);
+      room.off(RoomEvent.TrackSubscribed, onTrackSubscribed);
+      room.off(RoomEvent.ConnectionStateChanged, onConnectionStateChanged);
+      room.off(RoomEvent.MediaDevicesError, onMediaDevicesError);
+    };
+  }, [room, resolvedUrl]);
+
   // Real-time security events polling
   useEffect(() => {
+    // Immediate console diagnostic for media capabilities
+    if (typeof window !== "undefined") {
+      console.log("=== [FacultyStudio] MEDIA CAPABILITIES DIAGNOSTIC ===", {
+        href: window.location.href,
+        protocol: window.location.protocol,
+        isSecureContext: window.isSecureContext,
+        resolvedLivekitUrl: resolvedUrl,
+        mediaDevices: typeof navigator !== "undefined" ? typeof navigator.mediaDevices : "undefined",
+        getUserMedia: typeof navigator?.mediaDevices?.getUserMedia,
+        getDisplayMedia: typeof navigator?.mediaDevices?.getDisplayMedia,
+        userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "undefined",
+      });
+    }
+
     let isMounted = true;
     const fetchSecurityEvents = async () => {
       try {
@@ -290,47 +422,88 @@ function FacultyStudio({
   };
 
   const toggleScreenShare = async () => {
+    console.log("[toggleScreenShare] Checking media capabilities...", {
+      href: typeof window !== "undefined" ? window.location.href : "N/A",
+      protocol: typeof window !== "undefined" ? window.location.protocol : "N/A",
+      isSecureContext: typeof window !== "undefined" ? window.isSecureContext : false,
+      hasMediaDevices,
+      hasDisplayMedia,
+      typeOfGetDisplayMedia: typeof navigator?.mediaDevices?.getDisplayMedia,
+      userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "undefined",
+    });
+
+    if (!hasDisplayMedia) {
+      alert("Screen sharing is not supported in this browser or connection. Please use a supported browser over HTTPS.");
+      return;
+    }
     try {
       const nextState = !screenActive;
       await localParticipant.setScreenShareEnabled(nextState, { audio: true });
       setScreenActive(localParticipant.isScreenShareEnabled);
     } catch (err: any) {
       console.warn("Screen share toggled/cancelled:", err);
+      const errMsg = err?.message || String(err);
+      if (errMsg.toLowerCase().includes("not supported") || errMsg.toLowerCase().includes("getdisplaymedia")) {
+        alert("Screen sharing is not supported in this browser or connection. Please use a supported browser over HTTPS.");
+      }
       setScreenActive(localParticipant.isScreenShareEnabled);
     }
   };
 
   const toggleMicrophone = async () => {
+    console.log("[toggleMicrophone] Checking media capabilities...", {
+      href: typeof window !== "undefined" ? window.location.href : "N/A",
+      isSecureContext: typeof window !== "undefined" ? window.isSecureContext : false,
+      hasUserMedia,
+    });
+
+    if (!hasUserMedia) {
+      alert("Microphone requires a supported browser over HTTPS or localhost.");
+      return;
+    }
     try {
       const nextState = !micActive;
       await localParticipant.setMicrophoneEnabled(nextState);
       setMicActive(localParticipant.isMicrophoneEnabled);
     } catch (err: any) {
+      console.warn("Microphone error:", err);
       alert("Microphone permission denied or device unavailable.");
     }
   };
 
   const toggleCamera = async () => {
+    console.log("[toggleCamera] Checking media capabilities...", {
+      href: typeof window !== "undefined" ? window.location.href : "N/A",
+      isSecureContext: typeof window !== "undefined" ? window.isSecureContext : false,
+      hasUserMedia,
+    });
+
+    if (!hasUserMedia) {
+      alert("Camera requires a supported browser over HTTPS or localhost.");
+      return;
+    }
     try {
       const nextState = !cameraActive;
       await localParticipant.setCameraEnabled(nextState);
       setCameraActive(localParticipant.isCameraEnabled);
     } catch (err: any) {
+      console.warn("Camera error:", err);
       alert("Camera permission denied or device unavailable.");
     }
   };
 
   // Find local screen share track
   const tracks = useTracks(
-    [
-      { source: Track.Source.ScreenShare, withPlaceholder: false },
-      { source: Track.Source.Camera, withPlaceholder: false },
-    ],
+    [Track.Source.ScreenShare, Track.Source.Camera],
     { onlySubscribed: false }
   );
   const validTracks = tracks.filter(isTrackReference);
-  const screenTrackRef = validTracks.find((t) => t.source === Track.Source.ScreenShare && t.participant.isLocal);
-  const cameraTrackRef = validTracks.find((t) => t.source === Track.Source.Camera && t.participant.isLocal);
+  const screenTrackRef = validTracks.find(
+    (t) => (t.source === Track.Source.ScreenShare || t.publication?.source === Track.Source.ScreenShare) && t.participant.isLocal
+  );
+  const cameraTrackRef = validTracks.find(
+    (t) => (t.source === Track.Source.Camera || t.publication?.source === Track.Source.Camera) && t.participant.isLocal
+  );
 
   const participantCount = (room?.numParticipants || 1);
   const highRiskCount = securityEvents.filter((e) => e.severity === "HIGH" || e.severity === "CRITICAL").length;
@@ -437,6 +610,8 @@ function FacultyStudio({
       <div className="relative aspect-video w-full rounded-3xl border border-border bg-slate-950 overflow-hidden shadow-2xl flex items-center justify-center">
         {screenTrackRef ? (
           <VideoTrack trackRef={screenTrackRef} className="h-full w-full object-contain" />
+        ) : cameraActive && cameraTrackRef ? (
+          <VideoTrack trackRef={cameraTrackRef} className="h-full w-full object-cover" />
         ) : (
           <div className="text-center p-8 space-y-4 max-w-md">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-400 ring-4 ring-emerald-500/10">
@@ -458,9 +633,9 @@ function FacultyStudio({
           </div>
         )}
 
-        {/* Small Inset Camera Preview if enabled */}
-        {cameraTrackRef && (
-          <div className="absolute top-4 right-4 h-32 w-48 rounded-2xl border-2 border-primary/50 overflow-hidden shadow-2xl bg-black">
+        {/* Small Inset Camera Preview if screen sharing AND camera are both active */}
+        {screenTrackRef && cameraActive && cameraTrackRef && (
+          <div className="absolute top-4 right-4 h-32 w-48 rounded-2xl border-2 border-primary/50 overflow-hidden shadow-2xl bg-black animate-in fade-in duration-200">
             <VideoTrack trackRef={cameraTrackRef} className="h-full w-full object-cover" />
             <span className="absolute bottom-1 left-2 text-[10px] font-bold text-white bg-black/60 px-1.5 py-0.5 rounded">
               Faculty Camera
@@ -517,6 +692,25 @@ function FacultyStudio({
           {cameraActive ? <VideoOff className="h-4 w-4" /> : <VideoIcon className="h-4 w-4" />}
           {cameraActive ? "Turn Off Camera" : "Camera (Optional)"}
         </button>
+      </div>
+
+      {/* Temporary Development Diagnostic for Media Capabilities */}
+      <div className="rounded-2xl border border-slate-800 bg-slate-950/90 p-3.5 shadow-md text-xs font-mono space-y-1.5">
+        <div className="flex items-center justify-between">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+            Media Diagnostics (Browser Context)
+          </span>
+          <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${typeof window !== "undefined" && window.isSecureContext ? "bg-emerald-500/20 text-emerald-400" : "bg-amber-500/20 text-amber-400"}`}>
+            {typeof window !== "undefined" && window.isSecureContext ? "Secure Context (HTTPS/localhost)" : "Insecure Context (HTTP)"}
+          </span>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-1 text-[11px] text-slate-300">
+          <div>Protocol: <span className="text-emerald-400">{typeof window !== "undefined" ? window.location.protocol : "N/A"}</span></div>
+          <div>Secure Context: <span className={typeof window !== "undefined" && window.isSecureContext ? "text-emerald-400" : "text-amber-400"}>{typeof window !== "undefined" ? String(window.isSecureContext) : "false"}</span></div>
+          <div>MediaDevices: <span className={hasMediaDevices ? "text-emerald-400" : "text-rose-400"}>{String(hasMediaDevices)}</span></div>
+          <div>UserMedia: <span className={hasUserMedia ? "text-emerald-400" : "text-rose-400"}>{String(hasUserMedia)}</span></div>
+          <div>DisplayMedia: <span className={hasDisplayMedia ? "text-emerald-400" : "text-rose-400"}>{String(hasDisplayMedia)}</span></div>
+        </div>
       </div>
 
       {/* Live Security & Violations Log Dashboard */}

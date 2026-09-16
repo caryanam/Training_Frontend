@@ -29,20 +29,15 @@ export function initKeyboardProtection(onEvent: EventCallback): () => void {
 
     const platform = typeof navigator !== "undefined" ? navigator.platform : "unknown";
 
-    // 1. SCREEN RECORDING SHORTCUTS
-    // - Win + Alt + R (Windows Game Bar recording shortcut)
-    // - Ctrl + Alt + R (Common capture shortcut)
-    // - Alt + R (AMD Radeon / OBS shortcut)
-    // - Win + G (Windows Game Bar overlay)
-    // - Alt + F9 (Nvidia GeForce Experience recording)
-    // - Ctrl + Shift + R
-    const isWinKey = e.metaKey || code === "osleft" || code === "osright" || key === "meta";
+    // 1. SCREEN RECORDING SHORTCUTS (browser-receivable only)
+    // - Ctrl + Alt + R (Common capture shortcut — browser receives this)
+    // - Alt + F9 (Nvidia GeForce Experience recording — usually received)
+    // - Ctrl + Shift + R (OBS/custom capture)
+    //
+    // NOTE: Win+Alt+R, Win+G are handled at OS level and are NOT delivered to the browser.
+    // Protection for those is handled by blur/visibilitychange events in the component.
     const isRecordingShortcut =
-      (isWinKey && isAlt && (key === "r" || code === "keyr")) ||
       (isCtrl && isAlt && (key === "r" || code === "keyr")) ||
-      (isAlt && (key === "r" || code === "keyr")) ||
-      (isWinKey && (key === "g" || code === "keyg")) ||
-      (isWinKey && isAlt && (key === "g" || code === "keyg")) ||
       (isAlt && (code === "f9" || key === "f9")) ||
       (isCtrl && isShift && (key === "r" || code === "keyr"));
 
@@ -52,7 +47,7 @@ export function initKeyboardProtection(onEvent: EventCallback): () => void {
         e.stopPropagation();
       } catch (_) {}
 
-      // Always trigger immediate UI protection/alert callback (0ms latency)
+      // Trigger immediate UI protection/alert callback
       onEvent(
         "SCREEN_RECORDING_ATTEMPT",
         `key:${e.key || key};code:${e.code || code};ctrl:${e.ctrlKey};alt:${e.altKey};meta:${e.metaKey};platform:${platform}`
@@ -60,17 +55,18 @@ export function initKeyboardProtection(onEvent: EventCallback): () => void {
       return;
     }
 
-    // 2. SCREENSHOT & PAGE CAPTURE SHORTCUTS
-    // - PrintScreen / Snapshot
-    // - Win + Shift + S (Snipping Tool)
+    // 2. SCREENSHOT & PAGE CAPTURE SHORTCUTS (browser-receivable only)
+    // - PrintScreen / Snapshot (usually received by browser)
     // - Ctrl + Shift + S (Browser screenshot tools)
     // - Ctrl + P (Print / Save PDF)
     // - Ctrl + S (Save page)
+    //
+    // NOTE: Win+Shift+S (Snipping Tool) is handled at OS level and is NOT delivered to the browser.
+    // Protection for that is handled by blur/visibilitychange events in the component.
     const isPrintScreen =
       key === "printscreen" ||
       code === "printscreen" ||
-      key === "snapshot" ||
-      (isShift && (e.metaKey || code === "osleft" || code === "osright" || key === "meta") && (key === "s" || code === "keys"));
+      key === "snapshot";
 
     const isCaptureShortcut =
       isPrintScreen ||
