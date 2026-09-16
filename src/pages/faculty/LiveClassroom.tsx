@@ -39,7 +39,8 @@ import {
 } from "lucide-react";
 
 function getResolvedLivekitUrl(rawUrl?: string): string {
-  return rawUrl || "https://livekit.nexorainstitute.in";
+  // Always use the production server URL instead of the local IP returned by the backend
+  return "https://livekit.nexorainstitute.in";
 }
 
 export default function FacultyLiveClassroom() {
