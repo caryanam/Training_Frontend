@@ -85,6 +85,7 @@ export const api = {
         fullName: payload.fullName,
         email: payload.email,
         mobileNumber: payload.mobileNumber,
+        phone: payload.mobileNumber,
         password: payload.password,
         confirmPassword: payload.confirmPassword,
         interestedCourse: payload.interestedCourse,
