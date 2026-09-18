@@ -51,9 +51,20 @@ export default function Register() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [step, setStep] = useState<1 | 2>(1);
+  const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
+  const [resendTimer, setResendTimer] = useState(0);
   const [springCourses, setSpringCourses] = useState<any[]>([]);
   const { signUp } = useAuth();
   const store = useDataStore();
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (step === 2 && resendTimer > 0) {
+      interval = setInterval(() => setResendTimer((t) => t - 1), 1000);
+    }
+    return () => clearInterval(interval);
+  }, [step, resendTimer]);
 
   useEffect(() => {
     api.getAllCourses().then((res) => {
@@ -121,25 +132,99 @@ export default function Register() {
 
     setLoading(true);
 
-    const { error: signUpError, fieldErrors: serverFieldErrors } = await signUp(
-      email.trim(),
+    const res = await api.initiateRegistration({
+      fullName: fullName.trim(),
+      email: email.trim(),
+      mobileNumber: phone.trim(),
       password,
-      fullName.trim(),
-      "student",
-      { phone: phone.trim(), interestedCourse, education: education.trim(), city: city.trim() }
-    );
+      confirmPassword,
+      interestedCourse,
+      education: education.trim(),
+      city: city.trim()
+    });
 
-    if (signUpError) {
-      setError(signUpError.message || "Registration failed. Please check your details.");
-      if (serverFieldErrors && typeof serverFieldErrors === "object") {
-        setFieldErrors(serverFieldErrors);
+    setLoading(false);
+
+    if (!res.success) {
+      setError(res.error || "Failed to initiate registration.");
+      if (res.data && typeof res.data === "object" && !Array.isArray(res.data)) {
+        setFieldErrors(res.data as Record<string, string>);
       }
-      setLoading(false);
+      return;
+    }
+
+    setStep(2);
+    setResendTimer(60);
+  };
+
+  const handleVerifyOtp = async (e: FormEvent) => {
+    e.preventDefault();
+    setError("");
+    const otpCode = otp.join("");
+    if (otpCode.length !== 6) {
+      setError("Please enter a 6-digit OTP.");
+      return;
+    }
+
+    setLoading(true);
+    const res = await api.verifyOtp({ email: email.trim(), otp: otpCode });
+    setLoading(false);
+
+    if (!res.success) {
+      setError(res.error || "Invalid OTP. Please check the code and try again.");
       return;
     }
 
     setSuccess(true);
+  };
+
+  const handleResendOtp = async () => {
+    if (resendTimer > 0) return;
+    setError("");
+    setLoading(true);
+    const res = await api.resendOtp({ email: email.trim() });
     setLoading(false);
+
+    if (!res.success) {
+      setError(res.error || "Failed to resend OTP.");
+      return;
+    }
+
+    setResendTimer(60);
+    setOtp(["", "", "", "", "", ""]);
+    document.getElementById("otp-0")?.focus();
+  };
+
+  const handleOtpChange = (index: number, value: string) => {
+    if (!/^\d*$/.test(value)) return;
+
+    const newOtp = [...otp];
+    
+    // Handle pasting 6 digits
+    if (value.length === 6) {
+      const chars = value.split("");
+      for (let i = 0; i < 6; i++) {
+        newOtp[i] = chars[i] || "";
+      }
+      setOtp(newOtp);
+      document.getElementById("otp-5")?.focus();
+      return;
+    }
+
+    // Normal typing
+    const char = value.slice(-1);
+    newOtp[index] = char;
+    setOtp(newOtp);
+
+    if (char && index < 5) {
+      document.getElementById(`otp-${index + 1}`)?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
+      document.getElementById(`otp-${index - 1}`)?.focus();
+    }
   };
 
   if (success) {
@@ -328,7 +413,8 @@ export default function Register() {
           )}
 
           {/* Registration Form — All Backend Fields */}
-          <form onSubmit={handleSubmit} className="space-y-2.5">
+          {step === 1 ? (
+            <form onSubmit={handleSubmit} className="space-y-2.5">
             
             {/* Row 1: Full Name & Email */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -635,11 +721,11 @@ export default function Register() {
               {loading ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Registering...</span>
+                  <span>Sending OTP...</span>
                 </>
               ) : (
                 <>
-                  <span>Register as Student</span>
+                  <span>Send OTP</span>
                   <div className="flex h-4.5 w-4.5 items-center justify-center rounded-full bg-white/20">
                     <ArrowRight className="h-3 w-3 text-white" />
                   </div>
@@ -647,17 +733,85 @@ export default function Register() {
               )}
             </button>
           </form>
+          ) : (
+            <div className="space-y-4 pt-2 animate-in fade-in zoom-in-95 duration-500">
+              <div className="text-center space-y-2">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800">
+                  <Mail className="h-7 w-7" />
+                </div>
+                <h3 className="text-lg font-black text-slate-900 dark:text-white">Verify Your Email</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto leading-relaxed font-medium">
+                  We've sent a 6-digit verification code to <span className="font-bold text-slate-700 dark:text-slate-300">{email}</span>.
+                </p>
+              </div>
+
+              <form onSubmit={handleVerifyOtp} className="space-y-4">
+                <div className="flex justify-center gap-2 sm:gap-3">
+                  {otp.map((digit, index) => (
+                    <input
+                      key={index}
+                      id={`otp-${index}`}
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      value={digit}
+                      maxLength={6}
+                      onChange={(e) => handleOtpChange(index, e.target.value)}
+                      onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                      className="w-10 h-12 sm:w-12 sm:h-14 text-center text-lg sm:text-xl font-black text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:bg-white focus:border-[#014122] focus:ring-2 focus:ring-[#014122]/20 outline-none transition-all shadow-sm"
+                    />
+                  ))}
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading || otp.join("").length !== 6}
+                  className="w-full h-11 rounded-xl bg-[#014122] hover:bg-[#026637] text-white font-extrabold text-sm flex items-center justify-center gap-2 shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 disabled:opacity-50 cursor-pointer"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Verifying...</span>
+                    </>
+                  ) : (
+                    <span>Verify OTP</span>
+                  )}
+                </button>
+              </form>
+
+              <div className="flex flex-col items-center gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={handleResendOtp}
+                  disabled={loading || resendTimer > 0}
+                  className="text-xs font-bold text-[#014122] dark:text-emerald-400 hover:underline disabled:text-slate-400 disabled:hover:no-underline transition-colors cursor-pointer"
+                >
+                  {resendTimer > 0 ? `Resend OTP in ${resendTimer}s` : "Resend OTP"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStep(1)}
+                  disabled={loading}
+                  className="text-[11px] font-semibold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors cursor-pointer"
+                >
+                  Change email address
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Footer Navigation Link */}
-          <div className="pt-0.5 text-center text-xs font-medium text-slate-600 dark:text-slate-400">
-            Already have an account?{" "}
-            <Link
-              to="/login"
-              className="font-black text-[#014122] dark:text-emerald-400 hover:underline transition-colors"
-            >
-              Sign In
-            </Link>
-          </div>
+          {step === 1 && (
+            <div className="pt-0.5 text-center text-xs font-medium text-slate-600 dark:text-slate-400">
+              Already have an account?{" "}
+              <Link
+                to="/login"
+                className="font-black text-[#014122] dark:text-emerald-400 hover:underline transition-colors"
+              >
+                Sign In
+              </Link>
+            </div>
+          )}
 
         </div>
 

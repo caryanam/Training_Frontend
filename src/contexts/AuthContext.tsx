@@ -38,7 +38,7 @@ interface AuthContextType {
     extras?: { phone?: string; interestedCourse?: string; education?: string; city?: string }
   ) => Promise<{ error: Error | null; fieldErrors?: Record<string, string>; data?: any }>;
   signIn: (
-    email: string,
+    identifier: string,
     password: string
   ) => Promise<{ error: Error | null; role?: Role }>;
   loginAsRole: (role: Role, customProfile?: Partial<Profile>) => Promise<void>;
@@ -218,8 +218,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signIn = async (email: string, password: string) => {
-    const springRes = await api.login({ email, password });
+  const signIn = async (identifier: string, password: string) => {
+    const springRes = await api.login({ identifier, password });
 
     const token = (springRes as any).token || springRes.data?.token;
     const userData = (springRes as any).user || springRes.data?.user;
@@ -229,11 +229,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const rawRole = (userData.role || "STUDENT").toString();
       const userRole = (rawRole.replace("ROLE_", "").toLowerCase() as Role) || "student";
 
+      const fallbackEmail = identifier.includes("@") ? identifier : `${identifier}@nexora.local`;
+
       const springProfile: Profile = {
-        id: userData.profileId || userData.id || email,
-        full_name: userData.fullName || userData.name || email.split("@")[0],
-        email: userData.email || email,
-        phone: userData.phone || null,
+        id: userData.profileId || userData.id || identifier,
+        full_name: userData.fullName || userData.name || identifier.split("@")[0],
+        email: userData.email || fallbackEmail,
+        phone: userData.phone || (identifier.includes("@") ? null : identifier),
         avatar_url: null,
         role: userRole,
         status: "active",
@@ -269,7 +271,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: new Error(springRes.error) };
     }
 
-    return { error: new Error("Invalid email or password") };
+    return { error: new Error("Invalid credentials") };
   };
 
   const signOut = async () => {

@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 
 export default function Login() {
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
@@ -33,11 +33,27 @@ export default function Login() {
     setInfoMsg("");
     setLoading(true);
 
+    const idValue = identifier.trim();
+    if (idValue.includes("@")) {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(idValue)) {
+        setError("Please enter a valid email address.");
+        setLoading(false);
+        return;
+      }
+    } else {
+      const clean = idValue.replace(/[\s\-\+]/g, "").replace(/^91(?=\d{10}$)/, "");
+      if (!/^[6-9]\d{9}$/.test(clean)) {
+        setError("Please enter a valid 10-digit mobile number.");
+        setLoading(false);
+        return;
+      }
+    }
+
     try {
-      const result = await signIn(email.trim(), password);
+      const result = await signIn(idValue, password);
 
       if (result.error) {
-        setError(result.error.message || "Invalid email or password");
+        setError(result.error.message || "Invalid credentials");
         setLoading(false);
         return;
       }
@@ -50,7 +66,7 @@ export default function Login() {
         navigate("/student", { replace: true });
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Invalid email or password";
+      const msg = err instanceof Error ? err.message : "Invalid credentials";
       setError(msg);
     } finally {
       setLoading(false);
@@ -226,22 +242,22 @@ export default function Login() {
           {/* Form Fields */}
           <form onSubmit={handleSubmit} className="space-y-3.5">
             
-            {/* Email Field */}
+            {/* Identifier Field */}
             <div className="space-y-1">
               <label
-                htmlFor="email"
+                htmlFor="identifier"
                 className="block text-[10px] font-black uppercase tracking-wider text-[#014122] dark:text-emerald-400"
               >
-                EMAIL ADDRESS
+                EMAIL OR MOBILE NUMBER
               </label>
               <div className="relative">
                 <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="reshma@gmail.com"
+                  id="identifier"
+                  type="text"
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
+                  placeholder="Enter email or mobile number"
                   required
                   className="w-full h-11 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 pl-10 pr-4 text-xs sm:text-sm font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 focus:bg-white focus:border-[#014122] focus:ring-2 focus:ring-[#014122]/20 outline-none transition-all"
                 />
@@ -326,34 +342,6 @@ export default function Login() {
             </button>
           </form>
 
-          {/* Quick Credential Fill Helpers */}
-          <div className="pt-2 border-t border-slate-100 dark:border-slate-800 text-center space-y-1.5">
-            <span className="text-[10px] uppercase font-black tracking-wider text-slate-400">Quick Demo Accounts</span>
-            <div className="flex items-center justify-center gap-1.5 flex-wrap">
-              <button
-                type="button"
-                onClick={() => {
-                  setEmail("admin@gmail.com");
-                  setPassword("admin@123");
-                  setError("");
-                }}
-                className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 px-2 py-1 text-[10px] font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-              >
-                Admin (admin@gmail.com)
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setEmail("reshma@gmail.com");
-                  setPassword("Password@123");
-                  setError("");
-                }}
-                className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 px-2 py-1 text-[10px] font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-              >
-                Executor (reshma@gmail.com)
-              </button>
-            </div>
-          </div>
 
           {/* Footer Register Link */}
           <div className="pt-1 text-center text-xs font-medium text-slate-600 dark:text-slate-400">

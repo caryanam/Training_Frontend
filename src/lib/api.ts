@@ -69,6 +69,42 @@ async function apiRequest<T>(
 // API Endpoint Wrappers matching D:\Training Spring Boot Controllers
 export const api = {
   // --- 1. AUTHENTICATION ---
+  initiateRegistration: (payload: {
+    fullName: string;
+    email: string;
+    mobileNumber: string;
+    password: string;
+    confirmPassword: string;
+    interestedCourse?: string;
+    education?: string;
+    city?: string;
+  }) =>
+    apiRequest<void>("/api/v1/auth/register/initiate", {
+      method: "POST",
+      body: JSON.stringify({
+        fullName: payload.fullName,
+        email: payload.email,
+        mobileNumber: payload.mobileNumber,
+        password: payload.password,
+        confirmPassword: payload.confirmPassword,
+        interestedCourse: payload.interestedCourse,
+        education: payload.education,
+        city: payload.city,
+      }),
+    }),
+
+  verifyOtp: (payload: { email: string; otp: string }) =>
+    apiRequest<any>("/api/v1/auth/register/verify-otp", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+
+  resendOtp: (payload: { email: string }) =>
+    apiRequest<void>("/api/v1/auth/register/resend-otp", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+
   registerStudent: (payload: {
     fullName: string;
     email: string;
@@ -100,7 +136,7 @@ export const api = {
       }),
     }),
 
-  login: (payload: { email: string; password: string }) =>
+  login: (payload: { identifier: string; password: string }) =>
     apiRequest<{
       token: string;
       tokenType: string;
