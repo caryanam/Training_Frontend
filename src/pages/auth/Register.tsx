@@ -59,7 +59,7 @@ export default function Register() {
   const store = useDataStore();
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: ReturnType<typeof setTimeout>;
     if (step === 2 && resendTimer > 0) {
       interval = setInterval(() => setResendTimer((t) => t - 1), 1000);
     }
