@@ -287,10 +287,10 @@ export default function LandingPage() {
 
                 {/* Main Titles */}
                 <div className="space-y-2">
-                  <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-[#014122] dark:text-white">
+                  <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-[#014122] dark:text-white leading-tight">
                     {t.programMainTitle}
                   </h2>
-                  <p className="text-lg sm:text-2xl font-black text-[#014122]/80 dark:text-emerald-300">
+                  <p className="text-lg sm:text-xl lg:text-2xl font-black text-[#014122]/80 dark:text-emerald-300">
                     {t.programMainSubtitle}
                   </p>
 
@@ -340,20 +340,20 @@ export default function LandingPage() {
                     {t.programDetailsTitle}
                   </h3>
 
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="rounded-2xl bg-white dark:bg-[#02381e] p-3.5 border border-[#014122]/15 shadow-sm text-center">
-                      <div className="text-[11px] font-extrabold text-slate-500 dark:text-slate-300 uppercase tracking-wider">{t.programDurationLabel}</div>
-                      <div className="text-lg font-black text-[#014122] dark:text-white mt-1">{t.programDurationValue}</div>
+                  <div className="grid grid-cols-1 min-[500px]:grid-cols-3 gap-3">
+                    <div className="rounded-2xl bg-white dark:bg-[#02381e] p-3 sm:p-3.5 border border-[#014122]/15 shadow-sm text-center flex flex-col justify-center items-center h-full">
+                      <div className="text-[10px] sm:text-[11px] font-extrabold text-slate-500 dark:text-slate-300 uppercase tracking-wider">{t.programDurationLabel}</div>
+                      <div className="text-sm sm:text-base lg:text-sm xl:text-base font-black text-[#014122] dark:text-white mt-1 leading-tight">{t.programDurationValue}</div>
                     </div>
 
-                    <div className="rounded-2xl bg-white dark:bg-[#02381e] p-3.5 border border-[#014122]/15 shadow-sm text-center">
-                      <div className="text-[11px] font-extrabold text-slate-500 dark:text-slate-300 uppercase tracking-wider">{t.programFeeLabel}</div>
-                      <div className="text-lg font-black text-[#014122] dark:text-white mt-1">{t.programFeeValue}</div>
+                    <div className="rounded-2xl bg-white dark:bg-[#02381e] p-3 sm:p-3.5 border border-[#014122]/15 shadow-sm text-center flex flex-col justify-center items-center h-full">
+                      <div className="text-[10px] sm:text-[11px] font-extrabold text-slate-500 dark:text-slate-300 uppercase tracking-wider">{t.programFeeLabel}</div>
+                      <div className="text-sm sm:text-base lg:text-sm xl:text-base font-black text-[#014122] dark:text-white mt-1 leading-tight">{t.programFeeValue}</div>
                     </div>
 
-                    <div className="rounded-2xl bg-white dark:bg-[#02381e] p-3.5 border border-[#014122]/15 shadow-sm text-center">
-                      <div className="text-[11px] font-extrabold text-slate-500 dark:text-slate-300 uppercase tracking-wider">{t.programSeatsLabel}</div>
-                      <div className="text-lg font-black text-[#014122] dark:text-white mt-1">{t.programSeatsValue}</div>
+                    <div className="rounded-2xl bg-white dark:bg-[#02381e] p-3 sm:p-3.5 border border-[#014122]/15 shadow-sm text-center flex flex-col justify-center items-center h-full">
+                      <div className="text-[10px] sm:text-[11px] font-extrabold text-slate-500 dark:text-slate-300 uppercase tracking-wider">{t.programSeatsLabel}</div>
+                      <div className="text-sm sm:text-base lg:text-sm xl:text-base font-black text-[#014122] dark:text-white mt-1 leading-tight">{t.programSeatsValue}</div>
                     </div>
                   </div>
                 </div>
